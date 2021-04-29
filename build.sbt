@@ -18,8 +18,12 @@ ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
 
 ThisBuild / scalaVersion := "2.13.5"
 
-replaceCommandAlias("ci", "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant")
-addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; +root/scalafmtSbt; +root/headerCreate")
+replaceCommandAlias(
+  "ci",
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant")
+addCommandAlias(
+  "prePR",
+  "; root/clean; +root/scalafmtAll; +root/scalafmtSbt; +root/headerCreate")
 
 val CatsVersion = "2.6.0"
 val CatsEffectVersion = "3.1.0"
