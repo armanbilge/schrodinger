@@ -13,8 +13,7 @@ ThisBuild / scmInfo := Some(
   ScmInfo(
     url("https://github.com/armanbilge/schrodinger"),
     "git@github.com:armanbilge/schrodinger.git"))
-ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org"
-ThisBuild / sonatypeRepository := "https://s01.oss.sonatype.org/service/local"
+sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 ThisBuild / scalaVersion := "2.13.5"
 
