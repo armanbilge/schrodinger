@@ -16,39 +16,54 @@
 
 package schrodinger.distributions
 
-import cats.Applicative
-import schrodinger.{Dist, DistT}
+import cats.Functor
+import schrodinger.RandomT
 
 import java.util
 
+final class Categorical[F[_], S, A, C] private[distributions] (
+    impl: CategoricalImpl[F, S, A, C])
+    extends Serializable {
+  def apply(a: A): RandomT[F, S, C] = impl(a)
+}
+
 object Categorical {
+  def apply[F[_], S](probabilities: Seq[Double])(
+      implicit C: Categorical[F, S, Seq[Double], Int]): RandomT[F, S, Int] =
+    C(probabilities)
 
-  private def int(p: Array[Double]): Dist[Int] = {
-    val cumulative = p
-    var i = 1
-    while (i < cumulative.length) {
-      cumulative(i) += cumulative(i - 1)
-      i += 1
-    }
-    Uniform.double.map { U =>
-      val i = util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
-      if (i >= 0) i else -(i + 1)
-    }
-  }
-
-  def int(p: Seq[Double]): Dist[Int] =
-    int(p.toArray)
-
-  def intF[F[_]: Applicative](p: IndexedSeq[Double]): DistT[F, Int] =
-    DistT.fromDist(int(p))
-
-  def apply[A](categories: Map[A, Double]): Dist[A] = {
+  def apply[F[_]: Functor, S, A](categories: Map[A, Double])(
+      implicit C: Categorical[F, S, Seq[Double], Int]): RandomT[F, S, A] = {
     val a = categories.keys.toIndexedSeq
-    val p = categories.values.toArray
-    int(p).map(a)
+    val p = categories.values.toSeq
+    C(p).map(a)
   }
 
-  def applyF[F[_]: Applicative, A](categories: Map[A, Double]): DistT[F, A] =
-    DistT.fromDist(apply(categories))
+  implicit def schrodingerDistributionsCategorical[F[_], S, A, C](
+      implicit
+      impl: PrioritizeGenerator[CategoricalImpl[F, S, A, C]]): Categorical[F, S, A, C] =
+    new Categorical(impl.join)
+}
 
+trait CategoricalImpl[F[_], S, A, C] extends Serializable {
+  def apply(args: A): RandomT[F, S, C]
+}
+
+object CategoricalImpl {
+  implicit def schrodingerDistributionsCategoricalForDoubleArray[F[_]: Functor, S](
+      implicit U: Uniform[F, S, Unit, Double]): CategoricalImpl[F, S, Seq[Double], Int] =
+    new CategoricalImpl[F, S, Seq[Double], Int] {
+      override def apply(p: Seq[Double]): RandomT[F, S, Int] = {
+        val cumulative = p.toArray
+        var i = 1
+        while (i < cumulative.length) {
+          cumulative(i) += cumulative(i - 1)
+          i += 1
+        }
+        U(()).map { U =>
+          val i = util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
+          if (i >= 0) i else -(i + 1)
+        }
+      }
+    }
 }

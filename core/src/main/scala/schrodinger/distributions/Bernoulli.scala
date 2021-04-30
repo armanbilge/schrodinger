@@ -16,49 +16,46 @@
 
 package schrodinger.distributions
 
-import cats.{Applicative, Id}
-import schrodinger.{Dist, DistT}
-import DistT.*=>
-import schrodinger.generators.Generator
+import cats.Functor
+import schrodinger.RandomT
+
+final class Bernoulli[F[_], S, A] private[distributions] (impl: BernoulliImpl[F, S, A])
+    extends Serializable {
+  def apply(a: A): RandomT[F, S, Boolean] = impl(a)
+}
 
 object Bernoulli {
 
-  val fair: Dist[Boolean] = DistT[Id, Boolean](new (Id *=> λ[S => (S, Boolean)]) {
-    override def apply[S](s: S)(implicit rng: Generator[S]): (S, Boolean) =
-      rng.nextBoolean.run(s)
-  })
-
-  def fairF[F[_]](implicit F: Applicative[F]): DistT[F, Boolean] =
-    DistT.fromDist(fair)
+  def fair[F[_], S](implicit B: Bernoulli[F, S, Unit]): RandomT[F, S, Boolean] =
+    B(())
 
   /**
    * @param p the probability of `true`
    */
-  def apply(p: Float): Dist[Boolean] =
-    if (p == 0.5f)
-      fair
-    else
-      Uniform.float.map(_ < p)
+  def apply[F[_], S](p: Double)(implicit B: Bernoulli[F, S, Double]): RandomT[F, S, Boolean] =
+    B(p)
 
-  /**
-   * @param p the probability of `true`
-   */
-  def applyF[F[_]: Applicative](p: Float): DistT[F, Boolean] =
-    DistT.fromDist(apply(p))
+  implicit def schrodingerDistributionsBernoulli[F[_], S, A](
+      implicit impl: PrioritizeGenerator[BernoulliImpl[F, S, A]]): Bernoulli[F, S, A] =
+    new Bernoulli(impl.join)
+}
 
-  /**
-   * @param p the probability of `true`
-   */
-  def apply(p: Double): Dist[Boolean] =
-    if (p == 0.5)
-      fair
-    else
-      Uniform.double.map(_ < p)
+trait BernoulliImpl[F[_], S, A] extends Serializable {
+  def apply(args: A): RandomT[F, S, Boolean]
+}
 
-  /**
-   * @param p the probability of `true`
-   */
-  def applyF[F[_]: Applicative](p: Double): DistT[F, Boolean] =
-    DistT.fromDist(apply(p))
+object BernoulliImpl {
+  implicit def schrodingerDistributionsFairBernoulli[F[_]: Functor, S](
+      implicit U: Uniform[F, S, Unit, Int]): BernoulliImpl[F, S, Unit] =
+    new BernoulliImpl[F, S, Unit] {
+      override def apply(args: Unit): RandomT[F, S, Boolean] =
+        U(()).map(_ >= 0)
+    }
 
+  implicit def schrodingerDistributionsBernoulliForDouble[F[_]: Functor, S](
+      implicit U: Uniform[F, S, Unit, Double]): BernoulliImpl[F, S, Double] =
+    new BernoulliImpl[F, S, Double] {
+      override def apply(p: Double): RandomT[F, S, Boolean] =
+        U(()).map(_ < p)
+    }
 }

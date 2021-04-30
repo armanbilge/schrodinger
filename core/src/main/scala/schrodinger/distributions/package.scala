@@ -14,15 +14,12 @@
  * limitations under the License.
  */
 
-import cats.Id
-import cats.data.StateT
+package schrodinger
 
-package object schrodinger {
+import schrodinger.util.Priority
 
-  type Random[S, A] = RandomT[Id, S, A]
-  object Random {
-    private[schrodinger] def apply[S, A](sampler: StateT[Id, S, A]): Random[S, A] =
-      RandomT(sampler)
-  }
+package object distributions {
+
+  type PrioritizeGenerator[A] = Priority[A with GeneratorOverride, A]
 
 }

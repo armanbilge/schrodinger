@@ -16,49 +16,51 @@
 
 package schrodinger.testkit
 
-import cats.Eq
+import cats.{Eq, Id}
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.traverse._
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.Dist
+import schrodinger.Random
 import schrodinger.distributions.Bernoulli
-import schrodinger.generators.SplitMix
+import schrodinger.generators.{Split, SplitMix}
 import schrodinger.generators.SplitMix._
-import schrodinger.testkit.DistTEqSpec.DifferentDists
-import schrodinger.testkit.dist._
+import schrodinger.testkit.RandomTEqSpec.DifferentRandoms
+import schrodinger.testkit.random._
 
-object DistTEqSpec {
-  final case class DifferentDists(dist1: Dist[Boolean], dist2: Dist[Boolean])
+object RandomTEqSpec {
+  final case class DifferentRandoms[S](dist1: Random[S, Boolean], dist2: Random[S, Boolean])
 }
 
-class DistTEqSpec extends Specification with ScalaCheck {
+class RandomTEqSpec extends Specification with ScalaCheck {
 
   implicit val arbitrary = Arbitrary(
     for {
       p <- Gen.choose(0, 0.25)
-    } yield DifferentDists(Bernoulli(p), Bernoulli(1 - p))
+    } yield DifferentRandoms(Bernoulli[Id, SplitMix](p), Bernoulli[Id, SplitMix](1 - p))
   )
 
   implicit val seeds = ExhaustiveCheck.instance(
     List
-      .fill(1)(SplitMix.DefaultInstance.split)
+      .fill(1)(Split[Id, SplitMix].split)
       .sequence
-      .runA(SplitMix.initialState(System.currentTimeMillis(), System.nanoTime()))
+      .simulate(SplitMix.initialState(System.currentTimeMillis(), System.nanoTime()))
   )
 
   implicit val confidence = Confidence(1000, 0.95)
 
-  "DistTEq" should {
+  "RandomTEq" should {
     "recognize equivalent distributions" in {
-      prop { (dist: Dist[Boolean]) => Eq[Dist[Boolean]].eqv(dist, dist) }
+      prop { (dist: Random[SplitMix, Boolean]) =>
+        Eq[Random[SplitMix, Boolean]].eqv(dist, dist)
+      }
     }
 
     "recognize non-equivalent distributions" in {
-      prop { different: DifferentDists =>
+      prop { different: DifferentRandoms[SplitMix] =>
         import different._
-        Eq[Dist[Boolean]].neqv(dist1, dist2)
+        Eq[Random[SplitMix, Boolean]].neqv(dist1, dist2)
       }
     }
   }

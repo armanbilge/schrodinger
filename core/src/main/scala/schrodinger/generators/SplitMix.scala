@@ -16,38 +16,24 @@
 
 package schrodinger.generators
 
-import cats.{Eq, Id}
 import cats.data.StateT
-import schrodinger.generators.SplitMix.{mix32, mix64, mixGamma, State}
+import cats.{Applicative, Eq, Id}
+import schrodinger.distributions.{GeneratorOverride, UniformImpl}
+import schrodinger.{Random, RandomT}
 
 import java.lang
 
-class SplitMix extends Generator[State] with BoxMullerGaussian[State] {
+final case class SplitMix private (seed: Long, gamma: Long, extra: Double = Double.NaN)
 
-  private val nextSeed = StateT.modify[Id, State](s => s.copy(seed = s.seed + s.gamma))
+object SplitMix extends SplitMixInstances {
 
-  final override val nextInt: StateT[Id, State, Int] = nextSeed.inspect(s => mix32(s.seed))
-
-  final override val nextLong: StateT[Id, State, Long] = nextSeed.inspect(s => mix64(s.seed))
-
-  final private val nextGamma = nextSeed.inspect(s => mixGamma(s.seed))
-
-  final override val split: StateT[Id, State, State] = for {
-    seed <- nextLong
-    gamma <- nextGamma
-  } yield State(seed, gamma, Double.NaN)
-
-  override protected val getExtraGaussian: StateT[Id, State, Double] =
-    StateT.inspect(_.extra)
-
-  override protected def setExtraGaussian(x: Double): StateT[Id, State, Unit] =
-    StateT.modify(_.copy(extra = x))
-
-}
-
-object SplitMix {
-
-  implicit val DefaultInstance: SplitMix = new SplitMix
+  /**
+   * Uses two longs (such as `currentTimeMillis` and `nanoTime`) to create an initial state.
+   */
+  def initialState(currentTimeMillis: Long, nanoTime: Long): SplitMix = {
+    val s = mix64(currentTimeMillis) ^ mix64(nanoTime)
+    SplitMix(mix64(s), mixGamma(s + GoldenGamma))
+  }
 
   private[generators] val GoldenGamma = 0x9e3779b97f4a7c15L
 
@@ -76,16 +62,38 @@ object SplitMix {
     else z
   }
 
-  final case class State private (seed: Long, gamma: Long, extra: Double = Double.NaN)
+  private val nextSeed = StateT.modify[Id, SplitMix](s => s.copy(seed = s.seed + s.gamma))
+  private[generators] val nextInt = Random(nextSeed.inspect(s => mix32(s.seed)))
+  private[generators] val nextLong = Random(nextSeed.inspect(s => mix64(s.seed)))
+  private[generators] val nextGamma = Random(nextSeed.inspect(s => mixGamma(s.seed)))
+  private[generators] val split = for {
+    seed <- nextLong
+    gamma <- nextGamma
+  } yield SplitMix(seed, gamma, Double.NaN)
+}
 
-  implicit def eqState: Eq[State] = Eq.fromUniversalEquals
+private[schrodinger] sealed class SplitMixInstances {
+  implicit def schrodingerGeneratorsEqForSplitMix: Eq[SplitMix] =
+    Eq.fromUniversalEquals
 
-  /**
-   * Uses two longs (such as `currentTimeMillis` and `nanoTime`) to create an initial state.
-   */
-  def initialState(currentTimeMillis: Long, nanoTime: Long): State = {
-    val s = mix64(currentTimeMillis) ^ mix64(nanoTime)
-    State(mix64(s), mixGamma(s + GoldenGamma))
-  }
+  implicit def schrodingerGeneratorsUniformIntForSplitMix[F[_]](
+      implicit F: Applicative[F]): UniformImpl[F, SplitMix, Unit, Int] with GeneratorOverride =
+    new UniformImpl[F, SplitMix, Unit, Int] with GeneratorOverride {
+      override def apply(args: Unit): RandomT[F, SplitMix, Int] =
+        RandomT.fromRandom(SplitMix.nextInt)
+    }
 
+  implicit def schrodingerGeneratorsUniformLongForSplitMix[F[_]](
+      implicit F: Applicative[F]): UniformImpl[F, SplitMix, Unit, Long] with GeneratorOverride =
+    new UniformImpl[F, SplitMix, Unit, Long] with GeneratorOverride {
+      override def apply(args: Unit): RandomT[F, SplitMix, Long] =
+        RandomT.fromRandom(SplitMix.nextLong)
+    }
+
+  implicit def schrodingerGeneratorsSplitForSplitMix[F[_]](
+      implicit F: Applicative[F]): Split[F, SplitMix] with GeneratorOverride =
+    new Split[F, SplitMix] with GeneratorOverride {
+      override def split: RandomT[F, SplitMix, SplitMix] =
+        RandomT.fromRandom(SplitMix.split)
+    }
 }

@@ -14,15 +14,9 @@
  * limitations under the License.
  */
 
-import cats.Id
-import cats.data.StateT
+package schrodinger.distributions
 
-package object schrodinger {
-
-  type Random[S, A] = RandomT[Id, S, A]
-  object Random {
-    private[schrodinger] def apply[S, A](sampler: StateT[Id, S, A]): Random[S, A] =
-      RandomT(sampler)
-  }
-
-}
+/**
+ * A marker indicating that a distribution implementation is provided directly by the generator
+ */
+trait GeneratorOverride

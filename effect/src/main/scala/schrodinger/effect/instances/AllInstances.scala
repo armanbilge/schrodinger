@@ -16,4 +16,4 @@
 
 package schrodinger.effect.instances
 
-trait AllInstances extends DistTInstances with WeightedTInstances
+trait AllInstances extends RandomTInstances with WeightedTInstances

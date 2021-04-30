@@ -21,7 +21,6 @@ import cats.syntax.traverse._
 import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.generators.SplitMix.State
 
 import java.util.SplittableRandom
 import scala.annotation.nowarn
@@ -30,20 +29,19 @@ import scala.collection.JavaConverters._
 class SplitMixSpec extends Specification with ScalaCheck {
 
   val N = 100
-  val splitMix = SplitMix.DefaultInstance
 
   implicit val arbitraryState = Arbitrary(
-    Arbitrary.arbLong.arbitrary.map(State(_, SplitMix.GoldenGamma))
+    Arbitrary.arbLong.arbitrary.map(SplitMix(_, SplitMix.GoldenGamma))
   )
 
-  def splittableRandom(state: State) =
+  def splittableRandom(state: SplitMix) =
     new SplittableRandom(state.seed)
 
   "SplitMix" should {
 
     "generate ints" in {
-      prop { state: State =>
-        val ints = List.fill(N)(splitMix.nextInt).sequence.runA(state)
+      prop { state: SplitMix =>
+        val ints = List.fill(N)(SplitMix.nextInt).sequence.simulate(state)
         val expectedInts =
           splittableRandom(state).ints().iterator().asScala.take(N).toList: @nowarn(
             "msg=deprecated")
@@ -52,8 +50,8 @@ class SplitMixSpec extends Specification with ScalaCheck {
     }
 
     "generate longs" in {
-      prop { state: State =>
-        val longs = List.fill(N)(splitMix.nextLong).sequence.runA(state)
+      prop { state: SplitMix =>
+        val longs = List.fill(N)(SplitMix.nextLong).sequence.simulate(state)
         val expectedLongs =
           splittableRandom(state).longs().iterator().asScala.take(N).toList: @nowarn(
             "msg=deprecated")
@@ -62,9 +60,9 @@ class SplitMixSpec extends Specification with ScalaCheck {
     }
 
     "split" in {
-      prop { state: State =>
+      prop { state: SplitMix =>
         val longs =
-          List.fill(N)(splitMix.split.map(splitMix.nextLong.runA)).sequence.runA(state)
+          List.fill(N)(SplitMix.split.map(SplitMix.nextLong.simulate)).sequence.simulate(state)
         val random = splittableRandom(state)
         val expectedLongs = List.fill(N)(random.split().nextLong())
         longs should_== expectedLongs

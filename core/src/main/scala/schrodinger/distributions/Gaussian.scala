@@ -16,25 +16,27 @@
 
 package schrodinger.distributions
 
-import cats.{Applicative, Id}
-import schrodinger.{Dist, DistT}
-import DistT.*=>
-import schrodinger.generators.Generator
+import cats.Functor
+import schrodinger.RandomT
+
+final class Gaussian[F[_], S, A] private[distributions] (impl: GaussianImpl[F, S, A])
+    extends Serializable {
+  def apply: RandomT[F, S, A] = impl.apply
+}
 
 object Gaussian {
+  def standard[F[_], S](implicit G: Gaussian[F, S, Double]): RandomT[F, S, Double] =
+    G.apply
 
-  val standard: Dist[Double] = DistT[Id, Double](new (Id *=> λ[S => (S, Double)]) {
-    override def apply[S](s: Id[S])(implicit rng: Generator[S]): (S, Double) =
-      rng.nextGaussian.run(s)
-  })
-
-  def standardF[F[_]: Applicative]: DistT[F, Double] =
-    DistT.fromDist(standard)
-
-  def apply(mean: Double, standardDeviation: Double): Dist[Double] =
+  def apply[F[_]: Functor, S](mean: Double, standardDeviation: Double)(
+      implicit G: Gaussian[F, S, Double]): RandomT[F, S, Double] =
     standard.map(mean + _ * standardDeviation)
 
-  def applyF[F[_]: Applicative](mean: Double, standardDeviation: Double): DistT[F, Double] =
-    DistT.fromDist(apply(mean, standardDeviation))
+  implicit def schrodingerDistributionsGaussian[F[_], S, A](
+      implicit impl: PrioritizeGenerator[GaussianImpl[F, S, A]]): Gaussian[F, S, A] =
+    new Gaussian(impl.join)
+}
 
+trait GaussianImpl[F[_], S, A] extends Serializable {
+  def apply: RandomT[F, S, A]
 }

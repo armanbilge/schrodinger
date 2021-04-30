@@ -16,30 +16,33 @@
 
 package schrodinger.generators
 
+import cats.Id
 import cats.instances.list._
 import cats.syntax.traverse._
 import org.apache.commons.rng.core.source32.{PcgXshRr32 => ApachePcgXshRr32}
 import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.generators.Pcg.State64
 
 class PcgSpec extends Specification with ScalaCheck {
 
   val N = 100
-  val pcgXshRr32 = new Pcg32XshRr
 
   implicit val arbitraryState64 = Arbitrary(
     for {
       state <- Arbitrary.arbLong.arbitrary
       inc <- Arbitrary.arbLong.arbitrary
-    } yield State64(state, inc | 1)
+    } yield Pcg32(state, inc | 1)
   )
 
   "Pcg32XshRr" should {
     "generate ints" in {
-      prop { state: State64 =>
-        val ints = List.fill(N + 1)(pcgXshRr32.nextInt).sequence.runA(state).tail
+      prop { state: Pcg32 =>
+        val ints = List
+          .fill(N + 1)(Pcg32XshRr.schrodingerGeneratorsUniformIntForPcg32[Id].apply(()))
+          .sequence
+          .simulate(state)
+          .tail
         val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
         val expectedInts = List.fill(N)(provider.nextInt())
         ints should_=== expectedInts
