@@ -19,10 +19,9 @@ ThisBuild / scalaVersion := "2.13.5"
 
 replaceCommandAlias(
   "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant") // TODO Reenable mimaReportBinaryIssuesIfRelevant
-addCommandAlias(
-  "prePR",
-  "; root/clean; +root/scalafmtAll; +root/scalafmtSbt; +root/headerCreate")
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant"
+) // TODO Reenable mimaReportBinaryIssuesIfRelevant
+addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
 val CatsVersion = "2.6.0"
 val CatsEffectVersion = "3.1.0"
