@@ -19,7 +19,7 @@ ThisBuild / scalaVersion := "2.13.5"
 
 replaceCommandAlias(
   "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant")
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant") // TODO Reenable mimaReportBinaryIssuesIfRelevant
 addCommandAlias(
   "prePR",
   "; root/clean; +root/scalafmtAll; +root/scalafmtSbt; +root/headerCreate")
