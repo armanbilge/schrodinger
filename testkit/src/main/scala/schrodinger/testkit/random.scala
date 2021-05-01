@@ -25,7 +25,7 @@ import cats.syntax.traverse._
 import org.apache.commons.math3.special.Gamma
 import org.scalacheck.{Arbitrary, Gen}
 import schrodinger.RandomT
-import schrodinger.distributions.{Bernoulli, Categorical}
+import schrodinger.random.{Bernoulli, Categorical}
 
 object random extends LowPriorityDistInstances {
 

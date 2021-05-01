@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.random
 
 import cats.Functor
 import schrodinger.RandomT
 
-final class Gaussian[F[_], S, A] private[distributions] (impl: GaussianImpl[F, S, A])
+final class Gaussian[F[_], S, A] private[random] (impl: GaussianImpl[F, S, A])
     extends Serializable {
   def apply: RandomT[F, S, A] = impl.apply
 }
 
 object Gaussian {
-  def standard[F[_], S](implicit G: Gaussian[F, S, Double]): RandomT[F, S, Double] =
+  def standard[F[_], S](implicit G: GaussianDouble[F, S]): RandomT[F, S, Double] =
     G.apply
 
   def apply[F[_]: Functor, S](mean: Double, standardDeviation: Double)(
-      implicit G: Gaussian[F, S, Double]): RandomT[F, S, Double] =
+      implicit G: GaussianDouble[F, S]): RandomT[F, S, Double] =
     standard.map(mean + _ * standardDeviation)
 
   implicit def schrodingerDistributionsGaussian[F[_], S, A](

@@ -23,7 +23,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.Random
-import schrodinger.distributions.Bernoulli
+import schrodinger.random.Bernoulli
 import schrodinger.generators.{Split, SplitMix}
 import schrodinger.generators.SplitMix._
 import schrodinger.testkit.RandomTEqSpec.DifferentRandoms

@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.random
 
 import cats.Functor
 import schrodinger.RandomT
 
-final class Exponential[F[_], S, A] private[distributions] (impl: ExponentialImpl[F, S, A])
+final class Exponential[F[_], S, A] private[random] (impl: ExponentialImpl[F, S, A])
     extends Serializable {
   def apply: RandomT[F, S, A] = impl.apply
 }
 
 object Exponential {
-  def standard[F[_], S](implicit E: Exponential[F, S, Double]): RandomT[F, S, Double] =
+  def standard[F[_], S](implicit E: ExponentialDouble[F, S]): RandomT[F, S, Double] =
     E.apply
 
   def apply[F[_]: Functor, S](rate: Double)(
-      implicit E: Exponential[F, S, Double]): RandomT[F, S, Double] =
+      implicit E: ExponentialDouble[F, S]): RandomT[F, S, Double] =
     standard.map(_ / rate)
 
   implicit def schrodingerDistributionsExponential[F[_], S, A](

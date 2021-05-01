@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.random
 
 import cats.Functor
 import schrodinger.RandomT
 
-final class Bernoulli[F[_], S, A] private[distributions] (impl: BernoulliImpl[F, S, A])
+final class Bernoulli[F[_], S, A] private[random] (impl: BernoulliImpl[F, S, A])
     extends Serializable {
   def apply(a: A): RandomT[F, S, Boolean] = impl(a)
 }
 
 object Bernoulli {
 
-  def fair[F[_], S](implicit B: Bernoulli[F, S, Unit]): RandomT[F, S, Boolean] =
+  def fair[F[_], S](implicit B: FairBernoulli[F, S]): RandomT[F, S, Boolean] =
     B(())
 
   /**

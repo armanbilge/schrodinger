@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.random
 
 import cats.syntax.monad._
 import cats.{Functor, Monad}
@@ -24,34 +24,34 @@ import java.lang
 import scala.annotation.switch
 import scala.collection.immutable.NumericRange
 
-final class Uniform[F[_], S, A, U] private[distributions] (impl: UniformImpl[F, S, A, U])
+final class Uniform[F[_], S, A, U] private[random] (impl: UniformImpl[F, S, A, U])
     extends Serializable {
   def apply(a: A): RandomT[F, S, U] = impl(a)
 }
 
 object Uniform {
 
-  def int[F[_], S](implicit U: Uniform[F, S, Unit, Int]): RandomT[F, S, Int] =
+  def int[F[_], S](implicit U: UniformInt[F, S]): RandomT[F, S, Int] =
     U(())
 
-  def long[F[_], S](implicit U: Uniform[F, S, Unit, Long]): RandomT[F, S, Long] =
+  def long[F[_], S](implicit U: UniformLong[F, S]): RandomT[F, S, Long] =
     U(())
 
-  def float[F[_], S](implicit U: Uniform[F, S, Unit, Float]): RandomT[F, S, Float] =
+  def float[F[_], S](implicit U: UniformFloat[F, S]): RandomT[F, S, Float] =
     U(())
 
-  def double[F[_], S](implicit U: Uniform[F, S, Unit, Double]): RandomT[F, S, Double] =
+  def double[F[_], S](implicit U: UniformDouble[F, S]): RandomT[F, S, Double] =
     U(())
 
-  def apply[F[_], S](range: Range)(implicit U: Uniform[F, S, Range, Int]): RandomT[F, S, Int] =
+  def apply[F[_], S](range: Range)(implicit U: UniformRange[F, S]): RandomT[F, S, Int] =
     U(range)
 
   def apply[F[_], S](range: NumericRange[Long])(
-      implicit U: Uniform[F, S, NumericRange[Long], Long]): RandomT[F, S, Long] =
+      implicit U: UniformLongRange[F, S]): RandomT[F, S, Long] =
     U(range)
 
   def apply[F[_]: Functor, S, A](seq: Seq[A])(
-      implicit U: Uniform[F, S, Range, Int]): RandomT[F, S, A] =
+      implicit U: UniformRange[F, S]): RandomT[F, S, A] =
     U(seq.indices).map(seq)
 
   implicit def schrodingerDistributionsUniform[F[_], S, A, U](

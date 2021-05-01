@@ -18,7 +18,7 @@ package schrodinger.generators
 import cats.{Applicative, Monad}
 import cats.data.StateT
 import schrodinger.RandomT
-import schrodinger.distributions.{GeneratorOverride, Uniform, UniformImpl}
+import schrodinger.random.{GeneratorOverride, Uniform, UniformImpl}
 import schrodinger.util.UInt128
 
 import java.lang

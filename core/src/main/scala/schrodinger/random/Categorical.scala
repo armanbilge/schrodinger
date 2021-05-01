@@ -14,26 +14,25 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.random
 
 import cats.Functor
 import schrodinger.RandomT
 
 import java.util
 
-final class Categorical[F[_], S, A, C] private[distributions] (
-    impl: CategoricalImpl[F, S, A, C])
+final class Categorical[F[_], S, A, C] private[random] (impl: CategoricalImpl[F, S, A, C])
     extends Serializable {
   def apply(a: A): RandomT[F, S, C] = impl(a)
 }
 
 object Categorical {
   def apply[F[_], S](probabilities: Seq[Double])(
-      implicit C: Categorical[F, S, Seq[Double], Int]): RandomT[F, S, Int] =
+      implicit C: CategoricalInt[F, S]): RandomT[F, S, Int] =
     C(probabilities)
 
   def apply[F[_]: Functor, S, A](categories: Map[A, Double])(
-      implicit C: Categorical[F, S, Seq[Double], Int]): RandomT[F, S, A] = {
+      implicit C: CategoricalInt[F, S]): RandomT[F, S, A] = {
     val a = categories.keys.toIndexedSeq
     val p = categories.values.toSeq
     C(p).map(a)

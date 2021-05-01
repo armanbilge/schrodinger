@@ -21,7 +21,7 @@ import cats.effect.std.CountDownLatch
 import cats.effect.syntax.all._
 import cats.effect.{Async, IO, IOApp, Ref}
 import cats.syntax.all._
-import schrodinger.distributions.Exponential
+import schrodinger.random.{Exponential, ExponentialDouble}
 import schrodinger.effect.instances.SplitMonadCancel
 import schrodinger.effect.instances.random._
 import schrodinger.generators.SplitMix
@@ -37,7 +37,7 @@ object ThoughtExperiment extends IOApp.Simple {
   val decayRate = math.log(2)
 
   def decayingAtom[F[_]: Async, S: SplitMonadCancel](
-      geigerCounter: CountDownLatch[RandomT[F, S, *]])(implicit E: Exponential[F, S, Double]) =
+      geigerCounter: CountDownLatch[RandomT[F, S, *]])(implicit E: ExponentialDouble[F, S]) =
     for {
       decayAfter <- Exponential[F, S](decayRate)
       _ <- Async[RandomT[F, S, *]].sleep(decayAfter.seconds)
@@ -50,7 +50,7 @@ object ThoughtExperiment extends IOApp.Simple {
       _ <- cat.set(DeadCat)
     } yield ()
 
-  def experiment[F[_]: Async, S: SplitMonadCancel](implicit E: Exponential[F, S, Double]) =
+  def experiment[F[_]: Async, S: SplitMonadCancel](implicit E: ExponentialDouble[F, S]) =
     for {
       cat <- Ref.of[RandomT[F, S, *], Cat](LiveCat)
       geigerCounter <- CountDownLatch[RandomT[F, S, *]](1)

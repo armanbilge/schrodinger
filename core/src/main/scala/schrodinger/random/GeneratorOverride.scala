@@ -14,12 +14,9 @@
  * limitations under the License.
  */
 
-package schrodinger
+package schrodinger.random
 
-import schrodinger.util.Priority
-
-package object distributions {
-
-  type PrioritizeGenerator[A] = Priority[A with GeneratorOverride, A]
-
-}
+/**
+ * A marker indicating that a distribution implementation is provided directly by the generator
+ */
+trait GeneratorOverride
