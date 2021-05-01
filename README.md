@@ -47,7 +47,7 @@ case object DeadCat extends Cat
 val decayRate = math.log(2)
 
 def decayingAtom[F[_]: Async, S: SplitMonadCancel](
-                                                    geigerCounter: CountDownLatch[RandomT[F, S, *]])(implicit E: ExponentialDouble[F, S]) =
+    geigerCounter: CountDownLatch[RandomT[F, S, *]])(implicit E: ExponentialDouble[F, S]) =
   for {
     decayAfter <- Exponential[F, S](decayRate)
     _ <- Async[RandomT[F, S, *]].sleep(decayAfter.seconds)
