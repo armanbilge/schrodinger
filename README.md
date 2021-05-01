@@ -12,9 +12,9 @@ This substantially improves the reproducibility of concurrent programs.
 ## Usage
 
 ```scala
-libraryDependencies += "com.armanbilge" %% "schrodinger" % "0.1.0"
+libraryDependencies += "com.armanbilge" %% "schrodinger" % "0.2.0"
 // (optional) provides additional instances for cats-effect typeclasses
-libraryDependencies += "com.armanbilge" %% "schrodinger-effect" % "0.1.0"
+libraryDependencies += "com.armanbilge" %% "schrodinger-effect" % "0.2.0"
 ```
 
 ## Datatypes
