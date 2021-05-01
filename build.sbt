@@ -5,6 +5,8 @@ ThisBuild / publishGithubUser := "armanbilge"
 ThisBuild / publishFullName := "Arman Bilge"
 ThisBuild / startYear := Some(2021)
 
+mimaPreviousArtifacts := Set()
+
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
 ThisBuild / spiewakMainBranches := Seq("main")
