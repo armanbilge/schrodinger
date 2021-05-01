@@ -21,9 +21,11 @@ libraryDependencies += "com.armanbilge" %% "schrodinger-effect" % "0.1.0"
 
 * `schrodinger.RandomT`: a monad transformer for a random variable that describes a probabilistic program.
   It is a light wrapper for Cat's [`StateT`](https://typelevel.org/cats/datatypes/state.html) with its own typeclass instances.
-  Hints (see also the example below):
+  Hints:
     1. (Flat)Map the "primitive" random variables provided in `schrodinger.random.*` to create `RandomT` instances for your own datatypes.
     2. Use typeclasses to defer binding the RNG state type `S` to a specific implementation until the (terminal) simulation step.
+
+  See this in action in the [example](#example-schrödingers-cat).
 * `schrodinger.data.Weighted`: represents a "weighted" sample from a probability distribution.
   It is similar to Cat's [`Writer`](https://typelevel.org/cats/datatypes/writer.html) datatype with the additional feature that it short-circuits computation (like `Option`) if the weight goes to zero.
   This is useful for (nested) [importance sampling](https://en.wikipedia.org/wiki/Importance_sampling) where samples from an auxiliary distribution are reweighted to sample from a target distribution.
