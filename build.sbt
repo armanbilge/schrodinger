@@ -1,4 +1,4 @@
-ThisBuild / baseVersion := "0.1"
+ThisBuild / baseVersion := "0.2"
 
 ThisBuild / organization := "com.armanbilge"
 ThisBuild / publishGithubUser := "armanbilge"
@@ -19,8 +19,8 @@ ThisBuild / scalaVersion := "2.13.5"
 
 replaceCommandAlias(
   "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant"
-) // TODO Reenable mimaReportBinaryIssuesIfRelevant
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
+)
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
 val CatsVersion = "2.6.0"
