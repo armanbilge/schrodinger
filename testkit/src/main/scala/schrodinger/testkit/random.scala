@@ -24,36 +24,35 @@ import cats.syntax.foldable._
 import cats.syntax.traverse._
 import org.apache.commons.math3.special.Gamma
 import org.scalacheck.{Arbitrary, Gen}
-import schrodinger.DistT
-import schrodinger.distributions.{Bernoulli, Categorical}
-import schrodinger.generators.Generator
+import schrodinger.RandomT
+import schrodinger.random.{Bernoulli, Categorical}
 
-object dist extends LowPriorityDistInstances {
+object random extends LowPriorityDistInstances {
 
-  implicit def schrodingerTestKitEqForDistT[F[_], A, S](
+  implicit def schrodingerTestKitEqForRandomT[F[_], S, A](
       implicit ev0: Monad[F],
       ev1: Confidence,
       ev2: Discrete[A],
       ev3: Eq[F[A]],
-      ev4: Generator[S],
-      ev5: ExhaustiveCheck[S],
-      ev6: F[Boolean] => Option[Boolean]): Eq[DistT[F, A]] =
-    new DistTEq[F, A, S] {
+      ev4: ExhaustiveCheck[S],
+      ev5: F[Boolean] => Option[Boolean]): Eq[RandomT[F, S, A]] =
+    new RandomTEq[F, A, S] {
       implicit override val F: Monad[F] = ev0
       implicit override val confidence: Confidence = ev1
       implicit override val discrete: Discrete[A] = ev2
       implicit override val eqFA: Eq[F[A]] = ev3
-      implicit override val generator: Generator[S] = ev4
-      implicit override val seeds: ExhaustiveCheck[S] = ev5
-      implicit override val eval: F[Boolean] => Option[Boolean] = ev6
+      implicit override val seeds: ExhaustiveCheck[S] = ev4
+      implicit override val eval: F[Boolean] => Option[Boolean] = ev5
     }
 
-  implicit def schrodingerTestKitArbitraryForDistT[F[_]: Applicative, A](
-      implicit ev: Discrete[A]): Arbitrary[DistT[F, A]] =
+  implicit def schrodingerTestKitArbitraryForRandomT[F[_]: Applicative, S, A](
+      implicit ev: Discrete[A],
+      B: Bernoulli[F, S, Double],
+      C: Categorical[F, S, Seq[Double], Int]): Arbitrary[RandomT[F, S, A]] =
     (ev.allValues, ev.dirichletPrior) match {
-      case (List(a), _) => Arbitrary(Arbitrary.arbUnit.arbitrary.map(_ => DistT.pure(a)))
+      case (List(a), _) => Arbitrary(Arbitrary.arbUnit.arbitrary.map(_ => RandomT.pure(a)))
       case (List(a, b), List(1.0, 1.0)) =>
-        Arbitrary(Gen.double.map(p => Bernoulli.applyF[F](p).map(if (_) a else b)))
+        Arbitrary(Gen.double.map(p => Bernoulli(p).map(if (_) a else b)))
       case (a, alpha) if alpha.forall(_ == 1.0) =>
         Arbitrary(
           for {
@@ -64,7 +63,7 @@ object dist extends LowPriorityDistInstances {
                   x <- Gen.exponential(1.0)
                 } yield x :: tail
             }
-          } yield Categorical.applyF(a.zip(p).toMap)
+          } yield Categorical[F, S, A](a.zip(p).toMap)
         )
       case _ =>
         ??? // TODO Sample probabilities from Dirichlet to create a categorical distribution
@@ -82,15 +81,13 @@ object dist extends LowPriorityDistInstances {
 }
 
 sealed trait LowPriorityDistInstances {
-  implicit def schrodingerTestKitFallbackEqForDistT[
-      F[_]: FlatMap,
-      A,
-      S: Generator: ExhaustiveCheck](implicit ev: Eq[F[A]]): Eq[DistT[F, A]] =
-    DistTEq.fallback
+  implicit def schrodingerTestKitFallbackEqForRandomT[F[_]: FlatMap, A, S: ExhaustiveCheck](
+      implicit ev: Eq[F[A]]): Eq[RandomT[F, S, A]] =
+    RandomTEq.fallback
 
-  implicit def schrodingerTestKitFallbackArbitraryForDistT[F[_]: Applicative, A](
-      implicit ev: Arbitrary[A]): Arbitrary[DistT[F, A]] =
-    Arbitrary(ev.arbitrary.map(a => DistT.pure(a)))
+  implicit def schrodingerTestKitFallbackArbitraryForRandomT[F[_]: Applicative, S, A](
+      implicit ev: Arbitrary[A]): Arbitrary[RandomT[F, S, A]] =
+    Arbitrary(ev.arbitrary.map(a => RandomT.pure(a)))
 }
 
 final case class Confidence(replicates: Int, threshold: Double)
@@ -116,25 +113,24 @@ object Discrete {
     instance(exhaustiveCheck.allValues)
 }
 
-object DistTEq {
-  def fallback[F[_]: FlatMap, A, S: Generator: ExhaustiveCheck](
-      implicit ev: Eq[F[A]]): Eq[DistT[F, A]] = {
+object RandomTEq {
+  def fallback[F[_]: FlatMap, S: ExhaustiveCheck, A](
+      implicit ev: Eq[F[A]]): Eq[RandomT[F, S, A]] = {
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
-    Eq.by[DistT[F, A], S => F[A]](d => s => d.sample(s))
+    Eq.by[RandomT[F, S, A], S => F[A]](d => s => d.simulate(s))
   }
 }
 
-trait DistTEq[F[_], A, S] extends Eq[DistT[F, A]] {
+trait RandomTEq[F[_], A, S] extends Eq[RandomT[F, S, A]] {
 
   implicit def F: Monad[F]
   implicit def confidence: Confidence
   implicit def discrete: Discrete[A]
   implicit def eqFA: Eq[F[A]]
-  implicit def generator: Generator[S]
   implicit def seeds: ExhaustiveCheck[S]
   implicit def eval: F[Boolean] => Option[Boolean]
 
-  override def eqv(x: DistT[F, A], y: DistT[F, A]): Boolean = {
+  override def eqv(x: RandomT[F, S, A], y: RandomT[F, S, A]): Boolean = {
 
     val dirichletPrior = discrete.dirichletPrior.toArray
     val eqAtRequestedConfidence = for {
@@ -147,11 +143,11 @@ trait DistTEq[F[_], A, S] extends Eq[DistT[F, A]] {
       p = 1 - equidistributedBelief(trial1, trial2, dirichletPrior)
     } yield !(p > confidence.threshold)
 
-    eval(seeds.allValues.forallM(eqAtRequestedConfidence.sample[S]))
-      .getOrElse(DistTEq.fallback[F, A, S].eqv(x, y))
+    eval(seeds.allValues.forallM(eqAtRequestedConfidence.simulate))
+      .getOrElse(RandomTEq.fallback[F, S, A].eqv(x, y))
   }
 
-  private def countOutcomes(fa: DistT[F, A]): DistT[F, Array[Int]] =
+  private def countOutcomes(fa: RandomT[F, S, A]): RandomT[F, S, Array[Int]] =
     Vector.fill(confidence.replicates)(fa).sequence.map { samples =>
       val counts = samples.groupMapReduce(identity)(_ => 1)(_ + _)
       discrete.allValues.map(counts.getOrElse(_, 0)).toArray

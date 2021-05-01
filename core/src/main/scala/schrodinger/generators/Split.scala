@@ -14,6 +14,14 @@
  * limitations under the License.
  */
 
-package schrodinger.effect.instances
+package schrodinger.generators
 
-object dist extends DistTInstances
+import schrodinger.RandomT
+
+trait Split[F[_], S] extends Serializable {
+  def split: RandomT[F, S, S]
+}
+
+object Split {
+  def apply[F[_], S](implicit ev: Split[F, S]): Split[F, S] = ev
+}

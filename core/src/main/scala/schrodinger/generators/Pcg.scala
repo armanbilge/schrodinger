@@ -15,93 +15,85 @@
  */
 
 package schrodinger.generators
-import cats.Id
+import cats.{Applicative, Monad}
 import cats.data.StateT
-import schrodinger.generators.Pcg.{State, State128, State64}
+import schrodinger.RandomT
+import schrodinger.random.{GeneratorOverride, Uniform, UniformImpl}
 import schrodinger.util.UInt128
 
 import java.lang
 
-abstract class Pcg[S <: State] extends Generator[S] with BoxMullerGaussian[S]
+final case class Pcg32(state: Long, inc: Long, extra: Double = Double.NaN)
 
-abstract class Pcg32 extends Pcg[State64] with IntBasedGenerator[State64] {
-
-  private val getState = StateT.inspect[Id, State64, Long](_.state)
-
-  final override val nextInt: StateT[Id, State64, Int] = StateT[Id, State64, Int] { state =>
-    (
-      state.copy(state = state.state * 6364136223846793005L + (state.inc | 1)),
-      output(state.state))
-  }
-
-  final override val split: StateT[Id, State64, State64] = for {
-    inc <- nextLong
-    state <- getState
-  } yield State64(state, inc | 1)
-
-  protected def output(state: Long): Int
-
-  override protected val getExtraGaussian: StateT[Id, State64, Double] =
-    StateT.inspect(_.extra)
-
-  override protected def setExtraGaussian(x: Double): StateT[Id, State64, Unit] =
-    StateT.modify(_.copy(extra = x))
-
-}
-
-class Pcg32XshRr extends Pcg32 {
+object Pcg32XshRr extends Pcg32Instances {
   final override protected def output(state: Long): Int =
     lang.Integer.rotateRight((((state >>> 18) ^ state) >>> 27).toInt, (state >>> 59).toInt)
 }
 
-abstract class Pcg64 extends Pcg[State128] with LongBasedGenerator[State128] {
+private[generators] abstract class Pcg32Instances {
+  implicit def shrodingerGeneratorsSplitForPcg32[F[_]: Monad](
+      implicit
+      nextLong: Uniform[F, Pcg32, Unit, Long]): Split[F, Pcg32] with GeneratorOverride =
+    new Split[F, Pcg32] with GeneratorOverride {
+      override def split: RandomT[F, Pcg32, Pcg32] = for {
+        inc <- nextLong(())
+        state <- RandomT(StateT.inspect[F, Pcg32, Long](_.state))
+      } yield Pcg32(state, inc | 1)
+    }
 
-  private val getState =
-    StateT.inspect[Id, State128, UInt128](s => UInt128(s.stateHi, s.stateLo))
+  implicit def schrodingerGeneratorsUniformIntForPcg32[F[_]](
+      implicit F: Applicative[F]): UniformImpl[F, Pcg32, Unit, Int] with GeneratorOverride =
+    new UniformImpl[F, Pcg32, Unit, Int] with GeneratorOverride {
+      override def apply(args: Unit): RandomT[F, Pcg32, Int] = RandomT(
+        StateT[F, Pcg32, Int] { state =>
+          F.pure(
+            (
+              state.copy(state = state.state * 6364136223846793005L + (state.inc | 1)),
+              output(state.state)))
+        }
+      )
+    }
 
-  final override val nextLong: StateT[Id, State128, Long] = StateT[Id, State128, Long] {
-    state =>
-      import state._
-      val s = UInt128(stateHi, stateLo) * UInt128(
-        2549297995355413924L,
-        4865540595714422341L) + UInt128(incHi, incLo | 1)
-      (state.copy(stateHi = s.hi, stateLo = s.lo), output(stateHi, stateLo))
-  }
-
-  final override val split: StateT[Id, State128, State128] = for {
-    incHi <- nextLong
-    incLo <- nextLong
-    state <- getState
-  } yield State128(state.hi, state.lo, incHi, incLo | 1)
-
-  protected def output(hi: Long, lo: Long): Long
-
-  override protected val getExtraGaussian: StateT[Id, State128, Double] =
-    StateT.inspect(_.extra)
-
-  override protected def setExtraGaussian(x: Double): StateT[Id, State128, Unit] =
-    StateT.modify(_.copy(extra = x))
-
+  protected def output(state: Long): Int
 }
 
-class Pcg64XslRr extends Pcg64 {
-  final override protected def output(hi: Long, lo: Long): Long =
+final case class Pcg64(
+    stateHi: Long,
+    stateLo: Long,
+    incHi: Long,
+    incLo: Long,
+    extra: Double = Double.NaN)
+
+object Pcg64XslRr extends Pcg64Instances {
+  override protected def output(hi: Long, lo: Long): Long =
     lang.Long.rotateRight(hi ^ lo, (hi >> 58).toInt)
 }
 
-object Pcg {
+private[generators] sealed abstract class Pcg64Instances {
+  implicit def shrodingerGeneratorsSplitForPcg64[F[_]: Monad](
+      implicit
+      nextLong: Uniform[F, Pcg64, Unit, Long]): Split[F, Pcg64] with GeneratorOverride =
+    new Split[F, Pcg64] with GeneratorOverride {
+      override def split: RandomT[F, Pcg64, Pcg64] = for {
+        incHi <- nextLong(())
+        incLo <- nextLong(())
+        state <- RandomT(StateT.get[F, Pcg64])
+      } yield Pcg64(state.stateHi, state.stateLo, incHi, incLo | 1)
+    }
 
-  implicit val DefaultInstance32: Pcg32 = new Pcg32XshRr
-  implicit val DefaultInstance64: Pcg64 = new Pcg64XslRr
+  implicit def schrodingerGeneratorsUniformLongForPcg64[F[_]](
+      implicit F: Applicative[F]): UniformImpl[F, Pcg64, Unit, Long] with GeneratorOverride =
+    new UniformImpl[F, Pcg64, Unit, Long] with GeneratorOverride {
+      override def apply(args: Unit): RandomT[F, Pcg64, Long] = RandomT(
+        StateT[F, Pcg64, Long] { state =>
+          import state._
+          val s = UInt128(stateHi, stateLo) * UInt128(
+            2549297995355413924L,
+            4865540595714422341L) + UInt128(incHi, incLo | 1)
+          F.pure((state.copy(stateHi = s.hi, stateLo = s.lo), output(stateHi, stateLo)))
+        }
+      )
+    }
 
-  sealed abstract class State
-  final case class State64(state: Long, inc: Long, extra: Double = Double.NaN) extends State
-  final case class State128(
-      stateHi: Long,
-      stateLo: Long,
-      incHi: Long,
-      incLo: Long,
-      extra: Double = Double.NaN)
-      extends State
-
+  protected def output(hi: Long, lo: Long): Long
 }

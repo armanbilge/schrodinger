@@ -14,21 +14,6 @@
  * limitations under the License.
  */
 
-package schrodinger.distributions
+package schrodinger.effect.instances
 
-import cats.Applicative
-import schrodinger.{Dist, DistT}
-
-object Exponential {
-
-  // TODO Replace with Ahrens-Dieter sampler?
-  val standard: Dist[Double] =
-    Uniform.double.map(U => -math.log(1 - U))
-
-  def apply(rate: Double): Dist[Double] =
-    standard.map(_ / rate)
-
-  def applyF[F[_]: Applicative](rate: Double): DistT[F, Double] =
-    DistT.fromDist(apply(rate))
-
-}
+object random extends RandomTInstances
