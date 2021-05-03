@@ -9,7 +9,7 @@ mimaPreviousArtifacts := Set()
 
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / sonatypePublishToBundle := {
+sonatypePublishToBundle := {
   val isSnapshot = version.value.endsWith("-SNAPSHOT") || git
     .gitCurrentTags
     .value
