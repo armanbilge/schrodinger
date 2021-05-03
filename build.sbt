@@ -13,7 +13,7 @@ mimaPreviousArtifacts := Set()
 
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / git.formattedShaVersion ~= {
+git.formattedShaVersion ~= {
   _.map { v => if (!v.endsWith("-SNAPSHOT")) v + "-SNAPSHOT" else v }
 }
 ThisBuild / spiewakMainBranches := Seq("main")
