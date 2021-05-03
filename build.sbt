@@ -19,12 +19,24 @@ ThisBuild / scmInfo := Some(
     url("https://github.com/armanbilge/schrodinger"),
     "git@github.com:armanbilge/schrodinger.git"))
 sonatypeCredentialHost := "s01.oss.sonatype.org"
+lazy val sonatypeBundleReleaseIfRelevant =
+  taskKey[Unit]("Executes sonatypeBundleRelease if not a snapshot")
+sonatypeBundleReleaseIfRelevant := Def.taskDyn[Unit] {
+  if (!isSnapshot.value)
+    Def.task(sonatypeBundleRelease.value)
+  else
+    Def.task(())
+}
 
 ThisBuild / scalaVersion := "2.13.5"
 
 replaceCommandAlias(
   "ci",
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
+)
+replaceCommandAlias(
+  "release",
+  "; reload; project /; +mimaReportBinaryIssuesIfRelevant; +publishIfRelevant; sonatypeBundleReleaseIfRelevant"
 )
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
