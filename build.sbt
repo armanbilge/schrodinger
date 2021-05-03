@@ -13,9 +13,8 @@ mimaPreviousArtifacts := Set()
 
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / git.formattedShaVersion ~= { _.map { v =>
-    if (!v.endsWith("-SNAPSHOT")) v + "-SNAPSHOT" else v
-  }
+ThisBuild / git.formattedShaVersion ~= {
+  _.map { v => if (!v.endsWith("-SNAPSHOT")) v + "-SNAPSHOT" else v }
 }
 ThisBuild / spiewakMainBranches := Seq("main")
 ThisBuild / homepage := Some(url("https://github.com/armanbilge/schrodinger"))
