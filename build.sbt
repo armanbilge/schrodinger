@@ -1,3 +1,7 @@
+import sbt.internal.util.SourcePosition
+
+import scala.util.Try
+
 ThisBuild / baseVersion := "0.2"
 
 ThisBuild / organization := "com.armanbilge"
@@ -9,17 +13,8 @@ mimaPreviousArtifacts := Set()
 
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
-sonatypePublishToBundle := {
-  val isSnapshot = version.value.endsWith("-SNAPSHOT") || git
-    .gitCurrentTags
-    .value
-    .map(git.gitTagToVersionNumber.value)
-    .flatten
-    .isEmpty
-  if (isSnapshot) {
-    Some(sonatypeSnapshotResolver.value)
-  } else {
-    Some(Resolver.file("sonatype-local-bundle", sonatypeBundleDirectory.value))
+ThisBuild / git.formattedShaVersion ~= { _.map { v =>
+    if (!v.endsWith("-SNAPSHOT")) v + "-SNAPSHOT" else v
   }
 }
 ThisBuild / spiewakMainBranches := Seq("main")
