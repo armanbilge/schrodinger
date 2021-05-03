@@ -1,7 +1,3 @@
-import sbt.internal.util.SourcePosition
-
-import scala.util.Try
-
 ThisBuild / baseVersion := "0.2"
 
 ThisBuild / organization := "com.armanbilge"
@@ -45,6 +41,7 @@ lazy val core = project
   .in(file("core"))
   .settings(
     name := "schrodinger",
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % CatsVersion,
       "org.specs2" %% "specs2-core" % Specs2Version % Test,
@@ -58,6 +55,7 @@ lazy val effect = project
   .dependsOn(core)
   .settings(
     name := "schrodinger-effect",
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect-kernel" % CatsEffectVersion
     )
@@ -68,6 +66,7 @@ lazy val laws = project
   .dependsOn(core)
   .settings(
     name := "schrodinger-laws",
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-laws" % CatsVersion,
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test
@@ -79,6 +78,7 @@ lazy val testkit = project
   .dependsOn(core)
   .settings(
     name := "schrodinger-testkit",
+    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-laws" % CatsVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
