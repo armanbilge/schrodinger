@@ -9,13 +9,18 @@ mimaPreviousArtifacts := Set()
 
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / isSnapshot := {
-  version.value.contains("SNAPSHOT") || git
+ThisBuild / sonatypePublishToBundle := {
+  val isSnapshot = version.value.endsWith("-SNAPSHOT") || git
     .gitCurrentTags
     .value
     .map(git.gitTagToVersionNumber.value)
     .flatten
     .isEmpty
+  if (isSnapshot) {
+    Some(sonatypeSnapshotResolver.value)
+  } else {
+    Some(Resolver.file("sonatype-local-bundle", sonatypeBundleDirectory.value))
+  }
 }
 ThisBuild / spiewakMainBranches := Seq("main")
 ThisBuild / homepage := Some(url("https://github.com/armanbilge/schrodinger"))
