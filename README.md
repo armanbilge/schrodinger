@@ -2,6 +2,8 @@
 
 [![Latest version](https://index.scala-lang.org/armanbilge/schrodinger/schrodinger/latest.svg?color=orange)](https://index.scala-lang.org/armanbilge/schrodinger/schrodinger)
 
+<img align="right" width="384px" style="padding: 100px" src="https://user-images.githubusercontent.com/3119428/116948367-09f10780-ac34-11eb-816a-8ffeea165d21.png"/>
+
 Schrodinger is an (early-stage) project for probabilistic programming built on the [Cats](https://github.com/typelevel/cats) ecosystem.
 At its heart is the `RandomT` monad transformer which enables you to safely inject randomness into your program by describing it as a random variable while also interleaving with other effects, such as [Cats Effect](https://github.com/typelevel/cats-effect)'s `IO` monad.
 The goal is that this construct will facilitate the implementation of high-performance, concurrent Monte Carlo algorithms for simulation and inference.
