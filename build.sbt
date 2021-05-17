@@ -28,7 +28,7 @@ sonatypeBundleReleaseIfRelevant := Def.taskDyn[Unit] {
     Def.task(())
 }
 
-ThisBuild / scalaVersion := "2.13.5"
+ThisBuild / scalaVersion := "2.13.6"
 
 replaceCommandAlias(
   "ci",
