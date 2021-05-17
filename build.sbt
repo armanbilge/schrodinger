@@ -40,11 +40,11 @@ replaceCommandAlias(
 )
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
-val CatsVersion = "2.6.0"
+val CatsVersion = "2.6.1"
 val CatsEffectVersion = "3.1.1"
 val Specs2Version = "4.11.0"
 val ScalaCheckVersion = "1.15.3"
-val DisciplineVersion = "1.1.5"
+val DisciplineVersion = "1.1.6"
 
 lazy val root =
   project.aggregate(core, effect, laws, testkit, tests, example).enablePlugins(NoPublishPlugin)
