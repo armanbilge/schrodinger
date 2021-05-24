@@ -44,9 +44,9 @@ import scala.concurrent.duration.FiniteDuration
 final class RVT[F[_], S, A](private[schrodinger] val simF: F[S => F[A]]) extends Serializable {
 
   def simulate(seed: S)(implicit F: FlatMap[F], S: Rng[S]): F[A] =
-    simulateUnsafe(S.copy(seed))
+    unsafeSimulate(S.copy(seed))
 
-  private[schrodinger] def simulateUnsafe(seed: S)(implicit F: FlatMap[F]): F[A] =
+  private[schrodinger] def unsafeSimulate(seed: S)(implicit F: FlatMap[F]): F[A] =
     simF.flatMap(_(seed))
 
   def map[B](f: A => B)(implicit F: Functor[F]): RVT[F, S, B] =
@@ -273,7 +273,7 @@ private[schrodinger] trait RVTMonadError[F[_], S, E]
     RVT.liftF(F.raiseError(e))
 
   override def handleErrorWith[A](fa: RVT[F, S, A])(f: E => RVT[F, S, A]): RVT[F, S, A] =
-    RVT.fromSim(s => fa.simulateUnsafe(s).handleErrorWith(f(_).simulateUnsafe(s)))
+    RVT.fromSim(s => fa.unsafeSimulate(s).handleErrorWith(f(_).unsafeSimulate(s)))
 }
 
 sealed private[schrodinger] trait RVTFunctorFilter[F[_], S]
@@ -300,7 +300,7 @@ sealed private[schrodinger] trait RVTSemigroupK[F[_], S] extends SemigroupK[RVT[
   implicit def F1: SemigroupK[F]
 
   def combineK[A](x: RVT[F, S, A], y: RVT[F, S, A]): RVT[F, S, A] =
-    RVT.fromSim(s => x.simulateUnsafe(s) <+> y.simulateUnsafe(s))
+    RVT.fromSim(s => x.unsafeSimulate(s) <+> y.unsafeSimulate(s))
 }
 
 sealed private[schrodinger] trait RVTMonoidK[F[_], S]
@@ -332,10 +332,10 @@ sealed private[schrodinger] trait RVTMonadCancel[F[_], S, E]
     RVT.liftF(F.canceled)
 
   def forceR[A, B](fa: RVT[F, S, A])(fb: RVT[F, S, B]): RVT[F, S, B] =
-    RVT.fromSim(s => F.forceR(fa.simulateUnsafe(s))(fb.simulateUnsafe(s)))
+    RVT.fromSim(s => F.forceR(fa.unsafeSimulate(s))(fb.unsafeSimulate(s)))
 
   def onCancel[A](fa: RVT[F, S, A], fin: RVT[F, S, Unit]): RVT[F, S, A] =
-    RVT.fromSim(s => F.onCancel(fa.simulateUnsafe(s), fin.simulateUnsafe(s)))
+    RVT.fromSim(s => F.onCancel(fa.unsafeSimulate(s), fin.unsafeSimulate(s)))
 
   def uncancelable[A](body: Poll[RVT[F, S, *]] => RVT[F, S, A]): RVT[F, S, A] =
     RVT(
@@ -367,7 +367,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E]
   override def start[A](fa: RVT[F, S, A]): RVT[F, S, Fiber[RVT[F, S, *], E, A]] =
     RVT.fromSim(s0 => {
       val s1 = S.unsafeSplit(s0)
-      F.start(fa.simulateUnsafe(s1)).map(liftFiber)
+      F.start(fa.unsafeSimulate(s1)).map(liftFiber)
     })
 
   override def racePair[A, B](fa: RVT[F, S, A], fb: RVT[F, S, B]): RVT[
@@ -379,7 +379,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E]
     RVT.fromSim(s0 => {
       val s1 = S.unsafeSplit(s0)
       val s2 = S.unsafeSplit(s0)
-      F.racePair(fa.simulateUnsafe(s1), fb.simulateUnsafe(s2)).map {
+      F.racePair(fa.unsafeSimulate(s1), fb.unsafeSimulate(s2)).map {
         case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
         case Right((fib, oc)) => Right((liftFiber(fib), liftOutcome(oc)))
       }
@@ -479,7 +479,7 @@ sealed private[schrodinger] trait RVTAsync[F[_], S]
       ))
 
   def evalOn[A](fa: RVT[F, S, A], ec: ExecutionContext): RVT[F, S, A] =
-    RVT.fromSim(s => F.evalOn(fa.simulateUnsafe(s), ec))
+    RVT.fromSim(s => F.evalOn(fa.unsafeSimulate(s), ec))
 
   def executionContext: RVT[F, S, ExecutionContext] =
     RVT.liftF(F.executionContext)
