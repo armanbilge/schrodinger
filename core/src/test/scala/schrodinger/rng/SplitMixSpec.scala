@@ -16,12 +16,11 @@
 
 package schrodinger.rng
 
-import cats.MonadError
 import cats.syntax.all._
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.{RV, RVT}
+import schrodinger.RV
 import schrodinger.random.Uniform
 
 import java.util.SplittableRandom
@@ -59,16 +58,9 @@ class SplitMixSpec extends Specification with ScalaCheck {
 
     "split" in {
       prop { (state: SplitMix) =>
-        val ints =
-          List
-            .fill(N)(
-              MonadError[RVT[Option, SplitMix, *], Unit]
-                .raiseError[Int](())
-                .handleErrorWith(_ => Uniform.int[RVT[Option, SplitMix, *]]))
-            .sequence
-            .simulate(state)
-            .get
         val random = splittableRandom(state)
+        import SplitMix.schrodingerRngSplittableRngForSplitMix._
+        val ints = List.fill(N)(unsafeNextInt(unsafeSplit(state)))
         val expectedInts = List.fill(N)(random.split().nextInt())
         ints should_=== expectedInts
       }
