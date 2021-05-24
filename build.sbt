@@ -52,7 +52,9 @@ val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.1.6"
 
 lazy val root =
-  project.aggregate(kernel, random, core, monteCarlo, testkit, tests, example).enablePlugins(NoPublishPlugin)
+  project
+    .aggregate(kernel, random, core, monteCarlo, testkit, tests, example)
+    .enablePlugins(NoPublishPlugin)
 
 lazy val kernel = project
   .in(file("kernel"))
