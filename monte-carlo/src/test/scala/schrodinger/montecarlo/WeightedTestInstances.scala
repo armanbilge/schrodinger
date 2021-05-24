@@ -23,7 +23,7 @@ import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
 
 trait WeightedTestInstances {
 
-  implicit object intZeroMonoid extends CommutativeZeroMonoid[Int] {
+  implicit val intZeroMonoid: CommutativeZeroMonoid[Int] = new CommutativeZeroMonoid[Int] {
     override def empty: Int = 1
     override def absorbing: Int = 0
     override def combine(x: Int, y: Int): Int = x * y
