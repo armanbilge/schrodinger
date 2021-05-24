@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-import cats.Eval
+package schrodinger.random
 
-package object schrodinger {
-  type RV[S, A] = RVT[Eval, S, A]
-  object RV
+import cats.Functor
+import cats.syntax.all._
+import schrodinger.kernel.Random
+
+object Bernoulli {
+  def fair[F[_]: Functor: Random]: F[Boolean] =
+    Uniform.int.map(_ >= 0)
+
+  def apply[F[_]: Functor: Random](p: Float): F[Boolean] =
+    Uniform.float.map(_ < p)
+
+  def apply[F[_]: Functor: Random](p: Double): F[Boolean] =
+    Uniform.double.map(_ < p)
 }

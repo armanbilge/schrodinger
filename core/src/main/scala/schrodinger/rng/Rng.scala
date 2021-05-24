@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import cats.Eval
+package schrodinger.rng
 
-package object schrodinger {
-  type RV[S, A] = RVT[Eval, S, A]
-  object RV
+trait Rng[S] extends Serializable {
+  def copy(s: S): S
+  def unsafeNextInt(s: S): Int
+  def unsafeNextLong(s: S): Long
+}
+
+trait SplittableRng[S] extends Rng[S] {
+  def unsafeSplit(s: S): S
 }

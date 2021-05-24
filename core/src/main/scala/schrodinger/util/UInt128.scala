@@ -17,6 +17,7 @@
 package schrodinger.util
 
 import java.lang.Long._
+import scala.annotation.tailrec
 
 final private[schrodinger] case class UInt128(hi: Long, lo: Long) {
 
@@ -67,23 +68,27 @@ final private[schrodinger] case class UInt128(hi: Long, lo: Long) {
     UInt128(hi, lo)
   }
 
-  def <<(n: Int) =
-    if (n >= 64)
+  @tailrec
+  def <<(n: Int): UInt128 =
+    if (n >= 128)
+      this << (n % 128)
+    else if (n >= 64)
       UInt128(lo << (n - 64), 0)
     else if (n > 0)
       UInt128((hi << n) | (lo >>> (64 - n)), lo << n)
     else
       this
 
-  def >>(n: Int) =
-    if (n >= 64)
+  @tailrec
+  def >>(n: Int): UInt128 =
+    if (n >= 128)
+      this >> (n % 128)
+    else if (n >= 64)
       UInt128(0, hi >>> (n - 64))
     else if (n > 0)
       UInt128(hi >>> n, (hi << (64 - n)) | (lo >>> n))
     else
       this
-
-  def >>>(n: Int) = this >> n
 
   def toBigInt =
     BigInt(toUnsignedString(hi, 16) + "0000000000000000", 16) + BigInt(

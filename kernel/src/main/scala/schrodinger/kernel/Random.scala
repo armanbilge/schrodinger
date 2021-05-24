@@ -14,9 +14,16 @@
  * limitations under the License.
  */
 
-import cats.Eval
+package schrodinger.kernel
 
-package object schrodinger {
-  type RV[S, A] = RVT[Eval, S, A]
-  object RV
+/**
+ * A type class which is a source of uniform random `Int`s and `Long`s.
+ */
+trait Random[F[_]] extends Serializable {
+  def randomInt: F[Int]
+  def randomLong: F[Long]
+}
+
+object Random {
+  def apply[F[_]](implicit F: Random[F]): F.type = F
 }

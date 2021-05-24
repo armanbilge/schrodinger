@@ -14,9 +14,22 @@
  * limitations under the License.
  */
 
-import cats.Eval
+package schrodinger.kernel
 
-package object schrodinger {
-  type RV[S, A] = RVT[Eval, S, A]
-  object RV
+/**
+ * A pseudo-random `F` is a random that can be transformed deterministically to a `G` via a seed `S`.
+ */
+trait PseudoRandom[F[_]] extends Random[F] {
+  type G[_]
+  type S
+  def simulate[A](fa: F[A])(seed: S): G[A]
+}
+
+object PseudoRandom {
+  type Aux[F[_], G0[_], S0] = PseudoRandom[F] {
+    type G[A] = G0[A]
+    type S = S0
+  }
+
+  def apply[F[_]](implicit F: PseudoRandom[F]): F.type = F
 }

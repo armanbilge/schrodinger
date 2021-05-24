@@ -21,10 +21,9 @@ import cats.effect.std.CountDownLatch
 import cats.effect.syntax.all._
 import cats.effect.{Async, IO, IOApp, Ref}
 import cats.syntax.all._
-import schrodinger.random.{Exponential, ExponentialDouble}
-import schrodinger.effect.instances.SplitMonadCancel
-import schrodinger.effect.instances.random._
-import schrodinger.generators.SplitMix
+import schrodinger.rng.SplitMix
+import schrodinger.kernel.Random
+import schrodinger.random.Exponential
 
 import scala.concurrent.duration._
 
@@ -36,11 +35,10 @@ object ThoughtExperiment extends IOApp.Simple {
 
   val decayRate = math.log(2)
 
-  def decayingAtom[F[_]: Async, S: SplitMonadCancel](
-      geigerCounter: CountDownLatch[RandomT[F, S, *]])(implicit E: ExponentialDouble[F, S]) =
+  def decayingAtom[F[_]: Async: Random](geigerCounter: CountDownLatch[F]) =
     for {
-      decayAfter <- Exponential[F, S](decayRate)
-      _ <- Async[RandomT[F, S, *]].sleep(decayAfter.seconds)
+      decayAfter <- Exponential(decayRate)
+      _ <- Async[F].sleep(decayAfter.seconds)
       _ <- geigerCounter.release
     } yield ()
 
@@ -50,25 +48,25 @@ object ThoughtExperiment extends IOApp.Simple {
       _ <- cat.set(DeadCat)
     } yield ()
 
-  def experiment[F[_]: Async, S: SplitMonadCancel](implicit E: ExponentialDouble[F, S]) =
+  def experiment[F[_]: Async: Random] =
     for {
-      cat <- Ref.of[RandomT[F, S, *], Cat](LiveCat)
-      geigerCounter <- CountDownLatch[RandomT[F, S, *]](1)
+      cat <- Ref.of[F, Cat](LiveCat)
+      geigerCounter <- CountDownLatch(1)
       // spawning fibers splits the RNG deterministically
-      _ <- poisonRelay[RandomT[F, S, *]](geigerCounter, cat).start
-      _ <- decayingAtom[F, S](geigerCounter).start
-      _ <- Async[RandomT[F, S, *]].sleep(1.second)
+      _ <- poisonRelay(geigerCounter, cat).start
+      _ <- decayingAtom(geigerCounter).start
+      _ <- Async[F].sleep(1.second)
       // 50% probability that we will observe a live cat
       observation <- cat.get
     } yield observation
 
-  val seed1 = SplitMix.initialState(0x2b992ddfa23249d6L, 0x4034650f1c98bd69L)
-  val seed2 = SplitMix.initialState(0x86d98163ff1fe751L, 0x8316a8fe31a2228eL)
+  val seed1 = SplitMix(0x2b992ddfa23249d6L, 0x4034650f1c98bd69L)
+  val seed2 = SplitMix(0x86d98163ff1fe751L, 0x8316a8fe31a2228eL)
 
   override def run: IO[Unit] = for {
-    observation1 <- experiment[IO, SplitMix].simulate(seed1)
+    observation1 <- experiment[RVT[IO, SplitMix, *]].simulate(seed1)
     _ <- IO.println(s"Experiment 1: observing a $observation1")
-    observation2 <- experiment[IO, SplitMix].simulate(seed2)
+    observation2 <- experiment[RVT[IO, SplitMix, *]].simulate(seed2)
     _ <- IO.println(s"Experiment 2: observing a $observation2")
     _ <- IO.println("No cats were harmed in the thinking of this experiment :)")
   } yield ()
