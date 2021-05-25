@@ -18,7 +18,6 @@ package schrodinger
 
 import cats.data.AndThen
 import cats.effect.kernel._
-import cats.syntax.all._
 import cats.{
   ~>,
   Alternative,
@@ -47,40 +46,42 @@ final class RVT[F[_], S, A](private[schrodinger] val simF: F[S => F[A]]) extends
     unsafeSimulate(S.copy(seed))
 
   private[schrodinger] def unsafeSimulate(seed: S)(implicit F: FlatMap[F]): F[A] =
-    simF.flatMap(_(seed))
+    F.flatMap(simF)(_(seed))
 
   def map[B](f: A => B)(implicit F: Functor[F]): RVT[F, S, B] =
-    RVT(simF.map(AndThen(_).andThen(_.map(f))))
+    RVT(F.map(simF)(AndThen(_).andThen(F.map(_)(f))))
 
   def flatMap[B](f: A => RVT[F, S, B])(implicit F: FlatMap[F]): RVT[F, S, B] =
-    RVT(simF.map { sim => seed =>
-      AndThen(sim).andThen(_.flatMap(f(_).simF).flatMap(_(seed)))(seed)
+    RVT(F.map(simF) { sim => seed =>
+      AndThen(sim).andThen(sim => F.flatMap(F.flatMap(sim)(f(_).simF))(_(seed)))(seed)
     })
 
   def mapK[G[_]](f: F ~> G)(implicit F: Functor[F]): RVT[G, S, A] =
-    RVT(f(simF.map(_.andThen(f(_)))))
+    RVT(f(F.map(simF)(_.andThen(f(_)))))
 }
 
 object RVT extends RVTInstances with CommonRVTConstructors {
   private[schrodinger] def apply[F[_], S, A](simF: F[S => F[A]]): RVT[F, S, A] =
     new RVT(simF)
 
-  private[schrodinger] def fromSim[F[_]: Applicative, S, A](sim: S => F[A]): RVT[F, S, A] =
-    RVT(sim.pure)
+  private[schrodinger] def fromSim[F[_], S, A](sim: S => F[A])(
+      implicit F: Applicative[F]): RVT[F, S, A] =
+    RVT(F.pure(sim))
 }
 
 private[schrodinger] trait CommonRVTConstructors {
-  def pure[F[_]: Applicative, S, A](a: A): RVT[F, S, A] =
-    RVT((Function.const(a.pure)(_: S)).pure)
+  def pure[F[_], S, A](a: A)(implicit F: Applicative[F]): RVT[F, S, A] =
+    RVT(F.pure(Function.const(F.pure(a))(_: S)))
 
-  def liftF[F[_]: Applicative, S, A](fa: F[A]): RVT[F, S, A] =
-    RVT(fa.map(a => Function.const(a.pure)))
+  def liftF[F[_], S, A](fa: F[A])(implicit F: Applicative[F]): RVT[F, S, A] =
+    RVT(F.map(fa)(a => Function.const(F.pure(a))))
 
-  def fromRV[F[_]: Applicative: Defer, S, A](rv: RV[S, A]): RVT[F, S, A] =
+  def fromRV[F[_], S, A](
+      rv: RV[S, A])(implicit F0: Applicative[F], F1: Defer[F]): RVT[F, S, A] =
     rv.mapK(new (Eval ~> F) {
       override def apply[A](fa: Eval[A]): F[A] = fa match {
-        case Now(a) => a.pure
-        case fa => Defer[F].defer(fa.value.pure)
+        case Now(a) => F0.pure(a)
+        case fa => F1.defer(F0.pure(fa.value))
       }
     })
 
@@ -236,10 +237,10 @@ sealed private[schrodinger] trait RVTPseudoRandom[F[_], S0]
     fa.simulate(seed)
 
   override def randomInt: RVT[F, S, Int] =
-    RVT.fromSim(S.unsafeNextInt(_).pure)
+    RVT.fromSim((s: S) => F.pure(S.unsafeNextInt(s)))
 
   override def randomLong: RVT[F, S, Long] =
-    RVT.fromSim(S.unsafeNextLong(_).pure)
+    RVT.fromSim((s: S) => F.pure(S.unsafeNextLong(s)))
 }
 
 sealed private[schrodinger] trait RVTFunctor[F[_], S] extends Functor[RVT[F, S, *]] {
@@ -261,7 +262,7 @@ sealed private[schrodinger] trait RVTMonad[F[_], S]
     fa.flatMap(f)
 
   def tailRecM[A, B](a: A)(f: A => RVT[F, S, Either[A, B]]): RVT[F, S, B] =
-    RVT.fromSim(s => F.tailRecM(a)(f.andThen(_.simF.flatMap(_(s)))))
+    RVT.fromSim(s => F.tailRecM(a)(f.andThen(fa => F.flatMap(fa.simF)(_(s)))))
 }
 
 private[schrodinger] trait RVTMonadError[F[_], S, E]
@@ -273,7 +274,7 @@ private[schrodinger] trait RVTMonadError[F[_], S, E]
     RVT.liftF(F.raiseError(e))
 
   override def handleErrorWith[A](fa: RVT[F, S, A])(f: E => RVT[F, S, A]): RVT[F, S, A] =
-    RVT.fromSim(s => fa.unsafeSimulate(s).handleErrorWith(f(_).unsafeSimulate(s)))
+    RVT.fromSim(s => F.handleErrorWith(fa.unsafeSimulate(s))(f(_).unsafeSimulate(s)))
 }
 
 sealed private[schrodinger] trait RVTFunctorFilter[F[_], S]
@@ -285,7 +286,7 @@ sealed private[schrodinger] trait RVTFunctorFilter[F[_], S]
     RVT.schrodingerFunctorForRVT(F1.functor)
 
   override def mapFilter[A, B](fa: RVT[F, S, A])(f: A => Option[B]): RVT[F, S, B] =
-    RVT(fa.simF.map(_.andThen(_.mapFilter(f))))
+    RVT(F0.map(fa.simF)(_.andThen(F1.mapFilter(_)(f))))
 }
 
 sealed private[schrodinger] trait RVTDefer[F[_], S] extends Defer[RVT[F, S, *]] {
@@ -300,7 +301,7 @@ sealed private[schrodinger] trait RVTSemigroupK[F[_], S] extends SemigroupK[RVT[
   implicit def F1: SemigroupK[F]
 
   def combineK[A](x: RVT[F, S, A], y: RVT[F, S, A]): RVT[F, S, A] =
-    RVT.fromSim(s => x.unsafeSimulate(s) <+> y.unsafeSimulate(s))
+    RVT.fromSim(s => F1.combineK(x.unsafeSimulate(s), y.unsafeSimulate(s)))
 }
 
 sealed private[schrodinger] trait RVTMonoidK[F[_], S]
@@ -342,10 +343,10 @@ sealed private[schrodinger] trait RVTMonadCancel[F[_], S, E]
       F.uncancelable { poll =>
         val poll2 = new Poll[RVT[F, S, *]] {
           def apply[B](fb: RVT[F, S, B]): RVT[F, S, B] =
-            RVT(fb.simF.map(sim => (s: S) => poll(sim(s))))
+            RVT(F.map(fb.simF)(sim => (s: S) => poll(sim(s))))
         }
 
-        body(poll2).simF.map(sim => (s: S) => sim(s))
+        F.map(body(poll2).simF)(sim => (s: S) => sim(s))
       }
     )
 
@@ -367,7 +368,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E]
   override def start[A](fa: RVT[F, S, A]): RVT[F, S, Fiber[RVT[F, S, *], E, A]] =
     RVT.fromSim(s0 => {
       val s1 = S.unsafeSplit(s0)
-      F.start(fa.unsafeSimulate(s1)).map(liftFiber)
+      F.map(F.start(fa.unsafeSimulate(s1)))(liftFiber)
     })
 
   override def racePair[A, B](fa: RVT[F, S, A], fb: RVT[F, S, B]): RVT[
@@ -379,7 +380,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E]
     RVT.fromSim(s0 => {
       val s1 = S.unsafeSplit(s0)
       val s2 = S.unsafeSplit(s0)
-      F.racePair(fa.unsafeSimulate(s1), fb.unsafeSimulate(s2)).map {
+      F.map(F.racePair(fa.unsafeSimulate(s1), fb.unsafeSimulate(s2))) {
         case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
         case Right((fib, oc)) => Right((liftFiber(fib), liftOutcome(oc)))
       }
@@ -469,10 +470,10 @@ sealed private[schrodinger] trait RVTAsync[F[_], S]
               val natT: RVT[F, S, *] ~> RVT[G, S, *] =
                 new (RVT[F, S, *] ~> RVT[G, S, *]) {
                   override def apply[A](fa: RVT[F, S, A]): RVT[G, S, A] =
-                    RVT(nat(fa.simF.map(sim => (s: S) => nat(sim(s)))))
+                    RVT(nat(F.map(fa.simF)(sim => (s: S) => nat(sim(s)))))
                 }
 
-              body[RVT[G, S, *]].apply(cb, RVT.liftF(ha), natT).simF.flatMap(_(gen))
+              G.flatMap(body[RVT[G, S, *]].apply(cb, RVT.liftF(ha), natT).simF)(_(gen))
             }
           }
         }

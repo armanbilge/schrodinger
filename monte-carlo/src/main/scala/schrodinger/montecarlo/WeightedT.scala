@@ -632,7 +632,7 @@ sealed private[montecarlo] trait WeightedTMonadCancel[F[_], W, E]
   override def onCancel[A](
       fa: WeightedT[F, W, A],
       fin: WeightedT[F, W, Unit]): WeightedT[F, W, A] =
-    WeightedT(F.onCancel(fa.value, fin.value.void))
+    WeightedT(F.onCancel(fa.value, F.void(fin.value)))
 
   def forceR[A, B](fa: WeightedT[F, W, A])(fb: WeightedT[F, W, B]): WeightedT[F, W, B] =
     WeightedT(F.forceR(fa.value)(fb.value))
@@ -650,7 +650,7 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
     WeightedT.liftF(F.unique)
 
   def start[A](fa: WeightedT[F, W, A]): WeightedT[F, W, Fiber[WeightedT[F, W, *], E, A]] =
-    WeightedT.liftF(F.start(fa.value).map(liftFiber))
+    WeightedT.liftF(F.map(F.start(fa.value))(liftFiber))
 
   def never[A]: WeightedT[F, W, A] = WeightedT.liftF(F.never)
 
@@ -664,7 +664,7 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
       (Fiber[WeightedT[F, W, *], E, A], Outcome[WeightedT[F, W, *], E, B])]] = {
     WeightedT.liftF(
       F.uncancelable(poll =>
-        poll(F.racePair(fa.value, fb.value)).map {
+        F.map(poll(F.racePair(fa.value, fb.value))) {
           case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
           case Right((fib, oc)) => Right((liftFiber(fib), liftOutcome(oc)))
         })
@@ -674,13 +674,13 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
   override def race[A, B](
       fa: WeightedT[F, W, A],
       fb: WeightedT[F, W, B]): WeightedT[F, W, Either[A, B]] =
-    WeightedT(F.race(fa.value, fb.value).map(_.bisequence))
+    WeightedT(F.map(F.race(fa.value, fb.value))(_.bisequence))
 
   override def both[A, B](
       fa: WeightedT[F, W, A],
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
-    WeightedT(F.both(fa.value, fb.value).map {
-      case (Heavy(w1, a), Heavy(w2, b)) => Weighted(w1 |+| w2, a -> b)
+    WeightedT(F.map(F.both(fa.value, fb.value)) {
+      case (Heavy(w1, a), Heavy(w2, b)) => Weighted(W0.combine(w1, w2), a -> b)
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     })
@@ -690,14 +690,14 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
     W,
     Either[Outcome[WeightedT[F, W, *], E, A], Outcome[WeightedT[F, W, *], E, B]]] =
     WeightedT.liftF(
-      F.raceOutcome(fa.value, fb.value).map(_.bimap(liftOutcome(_), liftOutcome(_))))
+      F.map(F.raceOutcome(fa.value, fb.value))(_.bimap(liftOutcome(_), liftOutcome(_))))
 
   override def bothOutcome[A, B](fa: WeightedT[F, W, A], fb: WeightedT[F, W, B]): WeightedT[
     F,
     W,
     (Outcome[WeightedT[F, W, *], E, A], Outcome[WeightedT[F, W, *], E, B])] =
     WeightedT.liftF(
-      F.bothOutcome(fa.value, fb.value).map(_.bimap(liftOutcome(_), liftOutcome(_))))
+      F.map(F.bothOutcome(fa.value, fb.value))(_.bimap(liftOutcome(_), liftOutcome(_))))
 
   private def liftOutcome[A](
       oc: Outcome[F, E, Weighted[W, A]]): Outcome[WeightedT[F, W, *], E, A] =
@@ -711,7 +711,7 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
     new Fiber[WeightedT[F, W, *], E, A] {
       def cancel: WeightedT[F, W, Unit] = WeightedT.liftF(fib.cancel)
       def join: WeightedT[F, W, Outcome[WeightedT[F, W, *], E, A]] =
-        WeightedT.liftF(fib.join.map(liftOutcome))
+        WeightedT.liftF(F.map(fib.join)(liftOutcome))
     }
 
 }
