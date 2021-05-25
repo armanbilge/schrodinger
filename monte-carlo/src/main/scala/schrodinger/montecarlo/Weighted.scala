@@ -32,7 +32,7 @@ import cats.{
 }
 import cats.syntax.all._
 import litter.{CommutativeZeroMonoid, ZeroGroup, ZeroMonoid}
-import schrodinger.montecarlo.Weighted.{Heavy, Weightless, WeightlessImpl}
+import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
 
 import scala.annotation.tailrec
 
@@ -77,8 +77,8 @@ sealed abstract class Weighted[W, +A] extends Product with Serializable {
     show(Show.fromToString, Show.fromToString)
 
   final def show[B >: A](implicit A: Show[B], W: Show[W]): String = this match {
-    case Heavy(w, a) => s"Weighted(${W.show(w)}, ${A.show(a)})"
-    case Weightless(w) => s"Weighted(${W.show(w)}, ?)"
+    case Heavy(w, a) => s"Heavy(${W.show(w)}, ${A.show(a)})"
+    case Weightless(w) => s"Weightless(${W.show(w)})"
   }
 
   final def ===[B >: A](that: Weighted[W, B])(implicit A: Eq[B], W: Eq[W]): Boolean =
@@ -87,35 +87,21 @@ sealed abstract class Weighted[W, +A] extends Product with Serializable {
       case (Weightless(wa), Weightless(wb)) => W.eqv(wa, wb)
       case _ => false
     }
-
 }
 
 object Weighted extends WeightedInstances with WeightedFunctions {
 
-  sealed abstract class Heavy[W, +A] extends Weighted[W, A] {
-    def value: A
-    final override def isWeightless: Boolean = false
-  }
-  final private[montecarlo] case class HeavyImpl[W, +A](weight: W, value: A) extends Heavy[W, A]
-
-  object Heavy {
-    private[montecarlo] def apply[W, A](weight: W, value: A): Heavy[W, A] =
-      HeavyImpl(weight, value)
-
-    def unapply[W, A](heavy: Heavy[W, A]): Some[(W, A)] =
-      Some((heavy.weight, heavy.value))
+  final case class Heavy[W, +A](weight: W, value: A) extends Weighted[W, A] {
+    override def isWeightless = false
   }
 
-  sealed abstract class Weightless[W] extends Weighted[W, Nothing] {
-    final override def isWeightless: Boolean = true
+  final case class Weightless[W](weight: W) extends Weighted[W, Nothing] {
+    override def isWeightless = true
   }
-  final private[montecarlo] case class WeightlessImpl[W](weight: W) extends Weightless[W]
 
   object Weightless {
     def apply[W](implicit W: ZeroMonoid[W]): Weightless[W] =
-      WeightlessImpl(W.absorbing)
-    def unapply[W](weightless: Weightless[W]): Some[W] =
-      Some(weightless.weight)
+      Weightless(W.absorbing)
   }
 }
 
@@ -341,5 +327,5 @@ sealed private[montecarlo] trait WeightedFunctions {
     Heavy(W.empty, a)
 
   def weightless[W, A](implicit W: ZeroMonoid[W]): Weighted[W, A] =
-    WeightlessImpl(W.absorbing)
+    Weightless[W]
 }
