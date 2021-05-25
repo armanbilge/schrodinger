@@ -30,7 +30,6 @@ import cats.{
   Semigroup,
   Show
 }
-import cats.syntax.all._
 import litter.{CommutativeZeroMonoid, ZeroGroup, ZeroMonoid}
 import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
 
@@ -53,7 +52,7 @@ sealed abstract class Weighted[W, +A] extends Product with Serializable {
     this match {
       case Heavy(wa, a) =>
         f(a) match {
-          case Heavy(wb, b) => Weighted(wa |+| wb, b)
+          case Heavy(wb, b) => Weighted(W0.combine(wa, wb), b)
           case weightless @ Weightless(_) => weightless
         }
       case weightless @ Weightless(_) => weightless
