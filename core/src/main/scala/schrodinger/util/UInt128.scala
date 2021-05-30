@@ -29,9 +29,10 @@ final private[schrodinger] case class UInt128(hi: Long, lo: Long) {
   }
 
   def *(that: UInt128): UInt128 = {
-    val a = UInt128(multiplyHighUnsigned(this.lo, that.lo), this.lo * that.lo)
-    val b = UInt128(this.lo * that.hi + this.hi * that.lo, 0)
-    a + b
+    val lo = this.lo * that.lo
+    val hi = multiplyHighUnsigned(this.lo, that.lo) +
+      this.lo * that.hi + this.hi * that.lo
+    UInt128(hi, lo)
   }
 
   private def multiplyHighUnsigned(x: Long, y: Long) = {
