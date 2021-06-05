@@ -18,37 +18,43 @@ package schrodinger.random
 
 import cats.Monad
 import cats.syntax.all._
-import schrodinger.kernel.Random
+import schrodinger.kernel.{Exponential, Random}
 
-object Exponential {
+object exponential extends ExponentialInstances
 
-  def apply[F[_]: Monad: Random](rate: Double): F[Double] =
-    standard.map(_ / rate)
+trait ExponentialInstances {
 
-  def standard[F[_]: Monad: Random]: F[Double] = {
-    import AhrensDieterConstants._
-    val umin = Vector.iterate(Uniform.double, 16)(_.map2(Uniform.double)(math.min))
-    Uniform.double.flatMap { _u =>
-      var a = 0.0
-      var u = _u
+  implicit def schrodingerRandomExponentialForDouble[F[_]: Monad: Random]
+      : Exponential[F, Double] =
+    new Exponential[F, Double] {
+      override def apply(rate: Double): F[Double] =
+        standard.map(_ / rate)
 
-      while (u < 0.5) {
-        a += ExponentialSaQi(0)
-        u *= 2
-      }
+      override val standard: F[Double] = {
+        import AhrensDieterConstants._
+        val umin = Vector.iterate(Uniform.double, 16)(_.map2(Uniform.double)(math.min))
+        Uniform.double.flatMap { _u =>
+          var a = 0.0
+          var u = _u
 
-      u += u - 1
+          while (u < 0.5) {
+            a += ExponentialSaQi(0)
+            u *= 2
+          }
 
-      if (u <= ExponentialSaQi(0))
-        (a + u).pure
-      else {
-        var i = 1
-        while (u > ExponentialSaQi(i)) i += 1
+          u += u - 1
 
-        umin(i).map(a + _ * ExponentialSaQi(0))
+          if (u <= ExponentialSaQi(0))
+            (a + u).pure
+          else {
+            var i = 1
+            while (u > ExponentialSaQi(i)) i += 1
+
+            umin(i).map(a + _ * ExponentialSaQi(0))
+          }
+        }
       }
     }
-  }
 
   private object AhrensDieterConstants {
     val ExponentialSaQi = {

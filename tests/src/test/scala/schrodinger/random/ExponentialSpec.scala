@@ -21,13 +21,15 @@ import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampl
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
+import schrodinger.kernel.Exponential
+import schrodinger.random.exponential._
 
 class ExponentialSpec extends Specification with ScalaCheck {
 
   "Exponential" should {
     "generate standard exponential variates" in {
       prop { (rng: SplitMix64) =>
-        val x = Exponential.standard[RV[SplitMix64, *]].simulate(rng).value
+        val x = Exponential.standard[RV[SplitMix64, *], Double].simulate(rng).value
         val y = new AhrensDieterExponentialSampler(rng, 1.0).sample()
         x should_=== y
       }
