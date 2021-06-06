@@ -21,7 +21,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
-import schrodinger.random.Uniform
+import schrodinger.kernel.Random
 
 import java.util.SplittableRandom
 
@@ -40,7 +40,7 @@ class SplitMixSpec extends Specification with ScalaCheck {
 
     "generate ints" in {
       prop { (state: SplitMix) =>
-        val ints = List.fill(N)(Uniform.int[RV[SplitMix, *]]).sequence.simulate(state).value
+        val ints = List.fill(N)(Random[RV[SplitMix, *]].int).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedInts = List.fill(N)(random.nextInt())
         ints should_=== expectedInts
@@ -49,7 +49,7 @@ class SplitMixSpec extends Specification with ScalaCheck {
 
     "generate longs" in {
       prop { (state: SplitMix) =>
-        val longs = List.fill(N)(Uniform.long[RV[SplitMix, *]]).sequence.simulate(state).value
+        val longs = List.fill(N)(Random[RV[SplitMix, *]].long).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedLongs = List.fill(N)(random.nextLong())
         longs should_=== expectedLongs

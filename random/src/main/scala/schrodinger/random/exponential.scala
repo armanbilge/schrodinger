@@ -18,13 +18,13 @@ package schrodinger.random
 
 import cats.Monad
 import cats.syntax.all._
-import schrodinger.kernel.{Exponential, Random}
+import schrodinger.kernel.{Exponential, Uniform}
 
 object exponential extends ExponentialInstances
 
 trait ExponentialInstances {
 
-  implicit def schrodingerRandomExponentialForDouble[F[_]: Monad: Random]
+  implicit def schrodingerRandomExponentialForDouble[F[_]: Monad: Uniform[*[_], Unit, Double]]
       : Exponential[F, Double] =
     new Exponential[F, Double] {
       override def apply(rate: Double): F[Double] =
@@ -32,8 +32,8 @@ trait ExponentialInstances {
 
       override val standard: F[Double] = {
         import AhrensDieterConstants._
-        val umin = Vector.iterate(Uniform.double, 16)(_.map2(Uniform.double)(math.min))
-        Uniform.double.flatMap { _u =>
+        val umin = Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(math.min))
+        Uniform.standard.flatMap { _u =>
           var a = 0.0
           var u = _u
 

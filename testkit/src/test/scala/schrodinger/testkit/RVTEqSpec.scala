@@ -23,7 +23,8 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
-import schrodinger.random.Bernoulli
+import schrodinger.kernel.Bernoulli
+import schrodinger.random.all._
 import schrodinger.rng.SplitMix
 import schrodinger.rng.SplitMix._
 import schrodinger.testkit.RVTEqSpec.DifferentRandoms
@@ -36,6 +37,8 @@ object RVTEqSpec {
 
 class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances {
 
+  implicit val eval: Eval[Boolean] => Some[Boolean] = eval => Some(eval.value)
+
   implicit object evalClock extends Clock[Eval] {
     override def applicative: Applicative[Eval] = Eval.catsBimonadForEval
     override def monotonic: Eval[FiniteDuration] = Eval.later(System.nanoTime().nanoseconds)
@@ -45,7 +48,9 @@ class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances {
   implicit val arbitrary: Arbitrary[DifferentRandoms[SplitMix]] = Arbitrary(
     for {
       p <- Gen.choose[Double](0, 0.25)
-    } yield DifferentRandoms(Bernoulli[RV[SplitMix, *]](p), Bernoulli[RV[SplitMix, *]](1 - p))
+    } yield DifferentRandoms(
+      Bernoulli[RV[SplitMix, *], Double, Boolean](p),
+      Bernoulli[RV[SplitMix, *], Double, Boolean](1 - p))
   )
 
   implicit val seeds: ExhaustiveCheck[SplitMix] =

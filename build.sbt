@@ -44,6 +44,7 @@ ThisBuild / crossScalaVersions := Seq(Scala3, Scala213)
 
 val CatsVersion = "2.6.1"
 val CatsEffectVersion = "3.1.1"
+val CatsMtlVersion = "1.2.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.0.4"
 val LitterVersion = "0.1.1"
@@ -82,7 +83,8 @@ lazy val random = project
     name := "schrodinger-random",
     sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % CatsVersion
+      "org.typelevel" %% "cats-core" % CatsVersion,
+      "org.typelevel" %% "cats-mtl" % CatsMtlVersion
     )
   )
 
@@ -131,7 +133,7 @@ lazy val tests = project
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(random, testkit % Test)
+  .dependsOn(kernel, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     sonatypeCredentialHost := "s01.oss.sonatype.org",

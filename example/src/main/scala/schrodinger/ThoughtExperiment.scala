@@ -22,8 +22,8 @@ import cats.effect.syntax.all._
 import cats.effect.{Async, IO, IOApp, Ref}
 import cats.syntax.all._
 import schrodinger.rng.SplitMix
-import schrodinger.kernel.Random
-import schrodinger.random.Exponential
+import schrodinger.kernel.Exponential
+import schrodinger.random.all._
 
 import scala.concurrent.duration._
 
@@ -35,7 +35,7 @@ object ThoughtExperiment extends IOApp.Simple {
 
   val decayRate = math.log(2)
 
-  def decayingAtom[F[_]: Async: Random](geigerCounter: CountDownLatch[F]) =
+  def decayingAtom[F[_]: Async: Exponential[*[_], Double]](geigerCounter: CountDownLatch[F]) =
     for {
       decayAfter <- Exponential(decayRate)
       _ <- Async[F].sleep(decayAfter.seconds)
@@ -48,7 +48,7 @@ object ThoughtExperiment extends IOApp.Simple {
       _ <- cat.set(DeadCat)
     } yield ()
 
-  def experiment[F[_]: Async: Random] =
+  def experiment[F[_]: Async: Exponential[*[_], Double]] =
     for {
       cat <- Ref.of[F, Cat](LiveCat)
       geigerCounter <- CountDownLatch(1)

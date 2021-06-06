@@ -26,7 +26,7 @@ import org.apache.commons.math3.special.Gamma
 import org.scalacheck.{Arbitrary, Gen}
 import schrodinger.RVT
 import schrodinger.rng.{Rng, SplitMix}
-import schrodinger.random.{Bernoulli, Categorical}
+import schrodinger.kernel.{Bernoulli, Categorical}
 
 trait RVTestInstances extends LowPriorityRVInstances {
 
@@ -55,12 +55,14 @@ trait RVTestInstances extends LowPriorityRVInstances {
       implicit override val eval = ev6
     }
 
-  implicit def schrodingerTestKitArbitraryForRVT[F[_]: Monad, S: Rng, A](
-      implicit ev: Discrete[A]): Arbitrary[RVT[F, S, A]] =
+  implicit def schrodingerTestKitArbitraryForRVT[F[_]: Monad, S, A](
+      implicit ev: Discrete[A],
+      Bernoulli: Bernoulli[RVT[F, S, *], Double, Boolean],
+      Categorical: Categorical[RVT[F, S, *], Seq[Double], Int]): Arbitrary[RVT[F, S, A]] =
     (ev.allValues, ev.dirichletPrior) match {
       case (List(a), _) => Arbitrary(Arbitrary.arbUnit.arbitrary.map(_ => RVT.pure(a)))
       case (List(a, b), List(1.0, 1.0)) =>
-        Arbitrary(Gen.double.map(p => Bernoulli[RVT[F, S, *]](p).map(if (_) a else b)))
+        Arbitrary(Gen.double.map(p => Bernoulli(p).map(if (_) a else b)))
       case (a, alpha) if alpha.forall(_ == 1.0) =>
         Arbitrary(
           for {
@@ -71,7 +73,7 @@ trait RVTestInstances extends LowPriorityRVInstances {
                   x <- Gen.exponential(1.0)
                 } yield x :: tail
             }
-          } yield Categorical[RVT[F, S, *]](a.zip(p).toMap)
+          } yield Categorical(p).map(a)
         )
       case _ =>
         ??? // TODO Sample probabilities from Dirichlet to create a categorical distribution

@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package schrodinger.kernel
+package schrodinger.random
 
-trait Bernoulli[F[_], R, B] {
-  def fair: F[B]
-  def apply(successProbability: R): F[B]
-}
-
-object Bernoulli {
-  def fair[F[_], R, B](implicit b: Bernoulli[F, R, B]): F[B] = b.fair
-  def apply[F[_], R, B](successProbability: R)(implicit b: Bernoulli[F, R, B]): F[B] =
-    b(successProbability)
-}
+object all
+    extends BernoulliInstances
+    with CategoricalInstances
+    with ExponentialInstances
+    with GaussianInstances
+    with UniformInstances

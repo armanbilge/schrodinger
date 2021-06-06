@@ -22,7 +22,7 @@ import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
 import schrodinger.kernel.Exponential
-import schrodinger.random.exponential._
+import schrodinger.random.all._
 
 class ExponentialSpec extends Specification with ScalaCheck {
 

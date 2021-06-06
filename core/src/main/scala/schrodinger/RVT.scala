@@ -236,10 +236,10 @@ sealed private[schrodinger] trait RVTPseudoRandom[F[_], S0]
   override def simulate[A](fa: RVT[F, S, A])(seed: S): F[A] =
     fa.simulate(seed)
 
-  override def randomInt: RVT[F, S, Int] =
+  override def int: RVT[F, S, Int] =
     RVT.fromSim((s: S) => F.pure(S.unsafeNextInt(s)))
 
-  override def randomLong: RVT[F, S, Long] =
+  override def long: RVT[F, S, Long] =
     RVT.fromSim((s: S) => F.pure(S.unsafeNextLong(s)))
 }
 

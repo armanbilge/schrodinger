@@ -18,15 +18,16 @@ package schrodinger.random
 
 import cats.Functor
 import cats.syntax.all._
-import schrodinger.kernel.Random
+import schrodinger.kernel.{Bernoulli, Random, Uniform}
 
-object Bernoulli {
-  def fair[F[_]: Functor: Random]: F[Boolean] =
-    Uniform.int.map(_ >= 0)
+object bernoulli extends BernoulliInstances
 
-  def apply[F[_]: Functor: Random](p: Float): F[Boolean] =
-    Uniform.float.map(_ < p)
-
-  def apply[F[_]: Functor: Random](p: Double): F[Boolean] =
-    Uniform.double.map(_ < p)
+trait BernoulliInstances {
+  implicit def schrodingerRandomBernoulliForDoubleBoolean[
+      F[_]: Functor: Random: Uniform[*[_], Unit, Double]]: Bernoulli[F, Double, Boolean] =
+    new Bernoulli[F, Double, Boolean] {
+      override val fair: F[Boolean] = Random[F].int.map(_ >= 0)
+      override def apply(successProbability: Double): F[Boolean] =
+        Uniform.standard.map(_ < successProbability)
+    }
 }

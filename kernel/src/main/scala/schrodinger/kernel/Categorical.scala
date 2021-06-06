@@ -19,3 +19,7 @@ package schrodinger.kernel
 trait Categorical[F[_], S, A] {
   def apply(support: S): F[A]
 }
+
+object Categorical {
+  def apply[F[_], S, A](support: S)(implicit c: Categorical[F, S, A]): F[A] = c(support)
+}

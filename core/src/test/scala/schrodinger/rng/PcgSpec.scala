@@ -23,7 +23,7 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
-import schrodinger.random.Uniform
+import schrodinger.kernel.Random
 
 class PcgSpec extends Specification with ScalaCheck {
 
@@ -40,7 +40,7 @@ class PcgSpec extends Specification with ScalaCheck {
     "generate ints" in {
       prop { (state: Pcg32) =>
         val ints =
-          List.fill(N + 1)(Uniform.int[RV[Pcg32, *]]).sequence.simulate(state).value.tail
+          List.fill(N + 1)(Random[RV[Pcg32, *]].int).sequence.simulate(state).value.tail
         val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
         val expectedInts = List.fill(N)(provider.nextInt())
         ints should_=== expectedInts
