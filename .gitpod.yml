@@ -1,0 +1,16 @@
+image: armanbilge/metals-gitpod:latest
+tasks:
+  - init: initMetals
+    command: sbt
+vscode:
+  extensions:
+    - scala-lang.scala
+    - scalameta.metals
+github:
+  prebuilds:
+    master: true
+    branches: true
+    pullRequests: true
+    pullRequestsFromForks: true
+    addComment: false
+    addBadge: false
