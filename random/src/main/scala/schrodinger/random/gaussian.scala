@@ -23,10 +23,12 @@ import schrodinger.kernel.{Gaussian, Uniform}
 
 object gaussian extends GaussianInstances
 
+final case class CachedGaussian[A](value: A) extends AnyVal
+
 trait GaussianInstances {
 
   def schrodingerRandomGaussianForDouble[F[_]: Monad: Uniform[*[_], Unit, Double]](
-      implicit state: Stateful[F, Double]): Gaussian[F, Double] = {
+      implicit state: Stateful[F, CachedGaussian[Double]]): Gaussian[F, Double] = {
 
     final case class BoxMuller(x: Double, y: Double, s: Double)
     object BoxMuller {
@@ -35,16 +37,17 @@ trait GaussianInstances {
     }
 
     new Gaussian[F, Double] {
+      private val CachedNaN = CachedGaussian(Double.NaN)
 
       override def apply(mean: Double, standardDeviation: Double): F[Double] =
         standard.map(_ * standardDeviation + mean)
 
       override val standard: F[Double] = state.get.flatMap { cached =>
-        if (cached.isNaN) for {
+        if (cached.value.isNaN) for {
           (x, y) <- pair
-          _ <- state.set(y)
+          _ <- state.set(CachedGaussian(y))
         } yield x
-        else state.set(Double.NaN).as(cached)
+        else state.set(CachedNaN).as(cached.value)
       }
 
       private val boxMuller =
