@@ -99,10 +99,10 @@ final case class WeightedT[F[_], W, A](value: F[Weighted[W, A]]) {
     WeightedT {
       F.flatMap(value) {
         case weightless @ Weightless(_) => F.pure(weightless)
-        case Heavy(wa, a) =>
+        case Heavy(wa, da, a) =>
           F.map(f(a).value) {
             case weightless @ Weightless(_) => weightless
-            case Heavy(wb, b) => Weighted(W0.combine(wa, wb), b)
+            case Heavy(wb, db, b) => Weighted(wa |+| wb, da |+| db, b)
           }
       }
     }
@@ -121,7 +121,7 @@ final case class WeightedT[F[_], W, A](value: F[Weighted[W, A]]) {
       f: A => F[W])(implicit F: Monad[F], W0: ZeroGroup[W], W1: Eq[W]): WeightedT[F, W, A] =
     WeightedT {
       F.flatMap(value) {
-        case Heavy(w, a) => F.map(f(a))(fa => Weighted(W0.remove(fa, w), a))
+        case heavy @ Heavy(_, _, a) => F.map(f(a))(fa => heavy.importance(_ => fa))
         case weightless @ Weightless(_) => F.pure(weightless)
       }
     }
@@ -467,8 +467,8 @@ sealed private[montecarlo] trait WeightedTApply[F[_], W]
       f: (A, B) => Z
   ): Eval[WeightedT[F, W, Z]] =
     F.map2Eval(fa.value, fb.map(_.value)) {
-      case (Heavy(wa, a), Heavy(wb, b)) =>
-        Weighted(W0.combine(wa, wb), f(a, b))
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
+        Weighted(wa |+| wb, da |+| db, f(a, b))
       case _ => Weightless[W]
     }.map(WeightedT(_)) // F may have a lazy map2Eval
 
@@ -476,8 +476,8 @@ sealed private[montecarlo] trait WeightedTApply[F[_], W]
       fa: WeightedT[F, W, A],
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT(F.map(F.product(fa.value, fb.value)) {
-      case (Heavy(wa, a), Heavy(wb, b)) =>
-        Weighted(W0.combine(wa, wb), (a, b))
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
+        Weighted(wa |+| wb, da |+| db, (a, b))
       case _ => Weightless[W]
     })
 }
@@ -506,15 +506,16 @@ sealed private[montecarlo] trait WeightedTMonad[F[_], W]
 
     def step(wa: Weighted[W, A]): F[Either[Weighted[W, A], Weighted[W, B]]] = wa match {
       case weightless @ Weightless(_) => F.pure(Right(weightless))
-      case Heavy(w1, a) =>
+      case Heavy(w1, d1, a) =>
         val fwa: F[Weighted[W, Either[A, B]]] = fn(a).value
         F.map(fwa) {
           case weightless @ Weightless(_) => Right(weightless)
-          case Heavy(w2, aorb) =>
-            val combineW = W0.combine(w1, w2)
+          case Heavy(w2, d2, aorb) =>
+            val w = w1 |+| w2
+            val d = d1 |+| d2
             aorb match {
-              case Left(a) => Left(Weighted(combineW, a))
-              case Right(b) => Right(Weighted(combineW, b))
+              case Left(a) => Left(Weighted(w, d, a))
+              case Right(b) => Right(Weighted(w, d, b))
             }
         }
     }
@@ -588,7 +589,7 @@ sealed private[montecarlo] trait WeightedTContravariantMonoidal[F[_], W]
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT(
       F0.contramap(F0.product(fa.value, fb.value)) {
-        case Heavy(w, (a, b)) => (Heavy(w, a), Heavy(w, b))
+        case Heavy(w, d, (a, b)) => (Heavy(w, d, a), Heavy(w, d, b))
         case weightless @ Weightless(_) => (weightless, weightless)
       }
     )
@@ -680,7 +681,7 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E]
       fa: WeightedT[F, W, A],
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT(F.map(F.both(fa.value, fb.value)) {
-      case (Heavy(w1, a), Heavy(w2, b)) => Weighted(W0.combine(w1, w2), a -> b)
+      case (Heavy(w1, d1, a), Heavy(w2, d2, b)) => Weighted(w1 |+| w2, d1 |+| d2, a -> b)
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     })

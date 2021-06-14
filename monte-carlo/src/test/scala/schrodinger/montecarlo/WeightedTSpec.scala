@@ -62,14 +62,14 @@ class WeightedTSpec
           None,
           _ => None,
           {
-            case Some(Heavy(_, a)) => Some(a)
+            case Some(Heavy(_, _, a)) => Some(a)
             case _ => None
           })
     }
 
   implicit def weightedOrder[A](implicit ev: Order[Option[A]]): Order[Weighted[Int, A]] =
     Order.by {
-      case Heavy(_, a) => Some(a)
+      case Heavy(_, _, a) => Some(a)
       case _ => None
     }
 
@@ -80,7 +80,7 @@ class WeightedTSpec
   implicit def execWeightedTIO(sbool: WeightedT[IO, Int, Boolean])(
       implicit ticker: Ticker): Prop =
     ioBooleanToProp(sbool.value.map {
-      case Heavy(_, a) => a
+      case Heavy(_, _, a) => a
       case Weightless(_) => false
     })
 

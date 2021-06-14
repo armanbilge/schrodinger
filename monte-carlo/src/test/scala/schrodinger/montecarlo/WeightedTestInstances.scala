@@ -35,14 +35,15 @@ trait WeightedTestInstances {
     Arbitrary(
       for {
         w <- Arbitrary.arbitrary[W]
+        d <- Arbitrary.arbitrary[W]
         a <- Arbitrary.arbitrary[A]
-      } yield Weighted(w, a)
+      } yield Weighted(w, d, a)
     )
 
   implicit def schrodingerTestKitCogenForWeighted[A](
       implicit ev: Cogen[Option[A]]): Cogen[Weighted[Int, A]] =
     Cogen[Option[A]].contramap {
-      case Heavy(_, a) => Some(a)
+      case Heavy(_, _, a) => Some(a)
       case Weightless(_) => None
     }
 

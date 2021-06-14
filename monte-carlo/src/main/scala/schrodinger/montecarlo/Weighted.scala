@@ -30,6 +30,7 @@ import cats.{
   Semigroup,
   Show
 }
+import cats.syntax.all._
 import litter.{CommutativeZeroMonoid, ZeroGroup, ZeroMonoid}
 import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
 
@@ -38,21 +39,22 @@ import scala.annotation.tailrec
 sealed abstract class Weighted[W, +A] extends Product with Serializable {
 
   def weight: W
+  def density: W
 
   def isWeightless: Boolean
   final def isHeavy: Boolean = !isWeightless
 
   final def map[B](f: A => B): Weighted[W, B] = this match {
-    case Heavy(w, a) => Heavy(w, f(a))
+    case Heavy(w, d, a) => Heavy(w, d, f(a))
     case weightless @ Weightless(_) => weightless
   }
 
   final def flatMap[B](
       f: A => Weighted[W, B])(implicit W0: ZeroMonoid[W], W1: Eq[W]): Weighted[W, B] =
     this match {
-      case Heavy(wa, a) =>
+      case Heavy(wa, da, a) =>
         f(a) match {
-          case Heavy(wb, b) => Weighted(W0.combine(wa, wb), b)
+          case Heavy(wb, db, b) => Weighted(wa |+| wb, da |+| db, b)
           case weightless @ Weightless(_) => weightless
         }
       case weightless @ Weightless(_) => weightless
@@ -61,40 +63,43 @@ sealed abstract class Weighted[W, +A] extends Product with Serializable {
   final def product[B](
       b: Weighted[W, B])(implicit W0: ZeroMonoid[W], W1: Eq[W]): Weighted[W, (A, B)] =
     (this, b) match {
-      case (Heavy(wa, a), Heavy(wb, b)) => Weighted(W0.combine(wa, wb), (a, b))
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) => Weighted(wa |+| wb, da |+| db, (a, b))
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     }
 
   final def importance(f: A => W)(implicit W0: ZeroGroup[W], W1: Eq[W]): Weighted[W, A] =
     this match {
-      case Heavy(w, a) => Weighted(W0.remove(f(a), w), a)
+      case Heavy(w, d, a) =>
+        val fa = f(a)
+        Weighted(w |+| (fa |-| d), fa, a)
       case weightless @ Weightless(_) => weightless
     }
 
   final override def toString: String =
     show(Show.fromToString, Show.fromToString)
 
-  final def show[B >: A](implicit A: Show[B], W: Show[W]): String = this match {
-    case Heavy(w, a) => s"Heavy(${W.show(w)}, ${A.show(a)})"
-    case Weightless(w) => s"Weightless(${W.show(w)})"
+  final def show[B >: A: Show](implicit W: Show[W]): String = this match {
+    case Heavy(w, d, a) => s"Heavy(${w.show}, ${d.show}, ${(a: B).show})"
+    case Weightless(w) => s"Weightless(${w.show})"
   }
 
-  final def ===[B >: A](that: Weighted[W, B])(implicit A: Eq[B], W: Eq[W]): Boolean =
+  final def ===[B >: A: Eq](that: Weighted[W, B])(implicit W: Eq[W]): Boolean =
     (this, that) match {
-      case (Heavy(wa, a), Heavy(wb, b)) => W.eqv(wa, wb) && A.eqv(a, b)
-      case (Weightless(wa), Weightless(wb)) => W.eqv(wa, wb)
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) => wa === wb && da === db && b === a
+      case (Weightless(wa), Weightless(wb)) => wa === wb
       case _ => false
     }
 }
 
 object Weighted extends WeightedInstances with WeightedFunctions {
 
-  final case class Heavy[W, +A](weight: W, value: A) extends Weighted[W, A] {
+  final case class Heavy[W, +A](weight: W, density: W, value: A) extends Weighted[W, A] {
     override def isWeightless = false
   }
 
   final case class Weightless[W](weight: W) extends Weighted[W, Nothing] {
+    override def density: W = weight
     override def isWeightless = true
   }
 
@@ -227,14 +232,14 @@ sealed abstract private[montecarlo] class WeightedMonad[W]
     @tailrec
     def loop(wab: Weighted[W, Either[A, B]]): Weighted[W, B] = wab match {
       case weightless @ Weightless(_) => weightless
-      case Heavy(w, Right(b)) => Heavy(w, b)
-      case Heavy(w1, aorb) =>
-        aorb match {
-          case Right(b) => Heavy(w1, b)
+      case Heavy(w, d, Right(b)) => Heavy(w, d, b)
+      case Heavy(w1, d1, ab) =>
+        ab match {
+          case Right(b) => Heavy(w1, d1, b)
           case Left(a) =>
             f(a) match {
               case weightless @ Weightless(_) => weightless
-              case Heavy(w2, aorb) => loop(Weighted(W0.combine(w1, w2), aorb))
+              case Heavy(w2, d2, ab) => loop(Weighted(w1 |+| w2, d1 |+| d2, ab))
             }
         }
 
@@ -258,7 +263,7 @@ sealed abstract private[montecarlo] class WeightedSemigroup[W, A]
   implicit def W1: Eq[W]
   override def combine(wx: Weighted[W, A], wy: Weighted[W, A]): Weighted[W, A] =
     (wx, wy) match {
-      case (Heavy(wx, x), Heavy(wy, y)) => Weighted(W0.combine(wx, wy), A.combine(x, y))
+      case (Heavy(wx, dx, x), Heavy(wy, dy, y)) => Weighted(wx |+| wy, dx |+| dy, x |+| y)
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     }
@@ -309,21 +314,26 @@ sealed abstract private[montecarlo] class WeightedAlign[W] extends Align[Weighte
 
   override def align[A, B](fa: Weighted[W, A], fb: Weighted[W, B]): Weighted[W, Ior[A, B]] =
     (fa, fb) match {
-      case (Heavy(wa, a), Heavy(wb, b)) => Weighted(W0.combine(wa, wb), Ior.both(a, b))
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
+        Weighted(wa |+| wb, da |+| db, Ior.both(a, b))
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     }
 }
 
 sealed private[montecarlo] trait WeightedFunctions {
-  def apply[W: Eq, A](weight: W, value: A)(implicit W: ZeroMonoid[W]): Weighted[W, A] =
+  def apply[W: Eq, A](weight: W, density: W, value: A)(
+      implicit W: ZeroMonoid[W]): Weighted[W, A] =
     if (W.isAbsorbing(weight))
       weightless[W, A]
     else
-      Heavy(weight, value)
+      Heavy(weight, density, value)
+
+  def apply[W, A](density: W, value: A)(implicit W: Monoid[W]): Weighted[W, A] =
+    Heavy(W.empty, density, value)
 
   def pure[W, A](a: A)(implicit W: Monoid[W]): Weighted[W, A] =
-    Heavy(W.empty, a)
+    Heavy(W.empty, W.empty, a)
 
   def weightless[W, A](implicit W: ZeroMonoid[W]): Weighted[W, A] =
     Weightless[W]
