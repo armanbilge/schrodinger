@@ -42,7 +42,7 @@ addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/he
 
 val CatsVersion = "2.6.1"
 val CatsEffectVersion = "3.1.1"
-val Specs2Version = "4.11.0"
+val Specs2Version = "4.12.4-js-ec"
 val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.1.6"
 
