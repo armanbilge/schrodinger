@@ -43,7 +43,7 @@ val Scala3 = "3.0.0"
 ThisBuild / crossScalaVersions := Seq(Scala3, Scala213)
 
 val CatsVersion = "2.6.1"
-val CatsEffectVersion = "3.1.1"
+val CatsEffectVersion = "3.2.2"
 val CatsMtlVersion = "1.2.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.0.4"
