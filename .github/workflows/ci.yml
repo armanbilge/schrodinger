@@ -12,7 +12,7 @@ on:
     branches: ['**']
   push:
     branches: ['**']
-    tags: [v_]
+    tags: [v*]
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [3.0.1, 2.13.6]
+        scala: [3.0.1]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -73,7 +73,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        scala: [2.13.6]
+        scala: [3.0.1]
         java: [adopt@1.8]
     runs-on: ${{ matrix.os }}
     steps:
@@ -105,16 +105,6 @@ jobs:
           name: target-${{ matrix.os }}-3.0.1-${{ matrix.java }}
 
       - name: Inflate target directories (3.0.1)
-        run: |
-          tar xf targets.tar
-          rm targets.tar
-
-      - name: Download target directories (2.13.6)
-        uses: actions/download-artifact@v2
-        with:
-          name: target-${{ matrix.os }}-2.13.6-${{ matrix.java }}
-
-      - name: Inflate target directories (2.13.6)
         run: |
           tar xf targets.tar
           rm targets.tar
