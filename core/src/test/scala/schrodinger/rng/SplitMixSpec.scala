@@ -16,7 +16,7 @@
 
 package schrodinger.rng
 
-import cats.syntax.all._
+import cats.syntax.all.given
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
@@ -25,11 +25,11 @@ import schrodinger.kernel.Random
 
 import java.util.SplittableRandom
 
-class SplitMixSpec extends Specification with ScalaCheck {
+class SplitMixSpec extends Specification with ScalaCheck:
 
   val N = 100
 
-  implicit val arbitraryState: Arbitrary[SplitMix] = Arbitrary(
+  given Arbitrary[SplitMix] = Arbitrary(
     Gen.long.map(SplitMix(_, SplitMix.GoldenGamma))
   )
 
@@ -40,7 +40,7 @@ class SplitMixSpec extends Specification with ScalaCheck {
 
     "generate ints" in {
       prop { (state: SplitMix) =>
-        val ints = List.fill(N)(Random[RV[SplitMix, *]].int).sequence.simulate(state).value
+        val ints = List.fill(N)(Random[RV[SplitMix, _]].int).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedInts = List.fill(N)(random.nextInt())
         ints should_=== expectedInts
@@ -49,7 +49,7 @@ class SplitMixSpec extends Specification with ScalaCheck {
 
     "generate longs" in {
       prop { (state: SplitMix) =>
-        val longs = List.fill(N)(Random[RV[SplitMix, *]].long).sequence.simulate(state).value
+        val longs = List.fill(N)(Random[RV[SplitMix, _]].long).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedLongs = List.fill(N)(random.nextLong())
         longs should_=== expectedLongs
@@ -59,12 +59,10 @@ class SplitMixSpec extends Specification with ScalaCheck {
     "split" in {
       prop { (state: SplitMix) =>
         val random = splittableRandom(state)
-        import SplitMix.schrodingerRngSplittableRngForSplitMix._
-        val ints = List.fill(N)(unsafeNextInt(unsafeSplit(state)))
+        import SplitMix.schrodingerRngSplittableRngForSplitMix.given
+        val ints = List.fill(N)(state.unsafeSplit().unsafeNextInt())
         val expectedInts = List.fill(N)(random.split().nextInt())
         ints should_=== expectedInts
       }
     }
   }
-
-}

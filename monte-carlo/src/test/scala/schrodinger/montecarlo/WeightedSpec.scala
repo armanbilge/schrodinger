@@ -18,7 +18,7 @@ package schrodinger.montecarlo
 
 import cats.kernel.CommutativeMonoid
 import cats.kernel.laws.discipline.{CommutativeMonoidTests, SerializableTests}
-import cats.laws.discipline.arbitrary._
+import cats.laws.discipline.arbitrary.given
 import cats.laws.discipline.{AlignTests, CommutativeMonadTests, InvariantMonoidalTests}
 import cats.{Align, CommutativeMonad, InvariantMonoidal}
 import org.specs2.ScalaCheck
@@ -29,14 +29,14 @@ class WeightedSpec
     extends Specification
     with Discipline
     with ScalaCheck
-    with WeightedTestInstances {
+    with WeightedTestInstances:
 
   checkAll(
     "CommutativeMonad[Weighted]",
-    CommutativeMonadTests[Weighted[Int, *]].commutativeMonad[Int, Int, Int])
+    CommutativeMonadTests[Weighted[Int, _]].commutativeMonad[Int, Int, Int])
   checkAll(
     "CommutativeMonad[Weighted]",
-    SerializableTests.serializable(CommutativeMonad[Weighted[Int, *]]))
+    SerializableTests.serializable(CommutativeMonad[Weighted[Int, _]]))
 
   checkAll(
     "CommutativeMonoid[Weighted]",
@@ -47,12 +47,10 @@ class WeightedSpec
 
   checkAll(
     "InvariantMonoidal[Weighted]",
-    InvariantMonoidalTests[Weighted[Int, *]].invariantMonoidal[Int, Int, Int])
+    InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int])
   checkAll(
     "InvariantMonoidal[Weighted]",
-    SerializableTests.serializable(InvariantMonoidal[Weighted[Int, *]]))
+    SerializableTests.serializable(InvariantMonoidal[Weighted[Int, _]]))
 
-  checkAll("Align[Weighted]", AlignTests[Weighted[Int, *]].align[Int, Int, Int, Int])
-  checkAll("Align[Weighted]", SerializableTests.serializable(Align[Weighted[Int, *]]))
-
-}
+  checkAll("Align[Weighted]", AlignTests[Weighted[Int, _]].align[Int, Int, Int, Int])
+  checkAll("Align[Weighted]", SerializableTests.serializable(Align[Weighted[Int, _]]))

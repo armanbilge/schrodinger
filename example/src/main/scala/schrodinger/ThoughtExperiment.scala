@@ -18,16 +18,16 @@ package schrodinger
 
 import cats.Monad
 import cats.effect.std.CountDownLatch
-import cats.effect.syntax.all._
+import cats.effect.syntax.all.given
 import cats.effect.{Async, IO, IOApp, Ref}
-import cats.syntax.all._
+import cats.syntax.all.given
 import schrodinger.rng.SplitMix
 import schrodinger.kernel.Exponential
-import schrodinger.random.all._
+import schrodinger.random.all.given
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.given
 
-object ThoughtExperiment extends IOApp.Simple {
+object ThoughtExperiment extends IOApp.Simple:
 
   sealed trait Cat
   case object LiveCat extends Cat
@@ -35,7 +35,8 @@ object ThoughtExperiment extends IOApp.Simple {
 
   val decayRate = math.log(2)
 
-  def decayingAtom[F[_]: Async: Exponential[*[_], Double]](geigerCounter: CountDownLatch[F]) =
+  def decayingAtom[F[_]: Async](geigerCounter: CountDownLatch[F])(
+      using Exponential[F, Double]) =
     for {
       decayAfter <- Exponential(decayRate)
       _ <- Async[F].sleep(decayAfter.seconds)
@@ -48,7 +49,7 @@ object ThoughtExperiment extends IOApp.Simple {
       _ <- cat.set(DeadCat)
     } yield ()
 
-  def experiment[F[_]: Async: Exponential[*[_], Double]] =
+  def experiment[F[_]: Async](using Exponential[F, Double]) =
     for {
       cat <- Ref.of[F, Cat](LiveCat)
       geigerCounter <- CountDownLatch(1)
@@ -64,10 +65,9 @@ object ThoughtExperiment extends IOApp.Simple {
   val seed2 = SplitMix(0x86d98163ff1fe751L, 0x8316a8fe31a2228eL)
 
   override def run: IO[Unit] = for {
-    observation1 <- experiment[RVT[IO, SplitMix, *]].simulate(seed1)
+    observation1 <- experiment[RVT[IO, SplitMix, _]].simulate(seed1)
     _ <- IO.println(s"Experiment 1: observing a $observation1")
-    observation2 <- experiment[RVT[IO, SplitMix, *]].simulate(seed2)
+    observation2 <- experiment[RVT[IO, SplitMix, _]].simulate(seed2)
     _ <- IO.println(s"Experiment 2: observing a $observation2")
     _ <- IO.println("No cats were harmed in the thinking of this experiment :)")
   } yield ()
-}

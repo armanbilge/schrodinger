@@ -16,13 +16,11 @@
 
 package schrodinger.kernel
 
-trait Bernoulli[F[_], R, B] {
+trait Bernoulli[F[_], R, B]:
   def fair: F[B]
   def apply(successProbability: R): F[B]
-}
 
-object Bernoulli {
-  def fair[F[_], R, B](implicit b: Bernoulli[F, R, B]): F[B] = b.fair
-  def apply[F[_], R, B](successProbability: R)(implicit b: Bernoulli[F, R, B]): F[B] =
+object Bernoulli:
+  def fair[F[_], R, B](using b: Bernoulli[F, R, B]): F[B] = b.fair
+  def apply[F[_], R, B](successProbability: R)(using b: Bernoulli[F, R, B]): F[B] =
     b(successProbability)
-}

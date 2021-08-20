@@ -17,21 +17,22 @@
 package schrodinger.montecarlo
 
 import cats.Eq
-import litter.{CommutativeZeroMonoid, ZeroMonoid}
-import org.scalacheck.{Arbitrary, Cogen}
-import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
+import litter.CommutativeZeroMonoid
+import litter.ZeroMonoid
+import org.scalacheck.Arbitrary
+import org.scalacheck.Cogen
+import schrodinger.montecarlo.Weighted.Heavy
+import schrodinger.montecarlo.Weighted.Weightless
 
-trait WeightedTestInstances {
+trait WeightedTestInstances:
 
-  implicit val intZeroMonoid: CommutativeZeroMonoid[Int] = new CommutativeZeroMonoid[Int] {
-    override def empty: Int = 1
-    override def absorbing: Int = 0
-    override def combine(x: Int, y: Int): Int = x * y
-  }
+  given CommutativeZeroMonoid[Int] =
+    new CommutativeZeroMonoid[Int]:
+      override def empty: Int = 1
+      override def absorbing: Int = 0
+      override def combine(x: Int, y: Int): Int = x * y
 
-  implicit def schrodingerTestKitArbitraryForWeighted[
-      W: Arbitrary: Eq: ZeroMonoid,
-      A: Arbitrary]: Arbitrary[Weighted[W, A]] =
+  given [W: Arbitrary: Eq: ZeroMonoid, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
     Arbitrary(
       for {
         w <- Arbitrary.arbitrary[W]
@@ -40,19 +41,15 @@ trait WeightedTestInstances {
       } yield Weighted(w, d, a)
     )
 
-  implicit def schrodingerTestKitCogenForWeighted[A](
-      implicit ev: Cogen[Option[A]]): Cogen[Weighted[Int, A]] =
+  given [A](using Cogen[Option[A]]): Cogen[Weighted[Int, A]] =
     Cogen[Option[A]].contramap {
       case Heavy(_, _, a) => Some(a)
       case Weightless(_) => None
     }
 
-  implicit def schrodingerTestKitArbitraryForWeightedT[F[_], W, A](
-      implicit ev: Arbitrary[F[Weighted[W, A]]]): Arbitrary[WeightedT[F, W, A]] =
+  given [F[_], W, A](using ev: Arbitrary[F[Weighted[W, A]]]): Arbitrary[WeightedT[F, W, A]] =
     Arbitrary(ev.arbitrary.map(WeightedT(_)))
 
-  implicit def schrodingerTestKitCogenForWeightedT[F[_], A](
-      implicit ev: Cogen[F[Weighted[Int, A]]]): Cogen[WeightedT[F, Int, A]] =
+  given schrodingerTestKitCogenForWeightedT[F[_], A](
+      using ev: Cogen[F[Weighted[Int, A]]]): Cogen[WeightedT[F, Int, A]] =
     ev.contramap(_.value)
-
-}

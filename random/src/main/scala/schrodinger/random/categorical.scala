@@ -17,27 +17,22 @@
 package schrodinger.random
 
 import cats.Functor
-import cats.syntax.all._
+import cats.syntax.all.given
 import schrodinger.kernel.{Categorical, Uniform}
 
 object categorical extends CategoricalInstances
 
-trait CategoricalInstances {
-  implicit def schrodingerRandomCategoricalForSeqDouble[
-      F[_]: Functor: Uniform[*[_], Unit, Double]]: Categorical[F, Seq[Double], Int] =
-    new Categorical[F, Seq[Double], Int] {
-      override def apply(support: Seq[Double]): F[Int] = {
-        val cumulative = support.toArray
-        var i = 1
-        while (i < cumulative.length) {
-          cumulative(i) += cumulative(i - 1)
-          i += 1
-        }
-        Uniform.standard.map { U =>
-          val i =
-            java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
-          if (i >= 0) i else -(i + 1)
-        }
+trait CategoricalInstances:
+  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor](
+      using Uniform[F, Unit, Double]): Categorical[F, Seq[Double], Int] with
+    override def apply(support: Seq[Double]): F[Int] =
+      val cumulative = support.toArray
+      var i = 1
+      while i < cumulative.length do
+        cumulative(i) += cumulative(i - 1)
+        i += 1
+      Uniform.standard.map { U =>
+        val i =
+          java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
+        if i >= 0 then i else -(i + 1)
       }
-    }
-}

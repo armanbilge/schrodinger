@@ -16,84 +16,84 @@
 
 package schrodinger.montecarlo
 
+import cats.Alternative
+import cats.ContravariantMonoidal
+import cats.Defer
+import cats.Eval
+import cats.Order
+import cats.Parallel
 import cats.data.Const
 import cats.effect.IO
 import cats.effect.kernel.Async
 import cats.effect.laws.AsyncTests
 import cats.effect.testkit.TestInstances
 import cats.kernel.Monoid
-import cats.kernel.instances.finiteDuration._
+import cats.kernel.instances.finiteDuration.given
 import cats.kernel.instances.int.catsKernelStdOrderForInt
-import cats.kernel.instances.list._
-import cats.kernel.instances.option._
-import cats.kernel.laws.discipline.{MonoidTests, OrderTests}
-import cats.laws.discipline.arbitrary._
-import cats.laws.discipline.{
-  AlternativeTests,
-  ContravariantMonoidalTests,
-  DeferTests,
-  ParallelTests,
-  SerializableTests
-}
-import cats.{Alternative, ContravariantMonoidal, Defer, Eval, Order, Parallel}
+import cats.kernel.instances.list.given
+import cats.kernel.instances.option.given
+import cats.kernel.laws.discipline.MonoidTests
+import cats.kernel.laws.discipline.OrderTests
+import cats.laws.discipline.AlternativeTests
+import cats.laws.discipline.ContravariantMonoidalTests
+import cats.laws.discipline.DeferTests
+import cats.laws.discipline.ParallelTests
+import cats.laws.discipline.SerializableTests
+import cats.laws.discipline.arbitrary.given
 import org.scalacheck.Prop
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
-import schrodinger.montecarlo.Weighted.{Heavy, Weightless}
+import schrodinger.montecarlo.Weighted.Heavy
+import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.concurrent.duration.DurationInt
 
 class WeightedTSpec
-    extends Specification
-    with Discipline
-    with ScalaCheck
-    with WeightedTestInstances
-    with TestInstances {
+    extends Specification,
+      Discipline,
+      ScalaCheck,
+      WeightedTestInstances,
+      TestInstances:
 
   sequential
 
-  implicit def weightedTIOOrder[A](
-      implicit ev: Order[Option[A]],
-      ticker: Ticker): Order[WeightedT[IO, Int, A]] =
-    Order.by {
-      case WeightedT(value) =>
-        unsafeRun(value).fold(
-          None,
-          _ => None,
-          {
-            case Some(Heavy(_, _, a)) => Some(a)
-            case _ => None
-          })
+  given [A](using Order[Option[A]], Ticker): Order[WeightedT[IO, Int, A]] =
+    Order.by { w =>
+      unsafeRun(w.value).fold(
+        None,
+        _ => None,
+        {
+          case Some(Heavy(_, _, a)) => Some(a)
+          case _ => None
+        })
     }
 
-  implicit def weightedOrder[A](implicit ev: Order[Option[A]]): Order[Weighted[Int, A]] =
+  given [A](using Order[Option[A]]): Order[Weighted[Int, A]] =
     Order.by {
       case Heavy(_, _, a) => Some(a)
       case _ => None
     }
 
-  implicit def weightedTOrder[F[_], A](
-      implicit ev: Order[F[Weighted[Int, A]]]): Order[WeightedT[F, Int, A]] =
-    Order.by(_.value)
+  given [F[_], A](using Order[F[Weighted[Int, A]]]): Order[WeightedT[F, Int, A]] =
+    Order.by(WeightedT.value)
 
-  implicit def execWeightedTIO(sbool: WeightedT[IO, Int, Boolean])(
-      implicit ticker: Ticker): Prop =
-    ioBooleanToProp(sbool.value.map {
+  given (using Ticker): Conversion[WeightedT[IO, Int, Boolean], Prop] = sbool =>
+    ioBooleanToProp(WeightedT.value(sbool).map {
       case Heavy(_, _, a) => a
       case Weightless(_) => false
     })
 
   {
-    implicit val ticker = Ticker()
+    given Ticker = Ticker()
     checkAll(
       "Async[WeightedT]",
-      AsyncTests[WeightedT[IO, Int, *]].async[Int, Int, Int](10.millis))
+      AsyncTests[WeightedT[IO, Int, _]].async[Int, Int, Int](10.millis))
   }
-  checkAll("Async[WeightedT]", SerializableTests.serializable(Async[WeightedT[IO, Int, *]]))
+  checkAll("Async[WeightedT]", SerializableTests.serializable(Async[WeightedT[IO, Int, _]]))
 
-  checkAll("Defer[WeightedT]", DeferTests[WeightedT[Eval, Int, *]].defer[Int])
-  checkAll("Defer[WeightedT]", SerializableTests.serializable(Defer[WeightedT[Eval, Int, *]]))
+  checkAll("Defer[WeightedT]", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
+  checkAll("Defer[WeightedT]", SerializableTests.serializable(Defer[WeightedT[Eval, Int, _]]))
 
   checkAll("Order[WeightedT]", OrderTests[WeightedT[Option, Int, Int]].order)
   checkAll(
@@ -102,10 +102,10 @@ class WeightedTSpec
 
   checkAll(
     "Parallel[WeightedT]",
-    ParallelTests[WeightedT[Either[String, *], Int, *]].parallel[Int, Int])
+    ParallelTests[WeightedT[Either[String, _], Int, _]].parallel[Int, Int])
   checkAll(
     "Parallel[WeightedT]",
-    SerializableTests.serializable(Parallel[WeightedT[Either[String, *], Int, *]]))
+    SerializableTests.serializable(Parallel[WeightedT[Either[String, _], Int, _]]))
 
   checkAll("Monoid[WeightedT]", MonoidTests[WeightedT[List, Int, Int]].monoid)
   checkAll(
@@ -114,17 +114,15 @@ class WeightedTSpec
 
   checkAll(
     "Alternative[WeightedT]",
-    AlternativeTests[WeightedT[List, Int, *]].alternative[Int, Int, Int])
+    AlternativeTests[WeightedT[List, Int, _]].alternative[Int, Int, Int])
   checkAll(
     "Alternative[WeightedT]",
-    SerializableTests.serializable(Alternative[WeightedT[List, Int, *]]))
+    SerializableTests.serializable(Alternative[WeightedT[List, Int, _]]))
 
   checkAll(
     "ContravariantMonoidal[WeightedT]",
-    ContravariantMonoidalTests[WeightedT[Const[Int, *], Int, *]]
+    ContravariantMonoidalTests[WeightedT[Const[Int, _], Int, _]]
       .contravariantMonoidal[Int, Int, Int])
   checkAll(
     "ContravariantMonoidal[WeightedT]",
-    SerializableTests.serializable(ContravariantMonoidal[WeightedT[Const[Int, *], Int, *]]))
-
-}
+    SerializableTests.serializable(ContravariantMonoidal[WeightedT[Const[Int, _], Int, _]]))

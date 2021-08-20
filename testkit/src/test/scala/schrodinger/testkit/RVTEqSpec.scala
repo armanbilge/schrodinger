@@ -24,39 +24,36 @@ import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.RV
 import schrodinger.kernel.Bernoulli
-import schrodinger.random.all._
+import schrodinger.random.all.given
 import schrodinger.rng.SplitMix
-import schrodinger.rng.SplitMix._
+import schrodinger.rng.SplitMix.given
 import schrodinger.testkit.RVTEqSpec.DifferentRandoms
 
 import scala.concurrent.duration.{DurationLong, FiniteDuration}
 
-object RVTEqSpec {
+object RVTEqSpec:
   final case class DifferentRandoms[S](dist1: RV[S, Boolean], dist2: RV[S, Boolean])
-}
 
-class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances {
+class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances:
 
-  implicit val eval: Eval[Boolean] => Some[Boolean] = eval => Some(eval.value)
+  given (Eval[Boolean] => Some[Boolean]) = eval => Some(eval.value)
 
-  implicit object evalClock extends Clock[Eval] {
+  given Clock[Eval] with
     override def applicative: Applicative[Eval] = Eval.catsBimonadForEval
     override def monotonic: Eval[FiniteDuration] = Eval.later(System.nanoTime().nanoseconds)
     override def realTime: Eval[FiniteDuration] = Eval.later(System.currentTimeMillis().millis)
-  }
 
-  implicit val arbitrary: Arbitrary[DifferentRandoms[SplitMix]] = Arbitrary(
-    for {
-      p <- Gen.choose[Double](0, 0.25)
-    } yield DifferentRandoms(
-      Bernoulli[RV[SplitMix, *], Double, Boolean](p),
-      Bernoulli[RV[SplitMix, *], Double, Boolean](1 - p))
+  given Arbitrary[DifferentRandoms[SplitMix]] = Arbitrary(
+    for p <- Gen.choose[Double](0, 0.25)
+    yield DifferentRandoms(
+      Bernoulli[RV[SplitMix, _], Double, Boolean](p),
+      Bernoulli[RV[SplitMix, _], Double, Boolean](1 - p))
   )
 
-  implicit val seeds: ExhaustiveCheck[SplitMix] =
+  given ExhaustiveCheck[SplitMix] =
     ExhaustiveCheck.instance(List(SplitMix.fromTime[Eval].value))
 
-  implicit val confidence: Confidence = Confidence(1000, 0.95)
+  given Confidence = Confidence(1000, 0.95)
 
   "RVTEq" should {
     "recognize equivalent distributions" in {
@@ -65,10 +62,8 @@ class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances {
 
     "recognize non-equivalent distributions" in {
       prop { (different: DifferentRandoms[SplitMix]) =>
-        import different._
+        import different.*
         Eq[RV[SplitMix, Boolean]].neqv(dist1, dist2)
       }
     }
   }
-
-}

@@ -20,13 +20,13 @@ import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
-class UInt128Spec extends Specification with ScalaCheck {
+class UInt128Spec extends Specification with ScalaCheck:
 
-  implicit val arbitraryUInt128: Arbitrary[UInt128] = Arbitrary(
-    for {
+  given Arbitrary[UInt128] = Arbitrary(
+    for
       lo <- Arbitrary.arbLong.arbitrary
       hi <- Arbitrary.arbLong.arbitrary
-    } yield UInt128(hi, lo)
+    yield UInt128(hi, lo)
   )
 
   "UInt128" should {
@@ -60,16 +60,14 @@ class UInt128Spec extends Specification with ScalaCheck {
     }
 
     "shift left" in {
-      implicit val shift: Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
+      given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
       prop { (x: UInt128, y: Int) =>
         (x << y).toBigInt should_=== (x.toBigInt << y) % BigInt(2).pow(128)
       }
     }
 
     "shift right" in {
-      implicit val shift: Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
+      given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
       prop { (x: UInt128, y: Int) => (x >> y).toBigInt should_=== x.toBigInt >> y }
     }
   }
-
-}

@@ -16,21 +16,15 @@
 
 package schrodinger.kernel
 
-trait Uniform[F[_], S, A] {
+trait Uniform[F[_], S, A]:
   def apply(support: S): F[A]
-}
 
-object Uniform {
-  def apply[F[_], S, A](support: S)(implicit u: Uniform[F, S, A]): F[A] = u(support)
-  def standard[F[_], A](implicit u: Uniform[F, Unit, A]): F[A] = u(())
+object Uniform:
+  def apply[F[_], S, A](support: S)(using u: Uniform[F, S, A]): F[A] = u(support)
+  def standard[F[_], A](using u: Uniform[F, Unit, A]): F[A] = u(())
 
-  implicit def schrodingerKernelStandardUniformForInt[F[_]: Random]: Uniform[F, Unit, Int] =
-    new Uniform[F, Unit, Int] {
-      override def apply(support: Unit): F[Int] = Random[F].int
-    }
+  given schrodingerKernelStandardUniformForInt[F[_]: Random]: Uniform[F, Unit, Int] with
+    override def apply(support: Unit): F[Int] = Random[F].int
 
-  implicit def schrodingerKernelStandardUniformForLong[F[_]: Random]: Uniform[F, Unit, Long] =
-    new Uniform[F, Unit, Long] {
-      override def apply(support: Unit): F[Long] = Random[F].long
-    }
-}
+  given schrodingerKernelStandardUniformForLong[F[_]: Random]: Uniform[F, Unit, Long] with
+    override def apply(support: Unit): F[Long] = Random[F].long

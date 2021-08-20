@@ -16,7 +16,6 @@
 
 package schrodinger.kernel
 
-trait Gaussian[F[_], R] {
+trait Gaussian[F[_], R]:
   def standard: F[R]
   def apply(mean: R, standardDeviation: R): F[R]
-}

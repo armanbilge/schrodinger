@@ -38,9 +38,8 @@ replaceCommandAlias(
 )
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
-val Scala213 = "2.13.6"
 val Scala3 = "3.0.1"
-ThisBuild / crossScalaVersions := Seq(Scala3, Scala213)
+ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.6.1"
 val CatsEffectVersion = "3.2.3"
@@ -52,6 +51,18 @@ val Specs2Version = "4.11.0"
 val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.1.6"
 
+val commonSettings = Seq(
+  scalacOptions ~= {
+    _.filterNot(
+      Set("-language:implicitConversions", "-Ykind-projector", "-source:3.0-migration")) ++ Seq(
+      "-Ykind-projector:underscores",
+      "-new-syntax",
+      "-indent",
+      "-source:future")
+  },
+  sonatypeCredentialHost := "s01.oss.sonatype.org"
+)
+
 lazy val root =
   project
     .aggregate(kernel, random, core, monteCarlo, testkit, tests, example)
@@ -60,40 +71,39 @@ lazy val root =
 lazy val kernel = project
   .in(file("kernel"))
   .settings(
-    name := "schrodinger-kernel",
-    sonatypeCredentialHost := "s01.oss.sonatype.org"
+    name := "schrodinger-kernel"
   )
+  .settings(commonSettings: _*)
 
 lazy val laws = project
   .in(file("laws"))
   .dependsOn(kernel)
   .settings(
     name := "schrodinger-laws",
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-laws" % CatsVersion,
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion
     )
   )
+  .settings(commonSettings: _*)
 
 lazy val random = project
   .in(file("random"))
   .dependsOn(kernel)
   .settings(
     name := "schrodinger-random",
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-core" % CatsVersion,
       "org.typelevel" %% "cats-mtl" % CatsMtlVersion
     )
   )
+  .settings(commonSettings: _*)
 
 lazy val core = project
   .in(file("core"))
   .dependsOn(random)
   .settings(
     name := "schrodinger",
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect-kernel" % CatsEffectVersion,
       "org.specs2" %% "specs2-core" % Specs2Version % Test cross CrossVersion.for3Use2_13,
@@ -101,20 +111,23 @@ lazy val core = project
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
+  .settings(commonSettings: _*)
 
 lazy val testkit = project
   .in(file("testkit"))
   .dependsOn(core, random)
   .settings(
     name := "schrodinger-testkit",
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-laws" % CatsVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
-      "org.specs2" %% "specs2-core" % Specs2Version % Test cross CrossVersion.for3Use2_13,
-      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test cross CrossVersion.for3Use2_13
+      ("org.specs2" %% "specs2-core" % Specs2Version % Test).cross(CrossVersion.for3Use2_13),
+      ("org.specs2" %% "specs2-scalacheck" % Specs2Version % Test)
+        .cross(CrossVersion.for3Use2_13)
+        .exclude("org.scalacheck", "scalacheck_2.13")
     )
   )
+  .settings(commonSettings: _*)
 
 lazy val tests = project
   .in(file("tests"))
@@ -129,6 +142,7 @@ lazy val tests = project
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
+  .settings(commonSettings: _*)
   .enablePlugins(NoPublishPlugin)
 
 lazy val monteCarlo = project
@@ -136,7 +150,6 @@ lazy val monteCarlo = project
   .dependsOn(kernel, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
-    sonatypeCredentialHost := "s01.oss.sonatype.org",
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % Fs2Version,
       "com.armanbilge" %% "litter" % LitterVersion,
@@ -147,6 +160,7 @@ lazy val monteCarlo = project
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test
     )
   )
+  .settings(commonSettings: _*)
 
 lazy val example = project
   .in(file("example"))
@@ -155,4 +169,5 @@ lazy val example = project
     name := "schrodinger-example",
     libraryDependencies += "org.typelevel" %% "cats-effect" % CatsEffectVersion
   )
+  .settings(commonSettings: _*)
   .enablePlugins(NoPublishPlugin)

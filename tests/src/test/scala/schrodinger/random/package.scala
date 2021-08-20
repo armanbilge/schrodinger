@@ -20,17 +20,15 @@ import org.apache.commons.rng.core.source64.SplitMix64
 import org.scalacheck.{Arbitrary, Gen}
 import schrodinger.rng.Rng
 
-package object random {
-  implicit val arbitrarySplitMix64: Arbitrary[SplitMix64] =
+package object random:
+  given Arbitrary[SplitMix64] =
     Arbitrary(Gen.long.map(new SplitMix64(_)))
 
-  implicit object rngForSplitMix64 extends Rng[SplitMix64] {
-    override def unsafeNextInt(s: SplitMix64): Int = s.nextInt()
-    override def unsafeNextLong(s: SplitMix64): Long = s.nextLong()
-    override def copy(s: SplitMix64): SplitMix64 = {
-      val s1 = new SplitMix64(0)
-      s1.restoreState(s.saveState())
-      s1
-    }
-  }
-}
+  given Rng[SplitMix64] with
+    extension (s: SplitMix64)
+      override def unsafeNextInt(): Int = s.nextInt()
+      override def unsafeNextLong(): Long = s.nextLong()
+      override def copy: SplitMix64 =
+        val s1 = new SplitMix64(0)
+        s1.restoreState(s.saveState())
+        s1

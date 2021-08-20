@@ -16,26 +16,24 @@
 
 package schrodinger.util
 
-import java.lang.Long._
+import java.lang.Long.*
 import scala.annotation.tailrec
 
-final private[schrodinger] case class UInt128(hi: Long, lo: Long) {
+final private[schrodinger] case class UInt128(hi: Long, lo: Long):
 
-  def +(that: UInt128): UInt128 = {
+  def +(that: UInt128): UInt128 =
     val lo = this.lo + that.lo
-    val carry = if (compareUnsigned(lo, this.lo) < 0) 1 else 0
+    val carry = if compareUnsigned(lo, this.lo) < 0 then 1 else 0
     val hi = this.hi + that.hi + carry
     UInt128(hi, lo)
-  }
 
-  def *(that: UInt128): UInt128 = {
+  def *(that: UInt128): UInt128 =
     val lo = this.lo * that.lo
     val hi = multiplyHighUnsigned(this.lo, that.lo) +
       this.lo * that.hi + this.hi * that.lo
     UInt128(hi, lo)
-  }
 
-  private def multiplyHighUnsigned(x: Long, y: Long) = {
+  private def multiplyHighUnsigned(x: Long, y: Long) =
     val x0 = x & 0xffffffffL
     val x1 = x >>> 32
 
@@ -49,62 +47,45 @@ final private[schrodinger] case class UInt128(hi: Long, lo: Long) {
     z1 += x0 * y1
 
     x1 * y1 + z2 + (z1 >>> 32)
-  }
 
-  def |(that: UInt128) = {
+  def |(that: UInt128) =
     val lo = this.lo | that.lo
     val hi = this.hi | that.hi
     UInt128(hi, lo)
-  }
 
-  def &(that: UInt128) = {
+  def &(that: UInt128) =
     val lo = this.lo & that.lo
     val hi = this.hi & that.hi
     UInt128(hi, lo)
-  }
 
-  def ^(that: UInt128) = {
+  def ^(that: UInt128) =
     val lo = this.lo ^ that.lo
     val hi = this.hi ^ that.hi
     UInt128(hi, lo)
-  }
 
   @tailrec
   def <<(n: Int): UInt128 =
-    if (n >= 128)
-      this << (n % 128)
-    else if (n >= 64)
-      UInt128(lo << (n - 64), 0)
-    else if (n > 0)
-      UInt128((hi << n) | (lo >>> (64 - n)), lo << n)
-    else
-      this
+    if n >= 128 then this << (n % 128)
+    else if n >= 64 then UInt128(lo << (n - 64), 0)
+    else if n > 0 then UInt128((hi << n) | (lo >>> (64 - n)), lo << n)
+    else this
 
   @tailrec
   def >>(n: Int): UInt128 =
-    if (n >= 128)
-      this >> (n % 128)
-    else if (n >= 64)
-      UInt128(0, hi >>> (n - 64))
-    else if (n > 0)
-      UInt128(hi >>> n, (hi << (64 - n)) | (lo >>> n))
-    else
-      this
+    if n >= 128 then this >> (n % 128)
+    else if n >= 64 then UInt128(0, hi >>> (n - 64))
+    else if n > 0 then UInt128(hi >>> n, (hi << (64 - n)) | (lo >>> n))
+    else this
 
   def toBigInt =
     BigInt(toUnsignedString(hi, 16) + "0000000000000000", 16) + BigInt(
       toUnsignedString(lo, 16),
       16)
 
-}
+object UInt128:
 
-object UInt128 {
-
-  def apply(x: BigInt): UInt128 = {
+  def apply(x: BigInt): UInt128 =
     val s = x.toString(16)
     val lo = parseUnsignedLong(s.takeRight(16), 16)
     val hi = parseUnsignedLong("0" + s.dropRight(16), 16)
     UInt128(hi, lo)
-  }
-
-}

@@ -16,97 +16,96 @@
 
 package schrodinger.testkit
 
+import cats.Applicative
+import cats.Eq
+import cats.FlatMap
+import cats.Id
+import cats.Monad
+import cats.instances.list.given
+import cats.instances.vector.given
 import cats.laws.discipline.ExhaustiveCheck
-import cats.{Applicative, Eq, FlatMap, Id, Monad}
-import cats.instances.list._
-import cats.instances.vector._
-import cats.syntax.foldable._
-import cats.syntax.traverse._
+import cats.syntax.all.given
 import org.apache.commons.math3.special.Gamma
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Arbitrary
+import org.scalacheck.Cogen
+import org.scalacheck.Gen
 import schrodinger.RVT
-import schrodinger.rng.{Rng, SplitMix}
-import schrodinger.kernel.{Bernoulli, Categorical}
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Categorical
+import schrodinger.rng.Rng
+import schrodinger.rng.SplitMix
 
-trait RVTestInstances extends LowPriorityRVInstances {
+trait RVTestInstances extends LowPriorityRVInstances:
 
-  implicit val arbitrarySplitMix: Arbitrary[SplitMix] = Arbitrary(
-    for {
+  given schrodingerTestKitArbitraryForSplitMix: Arbitrary[SplitMix] = Arbitrary(
+    for
       seed <- Arbitrary.arbLong.arbitrary
       gamma <- Arbitrary.arbLong.arbitrary
-    } yield SplitMix(seed, gamma)
+    yield SplitMix(seed, gamma)
   )
 
-  implicit def schrodingerTestKitEqForRVT[F[_], S, A](
-      implicit ev0: Monad[F],
-      ev1: Rng[S],
-      ev2: Confidence,
-      ev3: Discrete[A],
-      ev4: Eq[F[A]],
-      ev5: ExhaustiveCheck[S],
-      ev6: F[Boolean] => Option[Boolean]): Eq[RVT[F, S, A]] =
-    new RVTEq[F, A, S] {
-      implicit override val F = ev0
-      implicit override val S = ev1
-      implicit override val confidence = ev2
-      implicit override val discrete = ev3
-      implicit override val eqFA = ev4
-      implicit override val seeds = ev5
-      implicit override val eval = ev6
-    }
+  given schrodingerTestKitEqForRVT[F[_], S, A](
+      using Monad[F],
+      Rng[S],
+      Confidence,
+      Discrete[A],
+      Eq[F[A]],
+      ExhaustiveCheck[S],
+      (F[Boolean] => Option[Boolean])): Eq[RVT[F, S, A]] =
+    new RVTEq[F, A, S] {}
 
-  implicit def schrodingerTestKitArbitraryForRVT[F[_]: Monad, S, A](
-      implicit ev: Discrete[A],
-      Bernoulli: Bernoulli[RVT[F, S, *], Double, Boolean],
-      Categorical: Categorical[RVT[F, S, *], Seq[Double], Int]): Arbitrary[RVT[F, S, A]] =
-    (ev.allValues, ev.dirichletPrior) match {
+  given schrodingerTestKitCogenForRVT[F[_]: FlatMap, S: Rng, A](
+      using cogen: Cogen[F[A]],
+      seeds: ExhaustiveCheck[S]): Cogen[RVT[F, S, A]] =
+    cogen.contramap(rv => rv.simulate(seeds.allValues.head))
+
+  given schrodingerTestKitArbitraryForRVT[F[_]: Monad, S, A](
+      using ev: Discrete[A],
+      Bernoulli: Bernoulli[RVT[F, S, _], Double, Boolean],
+      Categorical: Categorical[RVT[F, S, _], Seq[Double], Int]): Arbitrary[RVT[F, S, A]] =
+    (ev.allValues, ev.dirichletPrior) match
       case (List(a), _) => Arbitrary(Arbitrary.arbUnit.arbitrary.map(_ => RVT.pure(a)))
       case (List(a, b), List(1.0, 1.0)) =>
-        Arbitrary(Gen.double.map(p => Bernoulli(p).map(if (_) a else b)))
+        Arbitrary(Gen.double.map(p => Bernoulli(p).map(if _ then a else b)))
       case (a, alpha) if alpha.forall(_ == 1.0) =>
         Arbitrary(
-          for {
+          for
             p <- alpha.foldLeft(Arbitrary.arbUnit.arbitrary.map(_ => List.empty[Double])) {
               (list, _) =>
-                for {
+                for
                   tail <- list
                   x <- Gen.exponential(1.0)
-                } yield x :: tail
+                yield x :: tail
             }
-          } yield Categorical(p).map(a)
+          yield Categorical(p).map(a)
         )
       case _ =>
         ??? // TODO Sample probabilities from Dirichlet to create a categorical distribution
-    }
 
-  implicit val schrodingerTestKitDiscreteForUnit: Discrete[Unit] =
+  given schrodingerTestKitDiscreteForUnit: Discrete[Unit] =
     Discrete.instance[Unit](List(()))
 
-  implicit val schrodingerTestKitDiscreteForBoolean: Discrete[Boolean] =
+  given schrodingerTestKitDiscreteForBoolean: Discrete[Boolean] =
     Discrete.instance(List(false, true))
 
-  implicit def schrodingerTestKitEvalForId[A]: Id[A] => Option[A] =
+  given schrodingerTestKitEvalForId[A]: (Id[A] => Option[A]) =
     a => Some(a)
 
-}
-
-sealed trait LowPriorityRVInstances {
-  implicit def schrodingerTestKitFallbackEqForRVT[F[_]: FlatMap, A, S: Rng: ExhaustiveCheck](
-      implicit ev: Eq[F[A]]): Eq[RVT[F, S, A]] =
+sealed trait LowPriorityRVInstances:
+  given schrodingerTestKitFallbackEqForRVT[F[_]: FlatMap, A, S: Rng: ExhaustiveCheck](
+      using Eq[F[A]]): Eq[RVT[F, S, A]] =
     RVTEq.fallback
 
-  implicit def schrodingerTestKitFallbackArbitraryForRVT[F[_]: Applicative, S, A](
-      implicit ev: Arbitrary[A]): Arbitrary[RVT[F, S, A]] =
+  given schrodingerTestKitFallbackArbitraryForRVT[F[_]: Applicative, S, A](
+      using ev: Arbitrary[A]): Arbitrary[RVT[F, S, A]] =
     Arbitrary(ev.arbitrary.map(a => RVT.pure(a)))
-}
 
 final case class Confidence(replicates: Int, threshold: Double)
 
-trait Discrete[A] extends ExhaustiveCheck[A] {
+trait Discrete[A] extends ExhaustiveCheck[A]:
   def dirichletPrior: List[Double]
-}
 
-object Discrete {
+object Discrete:
   def apply[A](ev: Discrete[A]): Discrete[A] = ev
 
   def instance[A](values: List[A]): Discrete[A] =
@@ -118,33 +117,28 @@ object Discrete {
       override val dirichletPrior: List[Double] = prior
     }
 
-  implicit def fromExhaustiveCheck[A](
-      implicit exhaustiveCheck: ExhaustiveCheck[A]): Discrete[A] =
+  given fromExhaustiveCheck[A](using exhaustiveCheck: ExhaustiveCheck[A]): Discrete[A] =
     instance(exhaustiveCheck.allValues)
-}
 
-object RVTEq {
-  def fallback[F[_]: FlatMap, S: Rng: ExhaustiveCheck, A](
-      implicit ev: Eq[F[A]]): Eq[RVT[F, S, A]] = {
+object RVTEq:
+  def fallback[F[_]: FlatMap, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
     Eq.by[RVT[F, S, A], S => F[A]](d => s => d.simulate(s))
-  }
-}
 
-trait RVTEq[F[_], A, S] extends Eq[RVT[F, S, A]] {
+trait RVTEq[F[_], A, S](
+    using F: Monad[F],
+    S: Rng[S],
+    confidence: Confidence,
+    discrete: Discrete[A],
+    eqfa: Eq[F[A]],
+    seeds: ExhaustiveCheck[S],
+    eval: (F[Boolean] => Option[Boolean]))
+    extends Eq[RVT[F, S, A]]:
 
-  implicit def F: Monad[F]
-  implicit def S: Rng[S]
-  implicit def confidence: Confidence
-  implicit def discrete: Discrete[A]
-  implicit def eqFA: Eq[F[A]]
-  implicit def seeds: ExhaustiveCheck[S]
-  implicit def eval: F[Boolean] => Option[Boolean]
-
-  override def eqv(x: RVT[F, S, A], y: RVT[F, S, A]): Boolean = {
+  override def eqv(x: RVT[F, S, A], y: RVT[F, S, A]): Boolean =
 
     val dirichletPrior = discrete.dirichletPrior.toArray
-    val eqAtRequestedConfidence = for {
+    val eqAtRequestedConfidence = for
       trial1 <- countOutcomes(x)
       trial2 <- countOutcomes(y)
       // TODO Even when X === Y it is difficult to be certain of their equivalence
@@ -152,11 +146,10 @@ trait RVTEq[F[_], A, S] extends Eq[RVT[F, S, A]] {
       // This works best if when X !== Y then they are very different
       // If X !== Y but they are similar, they may be falsely indicated as equivalent
       p = 1 - equidistributedBelief(trial1, trial2, dirichletPrior)
-    } yield !(p > confidence.threshold)
+    yield !(p > confidence.threshold)
 
     eval(seeds.allValues.forallM(eqAtRequestedConfidence.simulate))
       .getOrElse(RVTEq.fallback[F, S, A].eqv(x, y))
-  }
 
   private def countOutcomes(fa: RVT[F, S, A]): RVT[F, S, Array[Int]] =
     Vector.fill(confidence.replicates)(fa).sequence.map { samples =>
@@ -167,71 +160,58 @@ trait RVTEq[F[_], A, S] extends Eq[RVT[F, S, A]] {
   private def equidistributedBelief(
       trial1: Array[Int],
       trial2: Array[Int],
-      dirichletPrior: Array[Double]): Double = {
+      dirichletPrior: Array[Double]): Double =
     val marginal1 = dirichletMultinomialLogPmf(trial1, trial2, dirichletPrior)
     val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) +
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
     math.exp(marginal1 - logPlus(marginal1, marginal2))
-  }
 
-  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): Double = {
-    import Gamma._
+  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): Double =
+    import Gamma.*
     val A = sum(alpha)
     val n = sum(x)
     var logPmf = logGamma(A) + logGamma(n + 1.0) - logGamma(n + A)
     var k = 0
-    while (k < x.length) {
+    while k < x.length do
       logPmf += logGamma(x(k) + alpha(k)) - logGamma(alpha(k)) - logGamma(x(k) + 1.0)
       k += 1
-    }
     logPmf
-  }
 
   private def dirichletMultinomialLogPmf(
       x1: Array[Int],
       x2: Array[Int],
-      alpha: Array[Double]): Double = {
-    import Gamma._
+      alpha: Array[Double]): Double =
+    import Gamma.*
     val A = sum(alpha)
     val n1 = sum(x1)
     val n2 = sum(x2)
     val n = n1 + n2
     var logPmf = logGamma(A) + logGamma(n1 + 1.0) + logGamma(n2 + 1.0) - logGamma(n + A)
     var k = 0
-    while (k < x1.length) {
+    while k < x1.length do
       logPmf += logGamma(x1(k) + x2(k) + alpha(k)) - logGamma(alpha(k)) - logGamma(
         x1(k) + 1.0) - logGamma(x2(k) + 1.0)
       k += 1
-    }
     logPmf
-  }
 
-  private def sum(x: Array[Int]): Int = {
+  private def sum(x: Array[Int]): Int =
     var i = 0
     var sum = 0
-    while (i < x.length) {
+    while i < x.length do
       sum += x(i)
       i += 1
-    }
     sum
-  }
 
-  private def sum(x: Array[Double]): Double = {
+  private def sum(x: Array[Double]): Double =
     var i = 0
     var sum = 0.0
-    while (i < x.length) {
+    while i < x.length do
       sum += x(i)
       i += 1
-    }
     sum
-  }
 
   private def logPlus(x: Double, y: Double): Double =
-    if (x < y)
-      y + math.log1p(math.exp(x - y))
-    else if (x > y)
-      x + math.log1p(math.exp(y - x))
+    if x < y then y + math.log1p(math.exp(x - y))
+    else if x > y then x + math.log1p(math.exp(y - x))
     else // x == y
       math.log(2) + x
-
-}

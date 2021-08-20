@@ -16,12 +16,11 @@
 
 package schrodinger.rng
 
-trait Rng[S] extends Serializable {
-  def copy(s: S): S
-  def unsafeNextInt(s: S): Int
-  def unsafeNextLong(s: S): Long
-}
+trait Rng[S] extends Serializable:
+  extension (s: S)
+    def copy: S
+    def unsafeNextInt(): Int
+    def unsafeNextLong(): Long
 
-trait SplittableRng[S] extends Rng[S] {
-  def unsafeSplit(s: S): S
-}
+trait SplittableRng[S] extends Rng[S]:
+  extension (s: S) def unsafeSplit(): S

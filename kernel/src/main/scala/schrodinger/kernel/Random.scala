@@ -19,11 +19,9 @@ package schrodinger.kernel
 /**
  * A type class which is a source of uniform random `Int`s and `Long`s.
  */
-trait Random[F[_]] extends Serializable {
+trait Random[F[_]] extends Serializable:
   def int: F[Int]
   def long: F[Long]
-}
 
-object Random {
-  def apply[F[_]](implicit F: Random[F]): F.type = F
-}
+object Random:
+  def apply[F[_]](using F: Random[F]): F.type = F

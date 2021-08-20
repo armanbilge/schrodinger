@@ -17,58 +17,48 @@
 package schrodinger.random
 
 import cats.Monad
-import cats.syntax.all._
+import cats.syntax.all.given
 import schrodinger.kernel.{Exponential, Uniform}
 
 object exponential extends ExponentialInstances
 
-trait ExponentialInstances {
+trait ExponentialInstances:
 
-  implicit def schrodingerRandomExponentialForDouble[F[_]: Monad: Uniform[*[_], Unit, Double]]
-      : Exponential[F, Double] =
-    new Exponential[F, Double] {
-      override def apply(rate: Double): F[Double] =
-        standard.map(_ / rate)
+  given schrodingerRandomExponentialForDouble[F[_]: Monad](
+      using Uniform[F, Unit, Double]): Exponential[F, Double] with
+    override def apply(rate: Double): F[Double] =
+      standard.map(_ / rate)
 
-      override val standard: F[Double] = {
-        import AhrensDieterConstants._
-        val umin = Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(math.min))
-        Uniform.standard.flatMap { _u =>
-          var a = 0.0
-          var u = _u
+    override val standard: F[Double] =
+      import AhrensDieterConstants.*
+      val umin = Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(math.min))
+      Uniform.standard.flatMap { _u =>
+        var a = 0.0
+        var u = _u
 
-          while (u < 0.5) {
-            a += ExponentialSaQi(0)
-            u *= 2
-          }
+        while u < 0.5 do
+          a += ExponentialSaQi(0)
+          u *= 2
 
-          u += u - 1
+        u += u - 1
 
-          if (u <= ExponentialSaQi(0))
-            (a + u).pure
-          else {
-            var i = 1
-            while (u > ExponentialSaQi(i)) i += 1
+        if u <= ExponentialSaQi(0) then (a + u).pure
+        else
+          var i = 1
+          while u > ExponentialSaQi(i) do i += 1
 
-            umin(i).map(a + _ * ExponentialSaQi(0))
-          }
-        }
+          umin(i).map(a + _ * ExponentialSaQi(0))
       }
-    }
 
-  private object AhrensDieterConstants {
-    val ExponentialSaQi = {
+  private object AhrensDieterConstants:
+    val ExponentialSaQi =
       val qi = new Array[Double](16)
       val log2 = math.log(2)
       var p = log2
       qi(0) = p
       var i = 1
-      while (i < qi.length) {
+      while i < qi.length do
         p *= log2 / (i + 1)
         qi(i) = qi(i - 1) + p
         i += 1
-      }
       qi
-    }
-  }
-}

@@ -16,7 +16,6 @@
 
 package schrodinger.kernel
 
-trait Gamma[F[_], R] {
+trait Gamma[F[_], R]:
   def apply(shape: R): F[R]
   def apply(shape: R, rate: R): F[R]
-}

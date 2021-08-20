@@ -17,28 +17,23 @@
 package schrodinger.kernel.laws
 
 import cats.kernel.Eq
-import cats.laws.discipline._
+import cats.laws.discipline.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Prop.forAll
 import org.typelevel.discipline.Laws
 import schrodinger.kernel.PseudoRandom
 
-trait PseudoRandomTests[F[_], G[_], S] extends Laws {
+trait PseudoRandomTests[F[_], G[_], S] extends Laws:
   val laws: PseudoRandomLaws[F, G, S]
 
-  def pseudoRandom[A](
-      implicit arbFA: Arbitrary[F[A]],
-      arbS: Arbitrary[S],
-      eqGA: Eq[G[A]]): RuleSet =
+  def pseudoRandom[A](using Arbitrary[F[A]], Arbitrary[S], Eq[G[A]]): RuleSet =
     new RuleSet {
       val name = "pseudoRandom"
       val bases = Nil
       val parents = Nil
       val props = Seq("reproducible" -> forAll((fa: F[A], s: S) => laws.reproducible(fa, s)))
     }
-}
 
-object PseudoRandomTests {
-  def apply[F[_], G[_], S](implicit F: PseudoRandom.Aux[F, G, S]): PseudoRandomTests[F, G, S] =
+object PseudoRandomTests:
+  def apply[F[_], G[_], S](using PseudoRandom.Aux[F, G, S]): PseudoRandomTests[F, G, S] =
     new PseudoRandomTests[F, G, S] { val laws = PseudoRandomLaws[F, G, S] }
-}

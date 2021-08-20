@@ -16,17 +16,14 @@
 
 package schrodinger.kernel.laws
 
-import cats.kernel.laws._
+import cats.kernel.laws.*
 import schrodinger.kernel.PseudoRandom
 
-trait PseudoRandomLaws[F[_], G[_], S] {
-  implicit val F: PseudoRandom.Aux[F, G, S]
+trait PseudoRandomLaws[F[_], G[_], S](using PseudoRandom.Aux[F, G, S]):
 
   def reproducible[A](fa: F[A], seed: S) =
-    F.simulate(fa)(seed) <-> F.simulate(fa)(seed)
-}
+    fa.simulate(seed) <-> fa.simulate(seed)
 
-object PseudoRandomLaws {
-  def apply[F[_], G[_], S](implicit F0: PseudoRandom.Aux[F, G, S]): PseudoRandomLaws[F, G, S] =
-    new PseudoRandomLaws[F, G, S] { val F = F0 }
-}
+object PseudoRandomLaws:
+  def apply[F[_], G[_], S](using PseudoRandom.Aux[F, G, S]): PseudoRandomLaws[F, G, S] =
+    new PseudoRandomLaws[F, G, S] {}

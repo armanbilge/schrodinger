@@ -16,15 +16,13 @@
 
 package schrodinger.kernel
 
-trait Exponential[F[_], R] {
+trait Exponential[F[_], R]:
   def standard: F[R]
   def apply(rate: R): F[R]
-}
 
-object Exponential {
-  def apply[F[_], R](rate: R)(implicit exp: Exponential[F, R]): F[R] =
+object Exponential:
+  def apply[F[_], R](rate: R)(using exp: Exponential[F, R]): F[R] =
     exp(rate)
 
-  def standard[F[_], R](implicit exp: Exponential[F, R]): F[R] =
+  def standard[F[_], R](using exp: Exponential[F, R]): F[R] =
     exp.standard
-}
