@@ -58,6 +58,9 @@ import cats.syntax.all.given
 import cats.~>
 import litter.ZeroGroup
 import litter.ZeroMonoid
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Density
+import schrodinger.kernel.Uniform
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
@@ -138,34 +141,55 @@ object WeightedT extends WeightedTInstances:
       Ord.compare(value, that.value)
 
 private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
-  given schrodingerEffectAsyncForWeightedT[F[_], W](
+  given schrodingerMonteCarloAsyncForWeightedT[F[_], W](
       using Async[F],
       ZeroMonoid[W],
       Eq[W]): Async[WeightedT[F, W, _]] =
     new WeightedTAsync[F, W] {}
 
+  given schrodingerMonteCarloBernoulliForWeightedT[F[_]: Monad, W: Monoid, R, B](
+      using r: Bernoulli[F, R, B],
+      d: Bernoulli[Density[F, W], R, B]
+  ): Bernoulli[WeightedT[F, W, _], R, B] with
+    override val fair =
+      WeightedT(r.fair.flatMap(a => d.fair(a).map(Heavy(Monoid[W].empty, _, a))))
+
+    override def apply(successProbability: R) =
+      val uniform = r(successProbability)
+      val density = d(successProbability)
+      WeightedT(uniform.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
+
+  given schrodingerMonteCarloUniformForWeightedT[F[_]: Monad, W: Monoid, S, A](
+      using r: Uniform[F, S, A],
+      d: Uniform[Density[F, W], S, A]
+  ): Uniform[WeightedT[F, W, _], S, A] with
+    override def apply(support: S) =
+      val uniform = r(support)
+      val density = d(support)
+      WeightedT(uniform.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
+
 sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1:
-  given schrodingerEffectSyncForWeightedT[F[_], W](
+  given schrodingerMonteCarloSyncForWeightedT[F[_], W](
       using Sync[F],
       ZeroMonoid[W],
       Eq[W]): Sync[WeightedT[F, W, _]] =
     new WeightedTSync[F, W]:
       override def rootCancelScope: CancelScope = Sync[F].rootCancelScope
 
-  given schrodingerEffectTemporalForWeightedT[F[_], W, E](
+  given schrodingerMonteCarloTemporalForWeightedT[F[_], W, E](
       using GenTemporal[F, E],
       ZeroMonoid[W],
       Eq[W]): GenTemporal[WeightedT[F, W, _], E] =
     new WeightedTTemporal[F, W, E] {}
 
 sealed private[montecarlo] class WeightedTInstances1 extends WeightedTInstances2:
-  given schrodingerEffectGenConcurrentForWeightedT[F[_], W, E](
+  given schrodingerMonteCarloGenConcurrentForWeightedT[F[_], W, E](
       using GenConcurrent[F, E],
       ZeroMonoid[W],
       Eq[W]): GenConcurrent[WeightedT[F, W, _], E] =
     new WeightedTConcurrent[F, W, E] {}
 
-  given schrodingerEffectClockForWeightedT[F[_], W, E](
+  given schrodingerMonteCarloClockForWeightedT[F[_], W, E](
       using Applicative[F],
       Clock[F],
       ZeroMonoid[W],
@@ -173,14 +197,14 @@ sealed private[montecarlo] class WeightedTInstances1 extends WeightedTInstances2
     new WeightedTClock[F, W] {}
 
 sealed private[montecarlo] class WeightedTInstances2 extends WeightedTInstances3:
-  given schrodingerEffectGenSpawnForWeightedT[F[_], W, E](
+  given schrodingerMonteCarloGenSpawnForWeightedT[F[_], W, E](
       using ev1: GenSpawn[F, E],
       ev2: ZeroMonoid[W],
       ev3: Eq[W]): GenSpawn[WeightedT[F, W, _], E] =
     new WeightedTSpawn[F, W, E] {}
 
 sealed private[montecarlo] class WeightedTInstances3 extends WeightedTInstances4:
-  given schrodingerEffectMonadCancelForWeightedT[F[_], W, E](
+  given schrodingerMonteCarloMonadCancelForWeightedT[F[_], W, E](
       using MonadCancel[F, E],
       ZeroMonoid[W],
       Eq[W]): MonadCancel[WeightedT[F, W, _], E] =

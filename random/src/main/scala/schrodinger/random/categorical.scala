@@ -18,7 +18,7 @@ package schrodinger.random
 
 import cats.Functor
 import cats.syntax.all.given
-import schrodinger.kernel.{Categorical, Uniform}
+import schrodinger.kernel.{Categorical, LogDouble, Uniform}
 
 object categorical extends CategoricalInstances
 
@@ -30,6 +30,26 @@ trait CategoricalInstances:
       var i = 1
       while i < cumulative.length do
         cumulative(i) += cumulative(i - 1)
+        i += 1
+      Uniform.standard.map { U =>
+        val i =
+          java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
+        if i >= 0 then i else -(i + 1)
+      }
+
+  given schrodingerRandomCategoricalForIArrayLogDouble[F[_]: Functor](
+      using Uniform[F, Unit, Double]): Categorical[F, IArray[LogDouble], Int] with
+    override def apply(support: IArray[LogDouble]): F[Int] =
+      val cumulative = new Array[Double](support.size)
+      var max = LogDouble.Zero
+      var i = 0
+      while i < cumulative.length do
+        max = max max support(i)
+        i += 1
+      cumulative(0) = (support(0) / max).real
+      i = 1
+      while i < cumulative.length do
+        cumulative(i) = (support(i) / max).real + cumulative(i - 1)
         i += 1
       Uniform.standard.map { U =>
         val i =

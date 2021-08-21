@@ -41,9 +41,11 @@ addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/he
 val Scala3 = "3.0.1"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
+val AlgebraVersion = "2.2.3"
 val CatsVersion = "2.6.1"
 val CatsEffectVersion = "3.2.3"
 val CatsMtlVersion = "1.2.1"
+val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.0"
 val LitterVersion = "0.1.1"
@@ -144,6 +146,20 @@ lazy val tests = project
   )
   .settings(commonSettings: _*)
   .enablePlugins(NoPublishPlugin)
+
+lazy val stats = project
+  .in(file("stats"))
+  .dependsOn(kernel)
+  .settings(
+    name := "schrodinger-stats",
+    libraryDependencies ++= Seq(
+      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
+      "org.typelevel" %% "algebra" % AlgebraVersion,
+      "org.typelevel" %% "cats-core" % CatsVersion,
+      "org.typelevel" %% "cats-laws" % CatsVersion % Test,
+    )
+  )
+  .settings(commonSettings: _*)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
