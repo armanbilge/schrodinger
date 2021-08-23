@@ -83,8 +83,7 @@ lazy val laws = project
   .settings(
     name := "schrodinger-laws",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-laws" % CatsVersion,
-      "org.typelevel" %% "discipline-specs2" % DisciplineVersion
+      "org.typelevel" %% "cats-laws" % CatsVersion
     )
   )
   .settings(commonSettings: _*)
@@ -156,7 +155,7 @@ lazy val stats = project
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.typelevel" %% "algebra" % AlgebraVersion,
       "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-laws" % CatsVersion % Test,
+      "org.typelevel" %% "cats-laws" % CatsVersion % Test
     )
   )
   .settings(commonSettings: _*)
