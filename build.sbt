@@ -97,8 +97,8 @@ lazy val logDouble = project
       "com.armanbilge" %% "litter" % LitterVersion,
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
       "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test,
-      "com.armanbilge" %% "litter-laws" % LitterVersion % Test,
-   )
+      "com.armanbilge" %% "litter-laws" % LitterVersion % Test
+    )
   )
   .settings(commonSettings: _*)
 
