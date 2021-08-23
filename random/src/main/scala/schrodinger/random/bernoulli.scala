@@ -23,8 +23,13 @@ import schrodinger.kernel.{Bernoulli, Random, Uniform}
 object bernoulli extends BernoulliInstances
 
 trait BernoulliInstances:
-  given schrodingerRandomBernoulliForDoubleBoolean[F[_]: Functor: Random](
-      using Uniform[F, Unit, Double]): Bernoulli[F, Double, Boolean] with
-    override val fair: F[Boolean] = Random[F].int.map(_ >= 0)
-    override def apply(successProbability: Double): F[Boolean] =
+  given schrodingerRandomFairBernoulliForBoolean[F[_]: Functor: Random]
+      : Bernoulli[0.5, Boolean][F] with
+    private val fair = Random[F].int.map(_ >= 0)
+    override def apply(params: Bernoulli.Params[0.5]) = fair
+
+  given schrodingerRandomBernoulliForDoubleBoolean[F[_]: Functor: Random: Uniform[Unit, Double]]
+      : Bernoulli[Double, Boolean][F] with
+    override def apply(params: Bernoulli.Params[Double]): F[Boolean] =
+      import params.*
       Uniform.standard.map(_ < successProbability)

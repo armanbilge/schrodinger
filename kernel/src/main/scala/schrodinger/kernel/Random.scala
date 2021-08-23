@@ -24,4 +24,4 @@ trait Random[F[_]] extends Serializable:
   def long: F[Long]
 
 object Random:
-  def apply[F[_]](using F: Random[F]): F.type = F
+  inline def apply[F[_]](using F: Random[F]): F.type = F

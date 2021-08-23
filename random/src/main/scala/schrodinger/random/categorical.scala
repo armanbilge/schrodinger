@@ -23,9 +23,10 @@ import schrodinger.kernel.{Categorical, LogDouble, Uniform}
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
-  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor](
-      using Uniform[F, Unit, Double]): Categorical[F, Seq[Double], Int] with
-    override def apply(support: Seq[Double]): F[Int] =
+  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[Unit, Double]]
+      : Categorical[Seq[Double], Int][F] with
+    override def apply(params: Categorical.Params[Seq[Double]]): F[Int] =
+      import params.*
       val cumulative = support.toArray
       var i = 1
       while i < cumulative.length do
@@ -37,9 +38,10 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
-  given schrodingerRandomCategoricalForIArrayLogDouble[F[_]: Functor](
-      using Uniform[F, Unit, Double]): Categorical[F, IArray[LogDouble], Int] with
-    override def apply(support: IArray[LogDouble]): F[Int] =
+  given schrodingerRandomCategoricalForIArrayLogDouble[F[_]: Functor: Uniform[Unit, Double]]
+      : Categorical[IArray[LogDouble], Int][F] with
+    override def apply(params: Categorical.Params[IArray[LogDouble]]): F[Int] =
+      import params.*
       val cumulative = new Array[Double](support.size)
       var max = LogDouble.Zero
       var i = 0

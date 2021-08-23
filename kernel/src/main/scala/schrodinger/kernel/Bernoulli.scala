@@ -16,11 +16,11 @@
 
 package schrodinger.kernel
 
-trait Bernoulli[F[_], R, B]:
-  def fair: F[B]
-  def apply(successProbability: R): F[B]
+type Bernoulli[R, B] = [F[_]] =>> Distribution[F, Bernoulli.Params[R], B]
 
 object Bernoulli:
-  def fair[F[_], R, B](using b: Bernoulli[F, R, B]): F[B] = b.fair
-  def apply[F[_], R, B](successProbability: R)(using b: Bernoulli[F, R, B]): F[B] =
-    b(successProbability)
+  final case class Params[R](successProbability: R)
+
+  inline def fair[F[_], B](using b: Bernoulli[0.5, B][F]): F[B] = b(Params(0.5))
+  inline def apply[F[_], R, B](successProbability: R)(using b: Bernoulli[R, B][F]): F[B] =
+    b(Params(successProbability))

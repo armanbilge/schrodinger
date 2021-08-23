@@ -61,8 +61,8 @@ trait RVTestInstances extends LowPriorityRVInstances:
 
   given schrodingerTestKitArbitraryForRVT[F[_]: Monad, S, A](
       using ev: Discrete[A],
-      Bernoulli: Bernoulli[RVT[F, S, _], Double, Boolean],
-      Categorical: Categorical[RVT[F, S, _], Seq[Double], Int]): Arbitrary[RVT[F, S, A]] =
+      b: Bernoulli[Double, Boolean][RVT[F, S, _]],
+      c: Categorical[Seq[Double], Int][RVT[F, S, _]]): Arbitrary[RVT[F, S, A]] =
     (ev.allValues, ev.dirichletPrior) match
       case (List(a), _) => Arbitrary(Arbitrary.arbUnit.arbitrary.map(_ => RVT.pure(a)))
       case (List(a, b), List(1.0, 1.0)) =>

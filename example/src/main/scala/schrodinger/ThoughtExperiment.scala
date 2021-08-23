@@ -35,8 +35,7 @@ object ThoughtExperiment extends IOApp.Simple:
 
   val decayRate = math.log(2)
 
-  def decayingAtom[F[_]: Async](geigerCounter: CountDownLatch[F])(
-      using Exponential[F, Double]) =
+  def decayingAtom[F[_]: Async: Exponential[Double]](geigerCounter: CountDownLatch[F]) =
     for {
       decayAfter <- Exponential(decayRate)
       _ <- Async[F].sleep(decayAfter.seconds)
@@ -49,7 +48,7 @@ object ThoughtExperiment extends IOApp.Simple:
       _ <- cat.set(DeadCat)
     } yield ()
 
-  def experiment[F[_]: Async](using Exponential[F, Double]) =
+  def experiment[F[_]: Async: Exponential[Double]] =
     for {
       cat <- Ref.of[F, Cat](LiveCat)
       geigerCounter <- CountDownLatch(1)

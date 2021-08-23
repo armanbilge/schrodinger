@@ -16,15 +16,16 @@
 
 package schrodinger.kernel
 
-trait Uniform[F[_], S, A]:
-  def apply(support: S): F[A]
+type Uniform[S, A] = [F[_]] =>> Distribution[F, Uniform.Params[S], A]
 
 object Uniform:
-  def apply[F[_], S, A](support: S)(using u: Uniform[F, S, A]): F[A] = u(support)
-  def standard[F[_], A](using u: Uniform[F, Unit, A]): F[A] = u(())
+  final case class Params[S](support: S)
 
-  given schrodingerKernelStandardUniformForInt[F[_]: Random]: Uniform[F, Unit, Int] with
-    override def apply(support: Unit): F[Int] = Random[F].int
+  inline def apply[F[_], S, A](support: S)(using u: Uniform[S, A][F]): F[A] = u(Params(support))
+  inline def standard[F[_], A](using u: Uniform[Unit, A][F]): F[A] = u(Params(()))
 
-  given schrodingerKernelStandardUniformForLong[F[_]: Random]: Uniform[F, Unit, Long] with
-    override def apply(support: Unit): F[Long] = Random[F].long
+  given schrodingerKernelStandardUniformForInt[F[_]: Random]: Uniform[Unit, Int][F] with
+    override def apply(support: Params[Unit]): F[Int] = Random[F].int
+
+  given schrodingerKernelStandardUniformForLong[F[_]: Random]: Uniform[Unit, Long][F] with
+    override def apply(support: Params[Unit]): F[Long] = Random[F].long

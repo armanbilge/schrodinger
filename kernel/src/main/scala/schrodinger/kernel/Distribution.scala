@@ -16,10 +16,4 @@
 
 package schrodinger.kernel
 
-type Exponential[R] = [F[_]] =>> Distribution[F, Exponential.Params[R], R]
-
-object Exponential:
-  final case class Params[R](rate: R)
-
-  inline def apply[F[_], R](rate: R)(using exp: Exponential[R][F]): F[R] =
-    exp(Params(rate))
+trait Distribution[F[_], -P, S] extends (P => F[S])

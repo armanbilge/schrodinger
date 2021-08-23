@@ -16,6 +16,10 @@
 
 package schrodinger.kernel
 
-trait Gaussian[F[_], R]:
-  def standard: F[R]
-  def apply(mean: R, standardDeviation: R): F[R]
+type Gaussian[R] = [F[_]] =>> Distribution[F, Gaussian.Params[R], R]
+
+object Gaussian:
+  final case class Params[R](mean: R, standardDeviation: R)
+
+  inline def apply[F[_], R](mean: R, standardDeviation: R)(using g: Gaussian[R][F]): F[R] =
+    g(Params(mean, standardDeviation))

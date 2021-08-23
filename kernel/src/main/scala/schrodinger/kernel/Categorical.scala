@@ -16,8 +16,9 @@
 
 package schrodinger.kernel
 
-trait Categorical[F[_], S, A]:
-  def apply(support: S): F[A]
+type Categorical[S, A] = [F[_]] =>> Distribution[F, Categorical.Params[S], A]
 
 object Categorical:
-  def apply[F[_], S, A](support: S)(using c: Categorical[F, S, A]): F[A] = c(support)
+  final case class Params[+S](support: S)
+
+  def apply[F[_], S, A](support: S)(using c: Categorical[S, A][F]): F[A] = c(Params(support))

@@ -28,18 +28,19 @@ object uniform extends UniformInstances
 
 trait UniformInstances:
 
-  given schrodingerRandomStandardUniformForFloat[F[_]: Functor: Random]: Uniform[F, Unit, Float]
+  given schrodingerRandomStandardUniformForFloat[F[_]: Functor: Random]: Uniform[Unit, Float][F]
     with
     private val standard = Random[F].int.map(x => (x >>> 8) * 5.9604645e-8f)
-    override def apply(support: Unit): F[Float] = standard
+    override def apply(params: Uniform.Params[Unit]): F[Float] = standard
 
   given schrodingerRandomStandardUniformForDouble[F[_]: Functor: Random]
-      : Uniform[F, Unit, Double] with
+      : Uniform[Unit, Double][F] with
     private val standard = Random[F].long.map(x => (x >>> 11) * 1.1102230246251565e-16)
-    override def apply(support: Unit): F[Double] = standard
+    override def apply(params: Uniform.Params[Unit]): F[Double] = standard
 
-  given schrodingerRandomUniformForIntRange[F[_]: Monad: Random]: Uniform[F, Range, Int] with
-    override def apply(range: Range): F[Int] =
+  given schrodingerRandomUniformForIntRange[F[_]: Monad: Random]: Uniform[Range, Int][F] with
+    override def apply(params: Uniform.Params[Range]): F[Int] =
+      val range = params.support
       require(range.nonEmpty)
       if range.start == 0 & range.step == 1 then
         if range.last == Int.MaxValue then Random[F].int.map(_ & Int.MaxValue)
@@ -48,7 +49,7 @@ trait UniformInstances:
         (range.step: @switch) match
           case 1 => boundedInt(range.start, range.last)
           case 2 => ??? // TODO
-          case _ => apply(range.indices).map(range)
+          case _ => apply(Uniform.Params(range.indices)).map(range)
 
     private def nonNegativeInt(n: Int): F[Int] =
       if (n & -n) == n then Random[F].int.map(_ & (n - 1))
@@ -86,8 +87,9 @@ trait UniformInstances:
       n * width
 
   given schrodingerRandomUniformForLongRange[F[_]: Monad: Random]
-      : Uniform[F, NumericRange[Long], Long] with
-    override def apply(range: NumericRange[Long]): F[Long] =
+      : Uniform[NumericRange[Long], Long][F] with
+    override def apply(params: Uniform.Params[NumericRange[Long]]): F[Long] =
+      val range = params.support
       require(range.nonEmpty)
       if range.start == 0 & range.step == 1 then
         if range.last == Long.MaxValue then Random[F].long.map(_ & Long.MaxValue)

@@ -26,26 +26,28 @@ object uniform extends UniformInstances
 trait UniformInstances:
 
   given schrodingerStatsStandardUniformForInt[F[_]: Applicative]
-      : Uniform[Density[F, LogDouble], Unit, Int] with
+      : Uniform[Unit, Int][Density[F, LogDouble]] with
     private val density =
       LogDouble(Int.MaxValue.toDouble - Int.MinValue.toDouble + 1).reciprocal.pure[F]
-    override def apply(support: Unit) = _ => density
+    override def apply(params: Uniform.Params[Unit]) = _ => density
 
   given schrodingerStatsStandardUniformForLong[F[_]: Applicative]
-      : Uniform[Density[F, LogDouble], Unit, Int] with
+      : Uniform[Unit, Int][Density[F, LogDouble]] with
     private val density =
       LogDouble(Long.MaxValue.toDouble - Long.MinValue.toDouble + 1).reciprocal.pure[F]
-    override def apply(support: Unit) = _ => density
+    override def apply(params: Uniform.Params[Unit]) = _ => density
 
   given schrodingerStatsStandardUniformForDouble[F[_]: Applicative]
-      : Uniform[Density[F, LogDouble], Unit, Double] with
+      : Uniform[Unit, Double][Density[F, LogDouble]] with
     private val zero = LogDouble.Zero.pure[F]
     private val one = LogDouble.One.pure[F]
-    override def apply(support: Unit) = x => if 0 <= x && x <= 1 then one else zero
+    override def apply(params: Uniform.Params[Unit]) = x =>
+      if 0 <= x && x <= 1 then one else zero
 
   given schrodingerStatsUniformForIntRange[F[_]: Applicative]
-      : Uniform[Density[F, LogDouble], Range, Int] with
-    override def apply(range: Range) =
+      : Uniform[Range, Int][Density[F, LogDouble]] with
+    override def apply(params: Uniform.Params[Range]) =
+      val range = params.support
       val density =
         LogDouble((range.last.toDouble - range.start.toDouble + 1).abs).reciprocal.pure[F]
       _ => density

@@ -24,12 +24,13 @@ object exponential extends ExponentialInstances
 
 trait ExponentialInstances:
 
-  given schrodingerRandomExponentialForDouble[F[_]: Monad](
-      using Uniform[F, Unit, Double]): Exponential[F, Double] with
-    override def apply(rate: Double): F[Double] =
+  given schrodingerRandomExponentialForDouble[F[_]: Monad: Uniform[Unit, Double]]
+      : Exponential[Double][F] with
+    override def apply(params: Exponential.Params[Double]): F[Double] =
+      import params.*
       standard.map(_ / rate)
 
-    override val standard: F[Double] =
+    private val standard: F[Double] =
       import AhrensDieterConstants.*
       val umin = Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(math.min))
       Uniform.standard.flatMap { _u =>

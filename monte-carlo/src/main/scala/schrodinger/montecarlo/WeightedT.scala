@@ -58,9 +58,8 @@ import cats.syntax.all.given
 import cats.~>
 import litter.ZeroGroup
 import litter.ZeroMonoid
-import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Density
-import schrodinger.kernel.Uniform
+import schrodinger.kernel.Distribution
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
@@ -147,26 +146,14 @@ private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
       Eq[W]): Async[WeightedT[F, W, _]] =
     new WeightedTAsync[F, W] {}
 
-  given schrodingerMonteCarloBernoulliForWeightedT[F[_]: Monad, W: Monoid, R, B](
-      using r: Bernoulli[F, R, B],
-      d: Bernoulli[Density[F, W], R, B]
-  ): Bernoulli[WeightedT[F, W, _], R, B] with
-    override val fair =
-      WeightedT(r.fair.flatMap(a => d.fair(a).map(Heavy(Monoid[W].empty, _, a))))
-
-    override def apply(successProbability: R) =
-      val uniform = r(successProbability)
-      val density = d(successProbability)
-      WeightedT(uniform.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
-
-  given schrodingerMonteCarloUniformForWeightedT[F[_]: Monad, W: Monoid, S, A](
-      using r: Uniform[F, S, A],
-      d: Uniform[Density[F, W], S, A]
-  ): Uniform[WeightedT[F, W, _], S, A] with
-    override def apply(support: S) =
-      val uniform = r(support)
-      val density = d(support)
-      WeightedT(uniform.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
+  given schrodingerMonteCarloDistributionForWeightedT[F[_]: Monad, W: Monoid, P, S](
+      using r: Distribution[F, P, S],
+      d: Distribution[Density[F, W], P, S]
+  ): Distribution[WeightedT[F, W, _], P, S] with
+    override def apply(params: P) =
+      val sampler = r(params)
+      val density = d(params)
+      WeightedT(sampler.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
 
 sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1:
   given schrodingerMonteCarloSyncForWeightedT[F[_], W](

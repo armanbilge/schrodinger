@@ -16,6 +16,10 @@
 
 package schrodinger.kernel
 
-trait Gamma[F[_], R]:
-  def apply(shape: R): F[R]
-  def apply(shape: R, rate: R): F[R]
+type Gamma[R] = [F[_]] =>> Distribution[F, Gamma.Params[R], R]
+
+object Gamma:
+  final case class Params[R](shape: R, rate: R)
+
+  inline def apply[F[_], R](shape: R, rate: R)(using g: Gamma[R][F]): F[R] =
+    g(Params(shape, rate))

@@ -26,8 +26,8 @@ object gaussian extends GaussianInstances
 trait GaussianInstances:
 
   given schrodingerStatsGaussianForDouble[F[_]: Applicative]
-      : Gaussian[Density[F, LogDouble], Double] with
-    override val standard = apply(0.0, 1.0)
-    override def apply(mean: Double, standardDeviation: Double) =
+      : Gaussian[Double][Density[F, LogDouble]] with
+    override def apply(params: Gaussian.Params[Double]) =
+      import params.*
       val distribution = new NormalDistribution(null, mean, standardDeviation)
       x => LogDouble.exp(distribution.logDensity(x)).pure[F]
