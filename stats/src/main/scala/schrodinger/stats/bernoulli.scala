@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
 import schrodinger.kernel.Density
 import schrodinger.kernel.Bernoulli

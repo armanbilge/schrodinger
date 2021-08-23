@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
 import cats.Applicative
 import cats.syntax.all.given

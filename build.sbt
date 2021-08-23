@@ -88,9 +88,23 @@ lazy val laws = project
   )
   .settings(commonSettings: _*)
 
+lazy val logDouble = project
+  .in(file("log-double"))
+  .settings(
+    name := "schrodinger-log-double",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %% "algebra" % AlgebraVersion,
+      "com.armanbilge" %% "litter" % LitterVersion,
+      "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
+      "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test,
+      "com.armanbilge" %% "litter-laws" % LitterVersion % Test,
+   )
+  )
+  .settings(commonSettings: _*)
+
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel)
+  .dependsOn(kernel, logDouble)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
@@ -148,12 +162,11 @@ lazy val tests = project
 
 lazy val stats = project
   .in(file("stats"))
-  .dependsOn(kernel)
+  .dependsOn(kernel, logDouble)
   .settings(
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
-      "org.typelevel" %% "algebra" % AlgebraVersion,
       "org.typelevel" %% "cats-core" % CatsVersion,
       "org.typelevel" %% "cats-laws" % CatsVersion % Test
     )

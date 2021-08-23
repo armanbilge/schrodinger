@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
-import schrodinger.kernel.Uniform
-import schrodinger.kernel.Density
-import cats.syntax.all.given
 import cats.Applicative
+import cats.syntax.all.given
+import schrodinger.kernel.Density
+import schrodinger.kernel.Uniform
 
 object uniform extends UniformInstances
 

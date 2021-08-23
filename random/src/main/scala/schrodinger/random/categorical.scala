@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger
+package random
 
 import cats.Functor
 import cats.syntax.all.given
-import schrodinger.kernel.{Categorical, LogDouble, Uniform}
+import schrodinger.kernel.Categorical
+import schrodinger.kernel.Uniform
 
 object categorical extends CategoricalInstances
 
@@ -46,7 +48,7 @@ trait CategoricalInstances:
       var max = LogDouble.Zero
       var i = 0
       while i < cumulative.length do
-        max = max max support(i)
+        max = max.max(support(i))
         i += 1
       cumulative(0) = (support(0) / max).real
       i = 1

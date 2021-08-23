@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
 import cats.Applicative
 import cats.syntax.all.given
-import schrodinger.kernel.{Density, Gaussian}
 import org.apache.commons.math3.distribution.NormalDistribution
+import schrodinger.kernel.Density
+import schrodinger.kernel.Gaussian
 
 object gaussian extends GaussianInstances
 
