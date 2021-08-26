@@ -94,7 +94,7 @@ lazy val logDouble = project
     libraryDependencies ++= Seq(
       "org.typelevel" %% "algebra" % AlgebraVersion,
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
-      "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test,
+      "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test
     )
   )
   .settings(commonSettings: _*)
