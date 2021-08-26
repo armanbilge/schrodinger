@@ -16,6 +16,13 @@
 
 package schrodinger.montecarlo
 
+import algebra.ring.CommutativeRig
+import algebra.ring.MultiplicativeCommutativeGroup
+import algebra.ring.MultiplicativeCommutativeMonoid
+import algebra.ring.MultiplicativeGroup
+import algebra.ring.MultiplicativeMonoid
+import algebra.ring.Rig
+import algebra.ring.Semiring
 import cats.Align
 import cats.CommutativeMonad
 import cats.Eq
@@ -30,9 +37,6 @@ import cats.data.Ior
 import cats.kernel.CommutativeMonoid
 import cats.kernel.CommutativeSemigroup
 import cats.syntax.all.given
-import litter.CommutativeZeroMonoid
-import litter.ZeroGroup
-import litter.ZeroMonoid
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
@@ -50,25 +54,25 @@ sealed abstract class Weighted[W, +A] extends Product, Serializable:
     case Heavy(w, d, a) => Heavy(w, d, f(a))
     case weightless @ Weightless(_) => weightless
 
-  final def flatMap[B](f: A => Weighted[W, B])(using ZeroMonoid[W], Eq[W]): Weighted[W, B] =
+  final def flatMap[B](f: A => Weighted[W, B])(using Rig[W], Eq[W]): Weighted[W, B] =
     this match
       case Heavy(wa, da, a) =>
         f(a) match
-          case Heavy(wb, db, b) => Weighted(wa |+| wb, da |+| db, b)
+          case Heavy(wb, db, b) => Weighted(wa * wb, da * db, b)
           case weightless @ Weightless(_) => weightless
       case weightless @ Weightless(_) => weightless
 
-  final def product[B](b: Weighted[W, B])(using ZeroMonoid[W], Eq[W]): Weighted[W, (A, B)] =
+  final def product[B](b: Weighted[W, B])(using Rig[W], Eq[W]): Weighted[W, (A, B)] =
     (this, b) match
-      case (Heavy(wa, da, a), Heavy(wb, db, b)) => Weighted(wa |+| wb, da |+| db, (a, b))
+      case (Heavy(wa, da, a), Heavy(wb, db, b)) => Weighted(wa * wb, da * db, (a, b))
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
 
-  final def importance(f: A => W)(using ZeroGroup[W], Eq[W]): Weighted[W, A] =
+  final def importance(f: A => W)(using Semifield[W], Eq[W]): Weighted[W, A] =
     this match
       case Heavy(w, d, a) =>
         val fa = f(a)
-        Weighted(w |+| (fa |-| d), fa, a)
+        Weighted(w * (fa / d), fa, a)
       case weightless @ Weightless(_) => weightless
 
   final override def toString: String =
@@ -94,24 +98,26 @@ object Weighted extends WeightedInstances, WeightedFunctions:
     override def isWeightless = true
 
   object Weightless:
-    def apply[W](using W: ZeroMonoid[W]): Weightless[W] =
-      Weightless(W.absorbing)
+    def apply[W](using W: Semiring[W]): Weightless[W] =
+      Weightless(W.zero)
 
 sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
   given schrodingerMonteCarloCommutativeMonadForWeighted[W](
-      using CommutativeZeroMonoid[W],
+      using CommutativeRig[W],
       Eq[W]): CommutativeMonad[Weighted[W, _]] =
     new WeightedCommutativeMonad[W]
 
-  given schrodingerMonteCarloAlignForWeighted[W](
-      using ZeroMonoid[W],
-      Eq[W]): Align[Weighted[W, _]] =
+  given schrodingerMonteCarloAlignForWeighted[W](using Rig[W], Eq[W]): Align[Weighted[W, _]] =
     new WeightedAlign[W]
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
-  given schrodingerMonteCarloMonadForWeighted[W](
-      using ZeroMonoid[W],
-      Eq[W]): Monad[Weighted[W, _]] =
+  given schrodingerMonteCarloParticleForWeighted[W]: Particle[Weighted[W, _], W] with
+    extension [A](wa: Weighted[W, A])
+      override def weight: W = wa.weight
+      override def withWeight(w: W): Weighted[W, A] = ???
+      override def importance[F[_]: Functor](f: A => F[W]): F[Weighted[W, A]] = ???
+
+  given schrodingerMonteCarloMonadForWeighted[W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
     new WeightedMonad[W]
 
   given schrodingerMonteCarloEqForWeighted[W: Eq, A: Eq]: Eq[Weighted[W, A]] with
@@ -121,34 +127,34 @@ sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
     override def show(t: Weighted[W, A]): String = t.show
 
   given schrodingerMonteCarloCommutativeMonoidForWeighted[W, A](
-      using CommutativeZeroMonoid[W],
+      using CommutativeRig[W],
       Eq[W],
       CommutativeMonoid[A]): CommutativeMonoid[Weighted[W, A]] =
     new WeightedCommutativeMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances1 extends WeightedInstances2:
   given schrodingerMonteCarloMonoidForWeighted[W, A](
-      using ZeroMonoid[W],
+      using Rig[W],
       Eq[W],
       Monoid[A]): Monoid[Weighted[W, A]] =
     new WeightedMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances2 extends WeightedInstances3:
   given schrodingerMonteCarloCommutativeSemigroupForWeighted[W, A](
-      using CommutativeZeroMonoid[W],
+      using CommutativeRig[W],
       Eq[W],
       CommutativeSemigroup[A]): CommutativeSemigroup[Weighted[W, A]] =
     new WeightedCommutativeSemigroup[W, A]
 
   given schrodingerMonteCarloInvariantMonoidalForWeighted[F[_], W](
-      using ZeroMonoid[W],
+      using Rig[W],
       Eq[W]): InvariantMonoidal[Weighted[W, _]] =
     new WeightedInvariantMonoidal[W]
 
 sealed private[montecarlo] class WeightedInstances3:
 
   given schrodingerMonteCarloSemigroupForWeighted[W, A](
-      using ZeroMonoid[W],
+      using Rig[W],
       Eq[W],
       Semigroup[A]): Semigroup[Weighted[W, A]] =
     new WeightedSemigroup[W, A]
@@ -160,7 +166,7 @@ sealed private[montecarlo] class WeightedFunctor[W] extends Functor[Weighted[W, 
   override def map[A, B](fa: Weighted[W, A])(f: A => B): Weighted[W, B] =
     fa.map(f)
 
-sealed private[montecarlo] class WeightedMonad[W](using ZeroMonoid[W], Eq[W])
+sealed private[montecarlo] class WeightedMonad[W](using Rig[W], Eq[W])
     extends WeightedFunctor[W],
       Monad[Weighted[W, _]]:
 
@@ -184,42 +190,37 @@ sealed private[montecarlo] class WeightedMonad[W](using ZeroMonoid[W], Eq[W])
           case Left(a) =>
             f(a) match
               case weightless @ Weightless(_) => weightless
-              case Heavy(w2, d2, ab) => loop(Weighted(w1 |+| w2, d1 |+| d2, ab))
+              case Heavy(w2, d2, ab) => loop(Weighted(w1 * w2, d1 * d2, ab))
 
     loop(f(a))
 
-sealed private[montecarlo] class WeightedCommutativeMonad[W](
-    using CommutativeZeroMonoid[W],
-    Eq[W])
+sealed private[montecarlo] class WeightedCommutativeMonad[W](using CommutativeRig[W], Eq[W])
     extends WeightedMonad[W],
       CommutativeMonad[Weighted[W, _]]
 
-sealed private[montecarlo] class WeightedSemigroup[W, A](
-    using Semigroup[A],
-    ZeroMonoid[W],
-    Eq[W])
+sealed private[montecarlo] class WeightedSemigroup[W, A](using Semigroup[A], Rig[W], Eq[W])
     extends Semigroup[Weighted[W, A]]:
   override def combine(wx: Weighted[W, A], wy: Weighted[W, A]): Weighted[W, A] =
     (wx, wy) match
-      case (Heavy(wx, dx, x), Heavy(wy, dy, y)) => Weighted(wx |+| wy, dx |+| dy, x |+| y)
+      case (Heavy(wx, dx, x), Heavy(wy, dy, y)) => Weighted(wx * wy, dx * dy, x |+| y)
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
 
 sealed private[montecarlo] class WeightedCommutativeSemigroup[W, A](
     using CommutativeSemigroup[A],
-    CommutativeZeroMonoid[W],
+    CommutativeRig[W],
     Eq[W])
     extends WeightedSemigroup[W, A],
       CommutativeSemigroup[Weighted[W, A]]
 
-sealed private[montecarlo] class WeightedMonoid[W, A](using Monoid[A], ZeroMonoid[W], Eq[W])
+sealed private[montecarlo] class WeightedMonoid[W, A](using Monoid[A], Rig[W], Eq[W])
     extends WeightedSemigroup[W, A],
       Monoid[Weighted[W, A]]:
   override def empty: Weighted[W, A] = Weighted.pure(Monoid[A].empty)
 
 sealed private[montecarlo] class WeightedCommutativeMonoid[W, A](
     using CommutativeMonoid[A],
-    CommutativeZeroMonoid[W],
+    CommutativeRig[W],
     Eq[W])
     extends WeightedMonoid[W, A],
       CommutativeMonoid[Weighted[W, A]]
@@ -228,7 +229,7 @@ sealed private[montecarlo] class WeightedInvariant[W] extends Invariant[Weighted
   override def imap[A, B](fa: Weighted[W, A])(f: A => B)(g: B => A): Weighted[W, B] =
     fa.map(f)
 
-sealed private[montecarlo] class WeightedInvariantMonoidal[W](using ZeroMonoid[W], Eq[W])
+sealed private[montecarlo] class WeightedInvariantMonoidal[W](using Rig[W], Eq[W])
     extends WeightedInvariant[W],
       InvariantMonoidal[Weighted[W, _]]:
 
@@ -238,7 +239,7 @@ sealed private[montecarlo] class WeightedInvariantMonoidal[W](using ZeroMonoid[W
   override def product[A, B](fa: Weighted[W, A], fb: Weighted[W, B]): Weighted[W, (A, B)] =
     fa.product(fb)
 
-sealed private[montecarlo] class WeightedAlign[W](using ZeroMonoid[W], Eq[W])
+sealed private[montecarlo] class WeightedAlign[W](using Rig[W], Eq[W])
     extends Align[Weighted[W, _]]:
 
   override def functor = Weighted.schrodingerMonteCarloMonadForWeighted
@@ -246,20 +247,20 @@ sealed private[montecarlo] class WeightedAlign[W](using ZeroMonoid[W], Eq[W])
   override def align[A, B](fa: Weighted[W, A], fb: Weighted[W, B]): Weighted[W, Ior[A, B]] =
     (fa, fb) match
       case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
-        Weighted(wa |+| wb, da |+| db, Ior.both(a, b))
+        Weighted(wa * wb, da * db, Ior.both(a, b))
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
 
 sealed private[montecarlo] trait WeightedFunctions:
-  def apply[W: Eq, A](weight: W, density: W, value: A)(using W: ZeroMonoid[W]): Weighted[W, A] =
-    if W.isAbsorbing(weight) then weightless[W, A]
+  def apply[W: Eq, A](weight: W, density: W, value: A)(using W: Rig[W]): Weighted[W, A] =
+    if W.isZero(weight) then weightless[W, A]
     else Heavy(weight, density, value)
 
-  def apply[W, A](density: W, value: A)(using W: Monoid[W]): Weighted[W, A] =
-    Heavy(W.empty, density, value)
+  def apply[W, A](density: W, value: A)(using W: MultiplicativeMonoid[W]): Weighted[W, A] =
+    Heavy(W.one, density, value)
 
-  def pure[W, A](a: A)(using W: Monoid[W]): Weighted[W, A] =
-    Heavy(W.empty, W.empty, a)
+  def pure[W, A](a: A)(using W: MultiplicativeMonoid[W]): Weighted[W, A] =
+    Heavy(W.one, W.one, a)
 
-  def weightless[W, A](using W: ZeroMonoid[W]): Weighted[W, A] =
+  def weightless[W, A](using W: Semiring[W]): Weighted[W, A] =
     Weightless[W]

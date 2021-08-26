@@ -16,9 +16,8 @@
 
 package schrodinger.montecarlo
 
+import algebra.ring.Rig
 import cats.Eq
-import litter.CommutativeZeroMonoid
-import litter.ZeroMonoid
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import schrodinger.montecarlo.Weighted.Heavy
@@ -26,13 +25,7 @@ import schrodinger.montecarlo.Weighted.Weightless
 
 trait WeightedTestInstances:
 
-  given CommutativeZeroMonoid[Int] =
-    new CommutativeZeroMonoid[Int]:
-      override def empty: Int = 1
-      override def absorbing: Int = 0
-      override def combine(x: Int, y: Int): Int = x * y
-
-  given [W: Arbitrary: Eq: ZeroMonoid, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
+  given [W: Arbitrary: Eq: Rig, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
     Arbitrary(
       for {
         w <- Arbitrary.arbitrary[W]

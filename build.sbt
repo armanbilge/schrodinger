@@ -48,7 +48,6 @@ val CatsMtlVersion = "1.2.1"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.1"
-val LitterVersion = "0.1.1"
 val Specs2Version = "4.11.0"
 val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.1.6"
@@ -94,10 +93,8 @@ lazy val logDouble = project
     name := "schrodinger-log-double",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "algebra" % AlgebraVersion,
-      "com.armanbilge" %% "litter" % LitterVersion,
       "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
       "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test,
-      "com.armanbilge" %% "litter-laws" % LitterVersion % Test
     )
   )
   .settings(commonSettings: _*)
@@ -175,12 +172,12 @@ lazy val stats = project
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel, testkit % Test)
+  .dependsOn(kernel, logDouble % Test, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
       "co.fs2" %% "fs2-core" % Fs2Version,
-      "com.armanbilge" %% "litter" % LitterVersion,
+      "org.typelevel" %% "algebra" % AlgebraVersion,
       "org.typelevel" %% "cats-effect-std" % CatsEffectVersion,
       "org.typelevel" %% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %% "cats-effect-laws" % CatsEffectVersion % Test,

@@ -16,6 +16,10 @@
 
 package schrodinger.montecarlo
 
+import algebra.ring.CommutativeRig
+import algebra.ring.MultiplicativeMonoid
+import algebra.ring.Rig
+import algebra.ring.Semiring
 import cats.Alternative
 import cats.Applicative
 import cats.ApplicativeError
@@ -56,8 +60,6 @@ import cats.effect.kernel.Sync.Type
 import cats.effect.kernel.Unique
 import cats.syntax.all.given
 import cats.~>
-import litter.ZeroGroup
-import litter.ZeroMonoid
 import schrodinger.kernel.Density
 import schrodinger.kernel.Distribution
 import schrodinger.montecarlo.Weighted.Heavy
@@ -70,13 +72,15 @@ opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
 object WeightedT extends WeightedTInstances:
   def apply[F[_], W, A](fwa: F[Weighted[W, A]]): WeightedT[F, W, A] = fwa
 
-  def pure[F[_], W: Monoid, A](a: A)(using F: Applicative[F]): WeightedT[F, W, A] =
+  def pure[F[_], W: MultiplicativeMonoid, A](a: A)(
+      using F: Applicative[F]): WeightedT[F, W, A] =
     liftF(F.pure(a))
 
-  def liftF[F[_], W: Monoid, A](fa: F[A])(using F: Functor[F]): WeightedT[F, W, A] =
+  def liftF[F[_], W: MultiplicativeMonoid, A](fa: F[A])(
+      using F: Functor[F]): WeightedT[F, W, A] =
     WeightedT(F.map(fa)(Weighted.pure(_)))
 
-  def liftK[F[_]: Applicative, W: Monoid]: F ~> WeightedT[F, W, _] =
+  def liftK[F[_]: Applicative, W: MultiplicativeMonoid]: F ~> WeightedT[F, W, _] =
     new (F ~> WeightedT[F, W, _]):
       def apply[A](a: F[A]): WeightedT[F, W, A] = WeightedT.liftF(a)
 
@@ -102,7 +106,7 @@ object WeightedT extends WeightedTInstances:
 
     def flatMap[B](f: A => WeightedT[F, W, B])(
         using F: Monad[F],
-        W0: ZeroMonoid[W],
+        W0: Rig[W],
         W1: Eq[W]): WeightedT[F, W, B] =
       WeightedT {
         F.flatMap(value) {
@@ -110,23 +114,23 @@ object WeightedT extends WeightedTInstances:
           case Heavy(wa, da, a) =>
             F.map(f(a).value) {
               case weightless @ Weightless(_) => weightless
-              case Heavy(wb, db, b) => Weighted(wa |+| wb, da |+| db, b)
+              case Heavy(wb, db, b) => Weighted(wa * wb, da * db, b)
             }
         }
       }
 
     def flatMapF[B](f: A => F[Weighted[W, B]])(
         using F: Monad[F],
-        W0: ZeroMonoid[W],
+        W0: Rig[W],
         W1: Eq[W]): WeightedT[F, W, B] =
       WeightedT.flatMap(wfa)(a => WeightedT(f(a)))
 
     def importance(
-        f: A => W)(using F: Applicative[F], W0: ZeroGroup[W], W1: Eq[W]): WeightedT[F, W, A] =
+        f: A => W)(using F: Applicative[F], W0: Semifield[W], W1: Eq[W]): WeightedT[F, W, A] =
       WeightedT(F.map(value)(_.importance(f)))
 
     def importanceF(
-        f: A => F[W])(using F: Monad[F], W0: ZeroGroup[W], W1: Eq[W]): WeightedT[F, W, A] =
+        f: A => F[W])(using F: Monad[F], W0: Semifield[W], W1: Eq[W]): WeightedT[F, W, A] =
       WeightedT {
         F.flatMap(value) {
           case heavy @ Heavy(_, _, a) => F.map(f(a))(fa => heavy.importance(_ => fa))
@@ -142,7 +146,7 @@ object WeightedT extends WeightedTInstances:
 private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
   given schrodingerMonteCarloAsyncForWeightedT[F[_], W](
       using Async[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Async[WeightedT[F, W, _]] =
     new WeightedTAsync[F, W] {}
 
@@ -158,42 +162,42 @@ private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
 sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1:
   given schrodingerMonteCarloSyncForWeightedT[F[_], W](
       using Sync[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Sync[WeightedT[F, W, _]] =
     new WeightedTSync[F, W]:
       override def rootCancelScope: CancelScope = Sync[F].rootCancelScope
 
   given schrodingerMonteCarloTemporalForWeightedT[F[_], W, E](
       using GenTemporal[F, E],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): GenTemporal[WeightedT[F, W, _], E] =
     new WeightedTTemporal[F, W, E] {}
 
 sealed private[montecarlo] class WeightedTInstances1 extends WeightedTInstances2:
   given schrodingerMonteCarloGenConcurrentForWeightedT[F[_], W, E](
       using GenConcurrent[F, E],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): GenConcurrent[WeightedT[F, W, _], E] =
     new WeightedTConcurrent[F, W, E] {}
 
   given schrodingerMonteCarloClockForWeightedT[F[_], W, E](
       using Applicative[F],
       Clock[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Clock[WeightedT[F, W, _]] =
     new WeightedTClock[F, W] {}
 
 sealed private[montecarlo] class WeightedTInstances2 extends WeightedTInstances3:
   given schrodingerMonteCarloGenSpawnForWeightedT[F[_], W, E](
       using ev1: GenSpawn[F, E],
-      ev2: ZeroMonoid[W],
+      ev2: Rig[W],
       ev3: Eq[W]): GenSpawn[WeightedT[F, W, _], E] =
     new WeightedTSpawn[F, W, E] {}
 
 sealed private[montecarlo] class WeightedTInstances3 extends WeightedTInstances4:
   given schrodingerMonteCarloMonadCancelForWeightedT[F[_], W, E](
       using MonadCancel[F, E],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): MonadCancel[WeightedT[F, W, _], E] =
     new WeightedTMonadCancel[F, W, E]:
       override def rootCancelScope: CancelScope = MonadCancel[F].rootCancelScope
@@ -220,18 +224,18 @@ sealed private[montecarlo] class WeightedTInstances7 extends WeightedTInstances8
 
   given schrodingerMonteCarloMonadErrorForWeightedT[F[_], W, E](
       using MonadError[F, E],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): MonadError[WeightedT[F, W, _], E] =
     new WeightedTMonadError[F, W, E] {}
 
-  given schrodingerMonteCarloParallelForWeightedT[M[_], W: ZeroMonoid: Eq](
+  given schrodingerMonteCarloParallelForWeightedT[M[_], W: Rig: Eq](
       using P: Parallel[M]): Parallel.Aux[WeightedT[M, W, _], WeightedT[P.F, W, _]] =
     new Parallel[WeightedT[M, W, _]]:
       type F[x] = WeightedT[P.F, W, x]
       given Monad[M] = P.monad
 
       def applicative: Applicative[WeightedT[P.F, W, _]] =
-        schrodingerMonteCarloApplicativeForWeightedT(using P.applicative, ZeroMonoid[W], Eq[W])
+        schrodingerMonteCarloApplicativeForWeightedT(using P.applicative, Rig[W], Eq[W])
       def monad: Monad[WeightedT[M, W, _]] = schrodingerMonteCarloMonadForWeightedT
 
       def sequential: WeightedT[P.F, W, _] ~> WeightedT[M, W, _] =
@@ -253,13 +257,12 @@ sealed private[montecarlo] class WeightedTInstances7 extends WeightedTInstances8
       using Show[F[Weighted[W, A]]]): Show[WeightedT[F, W, A]] with
     override def show(f: WeightedT[F, W, A]): String = f.show
 
-  given schrodingerMonteCarloMonoidForWeightedTId[W: ZeroMonoid: Eq, A: Monoid]
+  given schrodingerMonteCarloMonoidForWeightedTId[W: Rig: Eq, A: Monoid]
       : Monoid[WeightedT[Id, W, A]] =
     schrodingerMonteCarloMonoidForWeightedT[Id, W, A]
 
 sealed private[montecarlo] class WeightedTInstances8 extends WeightedTInstances9:
-  given schrodingerMonteCarloMonadForWeightedTId[W: ZeroMonoid: Eq]
-      : Monad[WeightedT[Id, W, _]] =
+  given schrodingerMonteCarloMonadForWeightedTId[W: Rig: Eq]: Monad[WeightedT[Id, W, _]] =
     given Monad[Id] = cats.catsInstancesForId
     schrodingerMonteCarloMonadForWeightedT[Id, W]
 
@@ -267,14 +270,14 @@ sealed private[montecarlo] class WeightedTInstances8 extends WeightedTInstances9
       using Eq[F[Weighted[W, A]]]): Eq[WeightedT[F, W, A]] =
     Eq.by[WeightedT[F, W, A], F[Weighted[W, A]]](_.value)
 
-  given schrodingerMonteCarloSemigroupForWeightedTId[W: ZeroMonoid: Eq, A: Semigroup]
+  given schrodingerMonteCarloSemigroupForWeightedTId[W: Rig: Eq, A: Semigroup]
       : Semigroup[WeightedT[Id, W, A]] =
     schrodingerMonteCarloSemigroupForWeightedT[Id, W, A]
 
 sealed private[montecarlo] class WeightedTInstances9 extends WeightedTInstances10:
   given schrodingerMonteCarloMonadForWeightedT[F[_], W](
       using Monad[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Monad[WeightedT[F, W, _]] =
     new WeightedTMonad[F, W] {}
 
@@ -290,14 +293,14 @@ sealed private[montecarlo] class WeightedTInstances10 extends WeightedTInstances
 sealed private[montecarlo] class WeightedTInstances11 extends WeightedTInstances12:
   given schrodingerMonteCarloApplicativeErrorForWeightedT[F[_], W, E](
       using ApplicativeError[F, E],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): ApplicativeError[WeightedT[F, W, _], E] =
     new WeightedTApplicativeError[F, W, E] {}
 
 sealed private[montecarlo] class WeightedTInstances12 extends WeightedTInstances13:
   given schrodingerMonteCarloAlternativeForWeightedT[F[_], W](
       using Alternative[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Alternative[WeightedT[F, W, _]] =
     new WeightedTAlternative[F, W] {}
 
@@ -321,7 +324,7 @@ sealed private[montecarlo] class WeightedTInstances14 extends WeightedTInstances
 
   given schrodingerMonteCarloApplicativeForWeightedT[F[_], W](
       using Applicative[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Applicative[WeightedT[F, W, _]] =
     new WeightedTApplicative[F, W] {}
 
@@ -332,7 +335,7 @@ sealed private[montecarlo] class WeightedTInstances14 extends WeightedTInstances
 sealed private[montecarlo] class WeightedTInstances15:
   given schrodingerMonteCarloApplyForWeightedT[F[_], W](
       using Apply[F],
-      ZeroMonoid[W],
+      Rig[W],
       Eq[W]): Apply[WeightedT[F, W, _]] =
     new WeightedTApply[F, W] {}
 
@@ -356,7 +359,7 @@ sealed private[montecarlo] trait WeightedTInvariant[F[_], W](using F: Invariant[
 
 sealed private[montecarlo] trait WeightedTApply[F[_], W](
     using F: Apply[F],
-    val W0: ZeroMonoid[W],
+    val W0: Rig[W],
     val W1: Eq[W])
     extends WeightedTFunctor[F, W],
       Apply[WeightedT[F, W, _]]:
@@ -369,7 +372,7 @@ sealed private[montecarlo] trait WeightedTApply[F[_], W](
   ): Eval[WeightedT[F, W, Z]] =
     F.map2Eval(fa.value, fb.map(_.value)) {
       case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
-        Weighted(wa |+| wb, da |+| db, f(a, b))
+        Weighted(wa * wb, da * db, f(a, b))
       case _ => Weightless[W]
     }.map(WeightedT(_)) // F may have a lazy map2Eval
 
@@ -378,20 +381,20 @@ sealed private[montecarlo] trait WeightedTApply[F[_], W](
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT(F.map(F.product(fa.value, fb.value)) {
       case (Heavy(wa, da, a), Heavy(wb, db, b)) =>
-        Weighted(wa |+| wb, da |+| db, (a, b))
+        Weighted(wa * wb, da * db, (a, b))
       case _ => Weightless[W]
     })
 
 sealed private[montecarlo] trait WeightedTApplicative[F[_], W](
     using F: Applicative[F],
-    W0: ZeroMonoid[W])
+    W0: Rig[W])
     extends WeightedTApply[F, W],
       Applicative[WeightedT[F, W, _]]:
 
   def pure[A](a: A): WeightedT[F, W, A] =
     WeightedT.pure(a)
 
-sealed private[montecarlo] trait WeightedTMonad[F[_], W](using F: Monad[F], W0: ZeroMonoid[W])
+sealed private[montecarlo] trait WeightedTMonad[F[_], W](using F: Monad[F], W0: Rig[W])
     extends WeightedTApplicative[F, W],
       Monad[WeightedT[F, W, _]]:
 
@@ -408,8 +411,8 @@ sealed private[montecarlo] trait WeightedTMonad[F[_], W](using F: Monad[F], W0: 
         F.map(fwa) {
           case weightless @ Weightless(_) => Right(weightless)
           case Heavy(w2, d2, aorb) =>
-            val w = w1 |+| w2
-            val d = d1 |+| d2
+            val w = w1 * w2
+            val d = d1 * d2
             aorb match
               case Left(a) => Left(Weighted(w, d, a))
               case Right(b) => Right(Weighted(w, d, b))
@@ -556,7 +559,7 @@ sealed private[montecarlo] trait WeightedTSpawn[F[_], W, E](using F: GenSpawn[F,
       fa: WeightedT[F, W, A],
       fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT(F.map(F.both(fa.value, fb.value)) {
-      case (Heavy(w1, d1, a), Heavy(w2, d2, b)) => Weighted(w1 |+| w2, d1 |+| d2, a -> b)
+      case (Heavy(w1, d1, a), Heavy(w2, d2, b)) => Weighted(w1 * w2, d1 * d2, a -> b)
       case (weightless @ Weightless(_), _) => weightless
       case (_, weightless @ Weightless(_)) => weightless
     })
@@ -609,7 +612,7 @@ sealed private[montecarlo] trait WeightedTConcurrent[F[_], W, E](using F: GenCon
 private[montecarlo] trait WeightedTClock[F[_], W](
     using F: Applicative[F],
     C: Clock[F],
-    W0: ZeroMonoid[W],
+    W0: Rig[W],
     W1: Eq[W]
 ) extends Clock[WeightedT[F, W, _]]:
 

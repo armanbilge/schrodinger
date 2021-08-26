@@ -16,6 +16,7 @@
 
 package schrodinger.montecarlo
 
+import algebra.instances.int.given
 import cats.kernel.CommutativeMonoid
 import cats.kernel.laws.discipline.{CommutativeMonoidTests, SerializableTests}
 import cats.laws.discipline.arbitrary.given

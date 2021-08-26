@@ -21,7 +21,6 @@ import cats.kernel.Eq
 import cats.kernel.laws.discipline.HashTests
 import cats.kernel.laws.discipline.OrderTests
 import cats.kernel.laws.discipline.SerializableTests
-import litter.laws.discipline.CommutativeZeroMonoidTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.specs2.ScalaCheck
@@ -47,9 +46,6 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck {
     checkAll(
       "MultiplicativeCommutativeGroup[LogDouble]",
       RingLaws[LogDouble].multiplicativeCommutativeGroup)
-    checkAll(
-      "ZeroMonoid[LogDouble]",
-      CommutativeZeroMonoidTests[LogDouble].commutativeZeroMonoid)
   }
 
   checkAll("Order[LogDouble]", OrderTests[LogDouble].order)

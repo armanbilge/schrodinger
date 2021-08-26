@@ -16,6 +16,7 @@
 
 package schrodinger.montecarlo
 
+import algebra.instances.int.given
 import cats.Alternative
 import cats.ContravariantMonoidal
 import cats.Defer

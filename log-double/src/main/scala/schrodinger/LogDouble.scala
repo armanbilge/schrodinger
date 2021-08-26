@@ -21,7 +21,6 @@ import algebra.ring.Field
 import algebra.ring.MultiplicativeCommutativeGroup
 import cats.kernel.Hash
 import cats.kernel.Order
-import litter.CommutativeZeroMonoid
 
 opaque type LogDouble = Double
 
@@ -68,7 +67,6 @@ object LogDouble:
   abstract class LogDoubleAlgebra private[LogDouble] ()
       extends CommutativeRig[LogDouble],
         MultiplicativeCommutativeGroup[LogDouble],
-        CommutativeZeroMonoid[LogDouble],
         Order[LogDouble],
         Hash[LogDouble]
 
@@ -81,6 +79,3 @@ object LogDouble:
     override def reciprocal(x: LogDouble) = x.reciprocal
     override def compare(x: LogDouble, y: LogDouble) = LogDouble.compare(x)(y)
     override def hash(x: LogDouble): Int = x.hashCode
-    override def empty: LogDouble = LogDouble.One
-    override def absorbing: LogDouble = LogDouble.Zero
-    override def combine(x: LogDouble, y: LogDouble): LogDouble = LogDouble.*(x)(y)
