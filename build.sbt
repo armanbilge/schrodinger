@@ -43,7 +43,7 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val AlgebraVersion = "2.2.3"
 val CatsVersion = "2.6.1"
-val CatsEffectVersion = "3.2.3"
+val CatsEffectVersion = "3.2.4"
 val CatsMtlVersion = "1.2.1"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.3"
