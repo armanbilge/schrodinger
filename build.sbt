@@ -38,7 +38,7 @@ replaceCommandAlias(
 )
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
-val Scala3 = "3.0.1"
+val Scala3 = "3.0.2"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val AlgebraVersion = "2.2.3"
