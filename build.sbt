@@ -48,7 +48,7 @@ val CatsMtlVersion = "1.2.1"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.1"
-val Specs2Version = "4.12.8"
+val Specs2Version = "4.12.9"
 val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.1.6"
 
