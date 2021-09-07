@@ -50,7 +50,7 @@ val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.1"
 val Specs2Version = "4.12.10"
 val ScalaCheckVersion = "1.15.3"
-val DisciplineVersion = "1.1.6"
+val DisciplineVersion = "1.2.0"
 
 val commonSettings = Seq(
   scalacOptions ~= {
