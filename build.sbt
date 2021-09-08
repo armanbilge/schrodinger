@@ -5,13 +5,8 @@ ThisBuild / publishGithubUser := "armanbilge"
 ThisBuild / publishFullName := "Arman Bilge"
 ThisBuild / startYear := Some(2021)
 
-mimaPreviousArtifacts := Set()
-
 enablePlugins(SonatypeCiReleasePlugin)
-ThisBuild / spiewakCiReleaseSnapshots := true
-git.formattedShaVersion ~= {
-  _.map { v => if (!v.endsWith("-SNAPSHOT")) v + "-SNAPSHOT" else v }
-}
+ThisBuild / spiewakCiReleaseSnapshots := false
 ThisBuild / spiewakMainBranches := Seq("main")
 ThisBuild / homepage := Some(url("https://github.com/armanbilge/schrodinger"))
 ThisBuild / scmInfo := Some(
@@ -19,23 +14,7 @@ ThisBuild / scmInfo := Some(
     url("https://github.com/armanbilge/schrodinger"),
     "git@github.com:armanbilge/schrodinger.git"))
 sonatypeCredentialHost := "s01.oss.sonatype.org"
-lazy val sonatypeBundleReleaseIfRelevant =
-  taskKey[Unit]("Executes sonatypeBundleRelease if not a snapshot")
-sonatypeBundleReleaseIfRelevant := Def.taskDyn[Unit] {
-  if (!isSnapshot.value)
-    Def.task(sonatypeBundleRelease.value)
-  else
-    Def.task(())
-}
 
-replaceCommandAlias(
-  "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
-)
-replaceCommandAlias(
-  "release",
-  "; reload; project /; +mimaReportBinaryIssuesIfRelevant; +publishIfRelevant; sonatypeBundleReleaseIfRelevant"
-)
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
 val Scala3 = "3.0.2"
@@ -53,19 +32,13 @@ val ScalaCheckVersion = "1.15.3"
 val DisciplineVersion = "1.2.0"
 
 val commonSettings = Seq(
-  scalacOptions ~= {
-    _.filterNot(
-      Set("-language:implicitConversions", "-Ykind-projector", "-source:3.0-migration")) ++ Seq(
-      "-Ykind-projector:underscores",
-      "-new-syntax",
-      "-indent",
-      "-source:future")
-  },
+  scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
   sonatypeCredentialHost := "s01.oss.sonatype.org"
 )
 
 lazy val root =
   project
+    .in(file("."))
     .aggregate(kernel, random, core, monteCarlo, testkit, tests, example)
     .enablePlugins(NoPublishPlugin)
 
