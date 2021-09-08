@@ -111,11 +111,11 @@ sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
     new WeightedAlign[W]
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
-  given schrodingerMonteCarloParticleForWeighted[W]: Particle[Weighted[W, _], W] with
-    extension [A](wa: Weighted[W, A])
-      override def weight: W = wa.weight
-      override def withWeight(w: W): Weighted[W, A] = ???
-      override def importance[F[_]: Functor](f: A => F[W]): F[Weighted[W, A]] = ???
+  // given schrodingerMonteCarloParticleForWeighted[W]: Particle[Weighted[W, _], W] with
+  //   extension [A](wa: Weighted[W, A])
+  //     override def weight: W = wa.weight
+  //     override def withWeight(w: W): Weighted[W, A] = ???
+  //     override def importance[F[_]: Functor](f: A => F[W]): F[Weighted[W, A]] = ???
 
   given schrodingerMonteCarloMonadForWeighted[W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
     new WeightedMonad[W]
