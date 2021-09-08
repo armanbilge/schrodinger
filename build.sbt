@@ -39,7 +39,7 @@ val commonSettings = Seq(
 lazy val root =
   project
     .in(file("."))
-    .aggregate(kernel, random, core, monteCarlo, testkit, tests, example)
+    .aggregate(kernel, random, stats, core, monteCarlo, testkit, tests, example)
     .enablePlugins(NoPublishPlugin)
 
 lazy val kernel = project
@@ -92,7 +92,7 @@ lazy val core = project
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect-kernel" % CatsEffectVersion,
-      "org.specs2" %% "specs2-core" % Specs2Version % Test ,
+      "org.specs2" %% "specs2-core" % Specs2Version % Test,
       "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
