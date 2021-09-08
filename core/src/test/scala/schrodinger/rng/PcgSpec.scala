@@ -43,7 +43,7 @@ class PcgSpec extends Specification with ScalaCheck:
           List.fill(N + 1)(Random[RV[Pcg32, _]].int).sequence.simulate(state).value.tail
         val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
         val expectedInts = List.fill(N)(provider.nextInt())
-        ints should_=== expectedInts
+        ints === expectedInts
       }
     }
   }

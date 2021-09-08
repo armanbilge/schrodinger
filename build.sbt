@@ -27,9 +27,9 @@ val CatsMtlVersion = "1.2.1"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.1"
-val Specs2Version = "4.12.10"
+val Specs2Version = "5.0.0-RC-07"
 val ScalaCheckVersion = "1.15.3"
-val DisciplineVersion = "1.2.0"
+val DisciplineSpecs2Version = "1.2-7-e3ce260"
 
 val commonSettings = Seq(
   scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
@@ -66,7 +66,8 @@ lazy val logDouble = project
     name := "schrodinger-log-double",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "algebra" % AlgebraVersion,
-      "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
+      "org.specs2" %% "specs2-core" % Specs2Version,
+      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test
     )
   )
@@ -91,8 +92,8 @@ lazy val core = project
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-effect-kernel" % CatsEffectVersion,
-      "org.specs2" %% "specs2-core" % Specs2Version % Test cross CrossVersion.for3Use2_13,
-      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test cross CrossVersion.for3Use2_13,
+      "org.specs2" %% "specs2-core" % Specs2Version % Test ,
+      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
@@ -106,10 +107,8 @@ lazy val testkit = project
     libraryDependencies ++= Seq(
       "org.typelevel" %% "cats-laws" % CatsVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
-      ("org.specs2" %% "specs2-core" % Specs2Version % Test).cross(CrossVersion.for3Use2_13),
-      ("org.specs2" %% "specs2-scalacheck" % Specs2Version % Test)
-        .cross(CrossVersion.for3Use2_13)
-        .exclude("org.scalacheck", "scalacheck_2.13")
+      "org.specs2" %% "specs2-core" % Specs2Version % Test,
+      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test
     )
   )
   .settings(commonSettings: _*)
@@ -120,7 +119,7 @@ lazy val tests = project
   .settings(
     name := "schrodinger-tests",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test,
+      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.typelevel" %% "cats-effect-testkit" % CatsEffectVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
@@ -155,7 +154,7 @@ lazy val monteCarlo = project
       "org.typelevel" %% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.typelevel" %% "cats-effect-testkit" % CatsEffectVersion % Test,
-      "org.typelevel" %% "discipline-specs2" % DisciplineVersion % Test
+      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
   .settings(commonSettings: _*)

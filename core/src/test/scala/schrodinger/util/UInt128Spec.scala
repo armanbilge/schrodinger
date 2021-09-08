@@ -32,42 +32,42 @@ class UInt128Spec extends Specification with ScalaCheck:
   "UInt128" should {
 
     "roundtrip with BigInt" in {
-      prop { (x: UInt128) => UInt128(x.toBigInt) should_=== x }
+      prop { (x: UInt128) => UInt128(x.toBigInt) === x }
     }
 
     "add" in {
       prop { (x: UInt128, y: UInt128) =>
-        (x + y).toBigInt should_=== (x.toBigInt + y.toBigInt) % BigInt(2).pow(128)
+        (x + y).toBigInt === (x.toBigInt + y.toBigInt) % BigInt(2).pow(128)
       }
     }
 
     "multiply" in {
       prop { (x: UInt128, y: UInt128) =>
-        (x * y).toBigInt should_=== (x.toBigInt * y.toBigInt) % BigInt(2).pow(128)
+        (x * y).toBigInt === (x.toBigInt * y.toBigInt) % BigInt(2).pow(128)
       }
     }
 
     "or" in {
-      prop { (x: UInt128, y: UInt128) => (x | y).toBigInt should_=== x.toBigInt | y.toBigInt }
+      prop { (x: UInt128, y: UInt128) => (x | y).toBigInt === (x.toBigInt | y.toBigInt) }
     }
 
     "and" in {
-      prop { (x: UInt128, y: UInt128) => (x & y).toBigInt should_=== x.toBigInt & y.toBigInt }
+      prop { (x: UInt128, y: UInt128) => (x & y).toBigInt === (x.toBigInt & y.toBigInt) }
     }
 
     "xor" in {
-      prop { (x: UInt128, y: UInt128) => (x ^ y).toBigInt should_=== x.toBigInt ^ y.toBigInt }
+      prop { (x: UInt128, y: UInt128) => (x ^ y).toBigInt === (x.toBigInt ^ y.toBigInt) }
     }
 
     "shift left" in {
       given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
       prop { (x: UInt128, y: Int) =>
-        (x << y).toBigInt should_=== (x.toBigInt << y) % BigInt(2).pow(128)
+        (x << y).toBigInt === (x.toBigInt << y) % BigInt(2).pow(128)
       }
     }
 
     "shift right" in {
       given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
-      prop { (x: UInt128, y: Int) => (x >> y).toBigInt should_=== x.toBigInt >> y }
+      prop { (x: UInt128, y: Int) => (x >> y).toBigInt === x.toBigInt >> y }
     }
   }

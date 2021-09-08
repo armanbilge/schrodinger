@@ -31,7 +31,7 @@ class ExponentialSpec extends Specification with ScalaCheck:
       prop { (rng: SplitMix64) =>
         val x = Exponential[RV[SplitMix64, _], Double](1.0).simulate(rng).value
         val y = new AhrensDieterExponentialSampler(rng, 1.0).sample()
-        x should_=== y
+        x === y
       }
     }
   }

@@ -43,7 +43,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
         val ints = List.fill(N)(Random[RV[SplitMix, _]].int).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedInts = List.fill(N)(random.nextInt())
-        ints should_=== expectedInts
+        ints === expectedInts
       }
     }
 
@@ -52,7 +52,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
         val longs = List.fill(N)(Random[RV[SplitMix, _]].long).sequence.simulate(state).value
         val random = splittableRandom(state)
         val expectedLongs = List.fill(N)(random.nextLong())
-        longs should_=== expectedLongs
+        longs === expectedLongs
       }
     }
 
@@ -62,7 +62,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
         import SplitMix.schrodingerRngSplittableRngForSplitMix.given
         val ints = List.fill(N)(state.unsafeSplit().unsafeNextInt())
         val expectedInts = List.fill(N)(random.split().nextInt())
-        ints should_=== expectedInts
+        ints === expectedInts
       }
     }
   }
