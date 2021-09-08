@@ -29,7 +29,7 @@ val CommonsRngVersion = "1.3"
 val Fs2Version = "3.1.1"
 val Specs2Version = "5.0.0-RC-07"
 val ScalaCheckVersion = "1.15.3"
-val DisciplineSpecs2Version = "1.2-7-e3ce260"
+val DisciplineSpecs2Version = "1.2-75-108db05"
 
 val commonSettings = Seq(
   scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
