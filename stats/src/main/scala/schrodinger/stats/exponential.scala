@@ -21,6 +21,7 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Density
 import schrodinger.kernel.Exponential
+import schrodinger.math.LogDouble
 
 object exponential extends ExponentialInstances
 

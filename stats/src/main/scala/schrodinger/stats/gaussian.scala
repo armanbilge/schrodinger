@@ -22,6 +22,7 @@ import cats.syntax.all.given
 import org.apache.commons.math3.distribution.NormalDistribution
 import schrodinger.kernel.Density
 import schrodinger.kernel.Gaussian
+import schrodinger.math.LogDouble
 
 object gaussian extends GaussianInstances
 

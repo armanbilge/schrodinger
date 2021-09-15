@@ -21,6 +21,7 @@ import cats.Functor
 import cats.syntax.all.given
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Uniform
+import schrodinger.math.LogDouble
 
 object categorical extends CategoricalInstances
 

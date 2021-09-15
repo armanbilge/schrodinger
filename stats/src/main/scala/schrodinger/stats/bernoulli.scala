@@ -21,6 +21,7 @@ import schrodinger.kernel.Density
 import schrodinger.kernel.Bernoulli
 import cats.Applicative
 import cats.syntax.all.given
+import schrodinger.math.LogDouble
 
 object bernoulli
 

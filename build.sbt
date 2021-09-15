@@ -60,10 +60,10 @@ lazy val laws = project
   )
   .settings(commonSettings: _*)
 
-lazy val logDouble = project
-  .in(file("log-double"))
+lazy val math = project
+  .in(file("math"))
   .settings(
-    name := "schrodinger-log-double",
+    name := "schrodinger-math",
     libraryDependencies ++= Seq(
       "org.typelevel" %% "algebra" % AlgebraVersion,
       "org.specs2" %% "specs2-core" % Specs2Version,
@@ -75,7 +75,7 @@ lazy val logDouble = project
 
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel, logDouble)
+  .dependsOn(kernel, math)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
@@ -131,7 +131,7 @@ lazy val tests = project
 
 lazy val stats = project
   .in(file("stats"))
-  .dependsOn(kernel, logDouble)
+  .dependsOn(kernel, math)
   .settings(
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
@@ -144,7 +144,7 @@ lazy val stats = project
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel, logDouble % Test, testkit % Test)
+  .dependsOn(kernel, math % Test, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(

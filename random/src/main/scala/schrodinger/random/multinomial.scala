@@ -21,6 +21,7 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Multinomial
+import schrodinger.math.LogDouble
 import scala.collection.immutable.ArraySeq
 
 object multinomial extends MultinomialInstances

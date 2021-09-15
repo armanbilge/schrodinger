@@ -21,6 +21,7 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
+import schrodinger.math.LogDouble
 
 object categorical extends CategoricalInstances
 

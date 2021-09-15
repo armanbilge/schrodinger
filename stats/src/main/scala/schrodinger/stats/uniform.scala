@@ -21,6 +21,7 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Density
 import schrodinger.kernel.Uniform
+import schrodinger.math.LogDouble
 
 object uniform extends UniformInstances
 
