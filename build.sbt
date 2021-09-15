@@ -39,48 +39,64 @@ val commonSettings = Seq(
 lazy val root =
   project
     .in(file("."))
-    .aggregate(kernel, random, stats, core, monteCarlo, testkit, tests, example)
+    .aggregate(
+      kernel.jvm,
+      kernel.js,
+      laws.jvm,
+      laws.js,
+      math.jvm,
+      math.js,
+      random,
+      stats,
+      core,
+      monteCarlo,
+      testkit,
+      tests,
+      example)
     .enablePlugins(NoPublishPlugin)
 
-lazy val kernel = project
+lazy val kernel = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .in(file("kernel"))
   .settings(
     name := "schrodinger-kernel"
   )
   .settings(commonSettings: _*)
 
-lazy val laws = project
+lazy val laws = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .in(file("laws"))
   .dependsOn(kernel)
   .settings(
     name := "schrodinger-laws",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-laws" % CatsVersion
+      "org.typelevel" %%% "cats-laws" % CatsVersion
     )
   )
   .settings(commonSettings: _*)
 
-lazy val math = project
+lazy val math = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
   .in(file("math"))
   .settings(
     name := "schrodinger-math",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "algebra" % AlgebraVersion,
-      "org.specs2" %% "specs2-core" % Specs2Version,
-      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %% "algebra-laws" % AlgebraVersion % Test
+      "org.typelevel" %%% "algebra" % AlgebraVersion,
+      "org.specs2" %%% "specs2-core" % Specs2Version,
+      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "algebra-laws" % AlgebraVersion % Test
     )
   )
   .settings(commonSettings: _*)
 
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel, math)
+  .dependsOn(kernel.jvm, math.jvm)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-mtl" % CatsMtlVersion
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "cats-mtl" % CatsMtlVersion
     )
   )
   .settings(commonSettings: _*)
@@ -91,9 +107,9 @@ lazy val core = project
   .settings(
     name := "schrodinger",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-effect-kernel" % CatsEffectVersion,
-      "org.specs2" %% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test,
+      "org.typelevel" %%% "cats-effect-kernel" % CatsEffectVersion,
+      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
@@ -105,23 +121,23 @@ lazy val testkit = project
   .settings(
     name := "schrodinger-testkit",
     libraryDependencies ++= Seq(
-      "org.typelevel" %% "cats-laws" % CatsVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
-      "org.specs2" %% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %% "specs2-scalacheck" % Specs2Version % Test
+      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
     )
   )
   .settings(commonSettings: _*)
 
 lazy val tests = project
   .in(file("tests"))
-  .dependsOn(testkit % Test, laws % Test)
+  .dependsOn(testkit % Test, laws.jvm % Test)
   .settings(
     name := "schrodinger-tests",
     libraryDependencies ++= Seq(
-      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %% "cats-effect-laws" % CatsEffectVersion % Test,
-      "org.typelevel" %% "cats-effect-testkit" % CatsEffectVersion % Test,
+      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
+      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
@@ -131,30 +147,30 @@ lazy val tests = project
 
 lazy val stats = project
   .in(file("stats"))
-  .dependsOn(kernel, math)
+  .dependsOn(kernel.jvm, math.jvm)
   .settings(
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
-      "org.typelevel" %% "cats-core" % CatsVersion,
-      "org.typelevel" %% "cats-laws" % CatsVersion % Test
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test
     )
   )
   .settings(commonSettings: _*)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel, math % Test, testkit % Test)
+  .dependsOn(kernel.jvm, math.jvm % Test, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
-      "co.fs2" %% "fs2-core" % Fs2Version,
-      "org.typelevel" %% "algebra" % AlgebraVersion,
-      "org.typelevel" %% "cats-effect-std" % CatsEffectVersion,
-      "org.typelevel" %% "cats-laws" % CatsVersion % Test,
-      "org.typelevel" %% "cats-effect-laws" % CatsEffectVersion % Test,
-      "org.typelevel" %% "cats-effect-testkit" % CatsEffectVersion % Test,
-      "io.vasilev" %% "discipline-specs2" % DisciplineSpecs2Version % Test
+      "co.fs2" %%% "fs2-core" % Fs2Version,
+      "org.typelevel" %%% "algebra" % AlgebraVersion,
+      "org.typelevel" %%% "cats-effect-std" % CatsEffectVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
+      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
+      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
   .settings(commonSettings: _*)
@@ -164,7 +180,7 @@ lazy val example = project
   .dependsOn(core)
   .settings(
     name := "schrodinger-example",
-    libraryDependencies += "org.typelevel" %% "cats-effect" % CatsEffectVersion
+    libraryDependencies += "org.typelevel" %%% "cats-effect" % CatsEffectVersion
   )
   .settings(commonSettings: _*)
   .enablePlugins(NoPublishPlugin)

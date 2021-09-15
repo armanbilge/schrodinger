@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger
+package schrodinger.math
 
 import algebra.laws.RingLaws
 import cats.kernel.Eq
