@@ -51,8 +51,7 @@ lazy val root =
       core,
       monteCarlo,
       testkit,
-      tests,
-      example)
+      tests)
     .enablePlugins(NoPublishPlugin)
 
 lazy val kernel = crossProject(JVMPlatform, JSPlatform)
@@ -160,7 +159,7 @@ lazy val stats = project
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, math.jvm % Test, testkit % Test)
+  .dependsOn(kernel.jvm, math.jvm, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
@@ -174,13 +173,3 @@ lazy val monteCarlo = project
     )
   )
   .settings(commonSettings: _*)
-
-lazy val example = project
-  .in(file("example"))
-  .dependsOn(core)
-  .settings(
-    name := "schrodinger-example",
-    libraryDependencies += "org.typelevel" %%% "cats-effect" % CatsEffectVersion
-  )
-  .settings(commonSettings: _*)
-  .enablePlugins(NoPublishPlugin)

@@ -52,6 +52,8 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck {
   checkAll("Hash[LogDouble]", HashTests[LogDouble].hash)
   checkAll(
     "Serializable[LogDoubleAlgebra]",
-    SerializableTests.serializable(LogDouble.schrodingerAlgebraForLogDouble))
+    SerializableTests.serializable(
+      LogDouble.given_CommutativeRig_LogDouble_MultiplicativeCommutativeGroup_LogDouble_Order_LogDouble_Hash_LogDouble)
+  )
 
 }

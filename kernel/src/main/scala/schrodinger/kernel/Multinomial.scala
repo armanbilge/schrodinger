@@ -16,10 +16,11 @@
 
 package schrodinger.kernel
 
-type Multinomial[S, Z, A] = [F[_]] =>> Distribution[F, Multinomial.Params[S, Z], A]
+type Multinomial[S, N, X] = [F[_]] =>> Distribution[F, Multinomial.Params[S, N], X]
 
 object Multinomial:
-  final case class Params[+S, Z](support: S, trials: Z)
+  final case class Params[+S, +N](support: S, trials: N)
 
-  def apply[F[_], S, Z, A](support: S, trials: Z)(using m: Multinomial[S, Z, A][F]): F[A] = m(
-    Params(support, trials))
+  inline def apply[F[_], S, N, X](support: S, trials: N)(
+      using m: Multinomial[S, N, X][F]): F[X] =
+    m(Params(support, trials))

@@ -22,34 +22,39 @@ import cats.syntax.all.given
 import schrodinger.kernel.Density
 import schrodinger.kernel.Uniform
 import schrodinger.math.LogDouble
+import schrodinger.math.Interval.*
+import schrodinger.math.Interval.given
 
 object uniform extends UniformInstances
 
 trait UniformInstances:
 
   given schrodingerStatsStandardUniformForInt[F[_]: Applicative]
-      : Uniform[Unit, Int][Density[F, LogDouble]] with
-    private val density =
-      LogDouble(Int.MaxValue.toDouble - Int.MinValue.toDouble + 1).reciprocal.pure[F]
-    override def apply(params: Uniform.Params[Unit]) = _ => density
+      : Uniform[Int.MinValue.type <=@<= Int.MaxValue.type, Int][Density[F, LogDouble]] =
+    val density =
+      (_: Int) =>
+        LogDouble(Int.MaxValue.toDouble - Int.MinValue.toDouble + 1).reciprocal.pure[F]
+    _ => density
 
   given schrodingerStatsStandardUniformForLong[F[_]: Applicative]
-      : Uniform[Unit, Int][Density[F, LogDouble]] with
-    private val density =
-      LogDouble(Long.MaxValue.toDouble - Long.MinValue.toDouble + 1).reciprocal.pure[F]
-    override def apply(params: Uniform.Params[Unit]) = _ => density
+      : Uniform[Long.MinValue.type <=@<= Long.MaxValue.type, Long][Density[F, LogDouble]] =
+    val density =
+      (_: Long) =>
+        LogDouble(Long.MaxValue.toDouble - Long.MinValue.toDouble + 1).reciprocal.pure[F]
+    _ => density
 
   given schrodingerStatsStandardUniformForDouble[F[_]: Applicative]
-      : Uniform[Unit, Double][Density[F, LogDouble]] with
-    private val zero = LogDouble.Zero.pure[F]
-    private val one = LogDouble.One.pure[F]
-    override def apply(params: Uniform.Params[Unit]) = x =>
-      if 0 <= x && x <= 1 then one else zero
+      : Uniform[0.0 <=@< 1.0, Double][Density[F, LogDouble]] =
+    val zero = LogDouble.Zero.pure[F]
+    val one = LogDouble.One.pure[F]
+    val density = (x: Double) => if 0 <= x && x <= 1 then one else zero
+    _ => density
 
   given schrodingerStatsUniformForIntRange[F[_]: Applicative]
       : Uniform[Range, Int][Density[F, LogDouble]] with
     override def apply(params: Uniform.Params[Range]) =
       val range = params.support
+      val zero = LogDouble.Zero.pure[F]
       val density =
         LogDouble((range.last.toDouble - range.start.toDouble + 1).abs).reciprocal.pure[F]
-      _ => density
+      x => if range.contains(x) then density else zero

@@ -16,4 +16,4 @@
 
 package schrodinger.kernel
 
-trait Distribution[F[_], -P, S] extends (P => F[S])
+trait Distribution[F[_], -P, X] extends (P => F[X])

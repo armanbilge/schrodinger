@@ -16,10 +16,13 @@
 
 package schrodinger.kernel
 
-type Exponential[R] = [F[_]] =>> Distribution[F, Exponential.Params[R], R]
+type GenExponential[R, X] = [F[_]] =>> Distribution[F, Exponential.Params[R], X]
+type Exponential[R] = [F[_]] =>> GenExponential[R, R][F]
 
 object Exponential:
-  final case class Params[R](rate: R)
+  final case class Params[+R](rate: R)
 
-  inline def apply[F[_], R](rate: R)(using exp: Exponential[R][F]): F[R] =
-    exp(Params(rate))
+  inline def standard[F[_], X](using e: GenExponential[1, X][F]): F[X] = e(Params(1))
+
+  inline def apply[F[_], R](rate: R)(using e: Exponential[R][F]): F[R] =
+    e(Params(rate))

@@ -28,8 +28,7 @@ object exponential extends ExponentialInstances
 trait ExponentialInstances:
 
   given schrodingerStatsExponentialForDouble[F[_]: Applicative]
-      : Exponential[Double][Density[F, LogDouble]] with
-    override def apply(params: Exponential.Params[Double]) =
-      import params.*
-      val logRate = LogDouble(rate)
-      x => (logRate * LogDouble.exp(-rate * x)).pure[F]
+      : Exponential[Double][Density[F, LogDouble]] = params =>
+    import params.*
+    val logRate = LogDouble(rate)
+    x => (logRate * LogDouble.exp(-rate * x)).pure[F]

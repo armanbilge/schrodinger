@@ -19,17 +19,19 @@ package schrodinger.random
 import cats.Functor
 import cats.syntax.all.given
 import schrodinger.kernel.{Bernoulli, Random, Uniform}
+import schrodinger.math.Interval.*
+import schrodinger.math.Interval.given
 
 object bernoulli extends BernoulliInstances
 
 trait BernoulliInstances:
   given schrodingerRandomFairBernoulliForBoolean[F[_]: Functor: Random]
-      : Bernoulli[0.5, Boolean][F] with
-    private val fair = Random[F].int.map(_ >= 0)
-    override def apply(params: Bernoulli.Params[0.5]) = fair
+      : Bernoulli[0.5, Boolean][F] =
+    val fair = Random[F].int.map(_ >= 0)
+    _ => fair
 
-  given schrodingerRandomBernoulliForDoubleBoolean[F[_]: Functor: Random: Uniform[Unit, Double]]
-      : Bernoulli[Double, Boolean][F] with
+  given schrodingerRandomBernoulliForDoubleBoolean[
+      F[_]: Functor: Random: Uniform[0.0 <=@< 1.0, Double]]: Bernoulli[Double, Boolean][F] with
     override def apply(params: Bernoulli.Params[Double]): F[Boolean] =
       import params.*
-      Uniform.standard.map(_ < successProbability)
+      Uniform(0.0 <=@< 1.0).map(_ < successProbability)
