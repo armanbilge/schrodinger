@@ -22,14 +22,14 @@ import cats.syntax.all.given
 import org.apache.commons.math3.distribution.NormalDistribution
 import schrodinger.kernel.Density
 import schrodinger.kernel.Gaussian
+import schrodinger.math.LogDouble
 
 object gaussian extends GaussianInstances
 
 trait GaussianInstances:
 
   given schrodingerStatsGaussianForDouble[F[_]: Applicative]
-      : Gaussian[Double][Density[F, LogDouble]] with
-    override def apply(params: Gaussian.Params[Double]) =
-      import params.*
-      val distribution = new NormalDistribution(null, mean, standardDeviation)
-      x => LogDouble.exp(distribution.logDensity(x)).pure[F]
+      : Gaussian[Double][Density[F, LogDouble]] = params =>
+    import params.*
+    val distribution = new NormalDistribution(null, mean, standardDeviation)
+    x => LogDouble.exp(distribution.logDensity(x)).pure[F]

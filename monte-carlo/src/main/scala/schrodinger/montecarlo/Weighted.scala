@@ -39,6 +39,8 @@ import cats.kernel.CommutativeSemigroup
 import cats.syntax.all.given
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
+import schrodinger.math.Semifield
+import schrodinger.math.syntax.*
 
 import scala.annotation.tailrec
 

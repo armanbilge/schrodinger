@@ -17,8 +17,9 @@
 package schrodinger.random
 
 import cats.{Functor, Monad}
-import cats.syntax.all.given
+import cats.syntax.all.*
 import schrodinger.kernel.{Random, Uniform}
+import schrodinger.math.Interval.*
 
 import java.lang
 import scala.annotation.switch
@@ -28,15 +29,31 @@ object uniform extends UniformInstances
 
 trait UniformInstances:
 
-  given schrodingerRandomStandardUniformForFloat[F[_]: Functor: Random]: Uniform[Unit, Float][F]
-    with
-    private val standard = Random[F].int.map(x => (x >>> 8) * 5.9604645e-8f)
-    override def apply(params: Uniform.Params[Unit]): F[Float] = standard
+  given schrodingerRandomUniformInt[F[_]: Random]
+      : Uniform[Int.MinValue.type <=@<= Int.MaxValue.type, Int][F] = _ => Random[F].int
 
-  given schrodingerRandomStandardUniformForDouble[F[_]: Functor: Random]
-      : Uniform[Unit, Double][F] with
-    private val standard = Random[F].long.map(x => (x >>> 11) * 1.1102230246251565e-16)
-    override def apply(params: Uniform.Params[Unit]): F[Double] = standard
+  given schrodingerRandomUniformLong[F[_]: Random]
+      : Uniform[Long.MinValue.type <=@<= Long.MaxValue.type, Long][F] = _ => Random[F].long
+
+  given `schrodingerRandomUniformFloat[0,1)`[F[_]: Functor: Random]
+      : Uniform[0f <=@< 1f, Float][F] =
+    val x = Random[F].int.map(x => (x >>> 8) * 5.9604645e-8f)
+    _ => x
+
+  given `schrodingerRandomUniformFloat(0,1]`[F[_]: Functor: Random]
+      : Uniform[0f <@<= 1f, Float][F] =
+    val x = Random[F].int.map(x => ((x >>> 8) + 1) * 5.9604645e-8f)
+    _ => x
+
+  given `schrodingerRandomUniformDouble[0,1)`[F[_]: Functor: Random]
+      : Uniform[0d <=@< 1d, Double][F] =
+    val x = Random[F].long.map(x => (x >>> 11) * 1.1102230246251565e-16)
+    _ => x
+
+  given `schrodingerRandomUniformDouble(0,1]`[F[_]: Functor: Random]
+      : Uniform[0d <@<= 1d, Double][F] =
+    val x = Random[F].long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
+    _ => x
 
   given schrodingerRandomUniformForIntRange[F[_]: Monad: Random]: Uniform[Range, Int][F] with
     override def apply(params: Uniform.Params[Range]): F[Int] =

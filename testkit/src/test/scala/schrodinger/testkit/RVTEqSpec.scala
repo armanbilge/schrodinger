@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package schrodinger.testkit
+package schrodinger
+package testkit
 
 import cats.effect.kernel.Clock
 import cats.laws.discipline.ExhaustiveCheck
@@ -22,7 +23,6 @@ import cats.{Applicative, Eq, Eval}
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.RV
 import schrodinger.kernel.Bernoulli
 import schrodinger.random.all.given
 import schrodinger.rng.SplitMix

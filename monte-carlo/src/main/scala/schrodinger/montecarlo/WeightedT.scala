@@ -64,6 +64,8 @@ import schrodinger.kernel.Density
 import schrodinger.kernel.Distribution
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
+import schrodinger.math.Semifield
+import schrodinger.math.syntax.*
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

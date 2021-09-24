@@ -21,11 +21,14 @@ import cats.Functor
 import cats.syntax.all.given
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Uniform
+import schrodinger.math.LogDouble
+import schrodinger.math.Interval.*
+import schrodinger.math.Interval.given
 
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
-  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[Unit, Double]]
+  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]
       : Categorical[Seq[Double], Int][F] with
     override def apply(params: Categorical.Params[Seq[Double]]): F[Int] =
       import params.*
@@ -34,14 +37,14 @@ trait CategoricalInstances:
       while i < cumulative.length do
         cumulative(i) += cumulative(i - 1)
         i += 1
-      Uniform.standard.map { U =>
+      Uniform(0.0 <=@< 1.0).map { U =>
         val i =
           java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
         if i >= 0 then i else -(i + 1)
       }
 
-  given schrodingerRandomCategoricalForIArrayLogDouble[F[_]: Functor: Uniform[Unit, Double]]
-      : Categorical[IArray[LogDouble], Int][F] with
+  given schrodingerRandomCategoricalForIArrayLogDouble[
+      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]: Categorical[IArray[LogDouble], Int][F] with
     override def apply(params: Categorical.Params[IArray[LogDouble]]): F[Int] =
       import params.*
       val cumulative = new Array[Double](support.size)
@@ -55,7 +58,7 @@ trait CategoricalInstances:
       while i < cumulative.length do
         cumulative(i) = (support(i) / max).real + cumulative(i - 1)
         i += 1
-      Uniform.standard.map { U =>
+      Uniform(0.0 <=@< 1.0).map { U =>
         val i =
           java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
         if i >= 0 then i else -(i + 1)

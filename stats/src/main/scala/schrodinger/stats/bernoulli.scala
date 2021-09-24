@@ -21,20 +21,20 @@ import schrodinger.kernel.Density
 import schrodinger.kernel.Bernoulli
 import cats.Applicative
 import cats.syntax.all.given
+import schrodinger.math.LogDouble
 
 object bernoulli
 
 trait BernoulliInstances:
   given schrodingerStatsFairBernoulliForBoolean[F[_]: Applicative]
-      : Bernoulli[0.5, Boolean][Density[F, LogDouble]] with
-    private val half = LogDouble(0.5).pure[F]
-    private val fair = (_: Boolean) => half
-    override def apply(params: Bernoulli.Params[0.5]) = fair
+      : Bernoulli[0.5, Boolean][Density[F, LogDouble]] =
+    val half = LogDouble(0.5).pure[F]
+    val fair = (_: Boolean) => half
+    _ => fair
 
   given schrodingerStatsBernoulliForDoubleBoolean[F[_]: Applicative]
-      : Bernoulli[Double, Boolean][Density[F, LogDouble]] with
-    override def apply(params: Bernoulli.Params[Double]) =
-      import params.*
-      val success = LogDouble(successProbability).pure[F]
-      val failure = LogDouble(1 - successProbability).pure[F]
-      x => if x then success else failure
+      : Bernoulli[Double, Boolean][Density[F, LogDouble]] = params =>
+    import params.*
+    val success = LogDouble(successProbability).pure[F]
+    val failure = LogDouble(1 - successProbability).pure[F]
+    x => if x then success else failure

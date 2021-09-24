@@ -16,4 +16,4 @@
 
 package schrodinger.kernel
 
-type Density[F[_], R] = [A] =>> (A => F[R])
+type Density[F[_], R] = [X] =>> (X => F[R])

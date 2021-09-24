@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.montecarlo
+package schrodinger.math
 
 import algebra.ring.AdditiveSemigroup
 import algebra.ring.CommutativeRig
@@ -26,7 +26,8 @@ import algebra.ring.Rig
 type Semifield[A] = Rig[A] & MultiplicativeGroup[A]
 type CommutativeSemifield[A] = CommutativeRig[A] & MultiplicativeCommutativeGroup[A]
 
-extension [A](x: A)
-  def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
-  def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
-  def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+object syntax:
+  extension [A](x: A)
+    def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
+    def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
+    def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)

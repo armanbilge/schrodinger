@@ -31,4 +31,4 @@ object PseudoRandom:
     type S = S0
   }
 
-  def apply[F[_]](using F: PseudoRandom[F]): F.type = F
+  inline def apply[F[_]](using F: PseudoRandom[F]): F.type = F

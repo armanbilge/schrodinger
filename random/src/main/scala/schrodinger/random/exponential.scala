@@ -16,24 +16,29 @@
 
 package schrodinger.random
 
+import cats.Functor
 import cats.Monad
 import cats.syntax.all.given
-import schrodinger.kernel.{Exponential, Uniform}
+import schrodinger.kernel.{Exponential, GenExponential, Uniform}
+import schrodinger.math.Interval.*
+import schrodinger.math.Interval.given
 
 object exponential extends ExponentialInstances
 
 trait ExponentialInstances:
 
-  given schrodingerRandomExponentialForDouble[F[_]: Monad: Uniform[Unit, Double]]
-      : Exponential[Double][F] with
-    override def apply(params: Exponential.Params[Double]): F[Double] =
-      import params.*
-      standard.map(_ / rate)
+  given schrodingerRandomExponentialForDouble[F[_]: Functor: GenExponential[1, Double]]
+      : Exponential[Double][F] = params =>
+    import params.*
+    Exponential.standard.map(_ / rate)
 
-    private val standard: F[Double] =
+  given schrodingerRandomStandardExponentialForDouble[
+      F[_]: Monad: Uniform[0.0 <@<= 1.0, Double]]: GenExponential[1, Double][F] =
+    val standard: F[Double] =
       import AhrensDieterConstants.*
-      val umin = Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(math.min))
-      Uniform.standard.flatMap { _u =>
+      val umin =
+        Vector.iterate(Uniform(0.0 <@<= 1.0), 16)(_.map2(Uniform(0.0 <@<= 1.0))(math.min))
+      Uniform(0.0 <@<= 1.0).flatMap { _u =>
         var a = 0.0
         var u = _u
 
@@ -50,6 +55,8 @@ trait ExponentialInstances:
 
           umin(i).map(a + _ * ExponentialSaQi(0))
       }
+
+    _ => standard
 
   private object AhrensDieterConstants:
     val ExponentialSaQi =

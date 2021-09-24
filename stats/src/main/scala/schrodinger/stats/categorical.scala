@@ -21,13 +21,13 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
+import schrodinger.math.LogDouble
 
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
   given schrodingerStatsCategoricalForIArrayLogDouble[F[_]: Applicative]
-      : Categorical[IArray[LogDouble], Int][Density[F, LogDouble]] with
-    override def apply(params: Categorical.Params[IArray[LogDouble]]) =
-      import params.*
-      val sum = LogDouble.sum(support)
-      i => (support(i) / sum).pure[F]
+      : Categorical[IArray[LogDouble], Int][Density[F, LogDouble]] = params =>
+    import params.*
+    val sum = LogDouble.sum(support)
+    i => (support(i) / sum).pure[F]

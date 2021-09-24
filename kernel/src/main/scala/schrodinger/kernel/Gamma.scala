@@ -16,10 +16,11 @@
 
 package schrodinger.kernel
 
-type Gamma[R] = [F[_]] =>> Distribution[F, Gamma.Params[R], R]
+type GenGamma[S, R, X] = [F[_]] =>> Distribution[F, Gamma.Params[S, R], X]
+type Gamma[R] = [F[_]] =>> GenGamma[R, R, R][F]
 
 object Gamma:
-  final case class Params[R](shape: R, rate: R)
+  final case class Params[+S, +R](shape: S, rate: R)
 
-  inline def apply[F[_], R](shape: R, rate: R)(using g: Gamma[R][F]): F[R] =
+  inline def apply[F[_], S, R, X](shape: S, rate: R)(using g: GenGamma[S, R, X][F]): F[X] =
     g(Params(shape, rate))

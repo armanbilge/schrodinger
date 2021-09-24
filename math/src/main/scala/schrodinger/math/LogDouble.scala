@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger
+package schrodinger.math
 
 import algebra.ring.CommutativeRig
 import algebra.ring.Field
@@ -64,13 +64,11 @@ object LogDouble:
     def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
     def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
-  abstract class LogDoubleAlgebra private[LogDouble] ()
-      extends CommutativeRig[LogDouble],
-        MultiplicativeCommutativeGroup[LogDouble],
-        Order[LogDouble],
-        Hash[LogDouble]
-
-  given schrodingerAlgebraForLogDouble: LogDoubleAlgebra with
+  given CommutativeRig[LogDouble]
+    with MultiplicativeCommutativeGroup[LogDouble]
+    with Order[LogDouble]
+    with Hash[LogDouble]
+    with
     override def zero: LogDouble = LogDouble.Zero
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)

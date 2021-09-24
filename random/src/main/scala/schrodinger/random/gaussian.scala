@@ -16,10 +16,13 @@
 
 package schrodinger.random
 
+import cats.Functor
 import cats.Monad
 import cats.syntax.all.given
 import cats.mtl.Stateful
-import schrodinger.kernel.{Gaussian, Uniform}
+import schrodinger.kernel.{Gaussian, GenGaussian, Uniform}
+import schrodinger.math.Interval.*
+import schrodinger.math.Interval.given
 
 object gaussian extends GaussianInstances
 
@@ -29,32 +32,36 @@ object CachedGaussian:
   extension [A](cached: CachedGaussian[A]) def value: A = cached
 
 trait GaussianInstances:
+  given schrodingerRandomGaussianForDouble[F[_]: Functor: GenGaussian[0, 1, Double]]
+      : GenGaussian[0, 1, Double][F] =
+    params =>
+      import params.*
+      Gaussian.standard.map(_ * standardDeviation + mean)
 
-  given schrodingerRandomGaussianForDouble[F[_]: Monad: Uniform[Unit, Double]](
-      using state: Stateful[F, CachedGaussian[Double]]): Gaussian[Double][F] =
+  given schrodingerRandomStandardGaussianForDouble[F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]](
+      using state: Stateful[F, CachedGaussian[Double]]): GenGaussian[0, 1, Double][F] =
 
     final case class BoxMuller(x: Double, y: Double, s: Double)
     object BoxMuller:
       def apply(x: Double, y: Double): BoxMuller =
         BoxMuller(x, y, x * x + y * y)
 
-    new Gaussian[Double][F]:
-      private val CachedNaN = CachedGaussian(Double.NaN)
+    val CachedNaN = CachedGaussian(Double.NaN)
 
-      override def apply(params: Gaussian.Params[Double]): F[Double] =
-        import params.*
-        standard.map(_ * standardDeviation + mean)
-
-      private val standard: F[Double] = state.get.flatMap { cached =>
-        if cached.value.isNaN then pair.flatMap { (x, y) => state.set(CachedGaussian(y)).as(x) }
-        else state.set(CachedNaN).as(cached.value)
+    val boxMuller =
+      Uniform(0.0 <=@< 1.0).map2(Uniform(0.0 <=@< 1.0)) { (x, y) =>
+        BoxMuller(x * 2 - 1, y * 2 - 1)
       }
 
-      private val boxMuller =
-        Uniform.standard.map2(Uniform.standard) { (x, y) => BoxMuller(x * 2 - 1, y * 2 - 1) }
+    val pair = boxMuller.iterateWhile(bm => bm.s >= 1.0 | bm.s == 0.0).map { bm =>
+      import bm.*
+      val scale = math.sqrt(-2.0 * math.log(s) / s)
+      (scale * x, scale * y)
+    }
 
-      private val pair = boxMuller.iterateWhile(bm => bm.s >= 1.0 | bm.s == 0.0).map { bm =>
-        import bm.*
-        val scale = math.sqrt(-2.0 * math.log(s) / s)
-        (scale * x, scale * y)
-      }
+    val standard = state.get.flatMap { cached =>
+      if cached.value.isNaN then pair.flatMap { (x, y) => state.set(CachedGaussian(y)).as(x) }
+      else state.set(CachedNaN).as(cached.value)
+    }
+
+    _ => standard
