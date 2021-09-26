@@ -70,7 +70,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
       case (a, alpha) if alpha.forall(_ == 1.0) =>
         Arbitrary(
           for
-            p <- alpha.foldLeft(Arbitrary.arbUnit.arbitrary.map(_ => List.empty[Double])) {
+            p <- alpha.foldLeft(Gen.const(List.empty[Double])) {
               (list, _) =>
                 for
                   tail <- list

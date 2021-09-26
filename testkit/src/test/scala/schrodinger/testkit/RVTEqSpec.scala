@@ -17,7 +17,7 @@
 package schrodinger
 package testkit
 
-import cats.effect.kernel.Clock
+import cats.effect.SyncIO
 import cats.laws.discipline.ExhaustiveCheck
 import cats.{Applicative, Eq, Eval}
 import org.scalacheck.{Arbitrary, Gen}
@@ -38,11 +38,6 @@ class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances:
 
   given (Eval[Boolean] => Some[Boolean]) = eval => Some(eval.value)
 
-  given Clock[Eval] with
-    override def applicative: Applicative[Eval] = Eval.catsBimonadForEval
-    override def monotonic: Eval[FiniteDuration] = Eval.later(System.nanoTime().nanoseconds)
-    override def realTime: Eval[FiniteDuration] = Eval.later(System.currentTimeMillis().millis)
-
   given Arbitrary[DifferentRandoms[SplitMix]] = Arbitrary(
     for p <- Gen.choose[Double](0, 0.25)
     yield DifferentRandoms(
@@ -51,7 +46,7 @@ class RVTEqSpec extends Specification with ScalaCheck with RVTestInstances:
   )
 
   given ExhaustiveCheck[SplitMix] =
-    ExhaustiveCheck.instance(List(SplitMix.fromTime[Eval].value))
+    ExhaustiveCheck.instance(List(SplitMix.fromTime[SyncIO].unsafeRunSync()))
 
   given Confidence = Confidence(1000, 0.95)
 
