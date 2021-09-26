@@ -123,7 +123,8 @@ lazy val testkit = project
       "org.typelevel" %%% "cats-laws" % CatsVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.typelevel" %%% "cats-effect" % CatsEffectVersion % Test
     )
   )
   .settings(commonSettings: _*)
