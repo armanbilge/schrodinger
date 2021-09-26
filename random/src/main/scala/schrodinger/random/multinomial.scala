@@ -27,9 +27,9 @@ import scala.collection.immutable.ArraySeq
 object multinomial extends MultinomialInstances
 
 trait MultinomialInstances:
-  given schrodingerRandomMultinomialForSeqDouble[
-      F[_]: Applicative: Categorical[Seq[Double], Int]]
-      : Multinomial[Seq[Double], Int, Seq[Int]][F] with
+  given schrodingerRandomMultinomialForSeqDouble[F[_]: Applicative](
+      using Categorical.Aux[F, Seq[Double], Int]): Multinomial[Seq[Double], Int, Seq[Int]][F]
+    with
     override def apply(params: Multinomial.Params[Seq[Double], Int]): F[Seq[Int]] =
       import params.*
       val categorical = Categorical(support)
@@ -43,8 +43,8 @@ trait MultinomialInstances:
         i += 1
       acc.map(ArraySeq.unsafeWrapArray)
 
-  given schrodingerRandomMultinomialForIArrayLogDouble[
-      F[_]: Applicative: Categorical[IArray[LogDouble], Int]]
+  given schrodingerRandomMultinomialForIArrayLogDouble[F[_]: Applicative](
+      using Categorical.Aux[F, IArray[LogDouble], Int])
       : Multinomial[IArray[LogDouble], Int, IArray[Int]][F] with
     override def apply(params: Multinomial.Params[IArray[LogDouble], Int]): F[IArray[Int]] =
       import params.*

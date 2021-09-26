@@ -32,14 +32,15 @@ object CachedGaussian:
   extension [A](cached: CachedGaussian[A]) def value: A = cached
 
 trait GaussianInstances:
-  given schrodingerRandomGaussianForDouble[F[_]: Functor: GenGaussian[0, 1, Double]]
-      : GenGaussian[0, 1, Double][F] =
+  given schrodingerRandomGaussianForDouble[F[_]: Functor](
+      using Gaussian.GenAux[F, 0, 1, Double]): GenGaussian[0, 1, Double][F] =
     params =>
       import params.*
       Gaussian.standard.map(_ * standardDeviation + mean)
 
-  given schrodingerRandomStandardGaussianForDouble[F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]](
-      using state: Stateful[F, CachedGaussian[Double]]): GenGaussian[0, 1, Double][F] =
+  given schrodingerRandomStandardGaussianForDouble[F[_]: Monad](
+      using uniform: Uniform.Aux[F, 0.0 <=@< 1.0, Double],
+      state: Stateful[F, CachedGaussian[Double]]): GenGaussian[0, 1, Double][F] =
 
     final case class BoxMuller(x: Double, y: Double, s: Double)
     object BoxMuller:

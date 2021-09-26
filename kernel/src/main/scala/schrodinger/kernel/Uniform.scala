@@ -19,6 +19,8 @@ package schrodinger.kernel
 type Uniform[S, X] = [F[_]] =>> Distribution[F, Uniform.Params[S], X]
 
 object Uniform:
+  type Aux[F[_], S, X] = Distribution[F, Uniform.Params[S], X]
+
   final case class Params[+S](support: S)
 
-  inline def apply[F[_], S, X](support: S)(using u: Uniform[S, X][F]): F[X] = u(Params(support))
+  inline def apply[F[_], S, X](support: S)(using u: Aux[F, S, X]): F[X] = u(Params(support))

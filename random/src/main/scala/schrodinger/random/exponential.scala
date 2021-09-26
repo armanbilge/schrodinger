@@ -27,17 +27,18 @@ object exponential extends ExponentialInstances
 
 trait ExponentialInstances:
 
-  given schrodingerRandomExponentialForDouble[F[_]: Functor: GenExponential[1, Double]]
-      : Exponential[Double][F] = params =>
+  given schrodingerRandomExponentialForDouble[F[_]: Functor](
+      using Exponential.GenAux[F, 1, Double]): Exponential.Aux[F, Double] = params =>
     import params.*
     Exponential.standard.map(_ / rate)
 
-  given schrodingerRandomStandardExponentialForDouble[
-      F[_]: Monad: Uniform[0.0 <@<= 1.0, Double]]: GenExponential[1, Double][F] =
+  given schrodingerRandomStandardExponentialForDouble[F[_]: Monad](
+      using Uniform.Aux[F, 0.0 <=@< 1.0, Double],
+      Uniform.Aux[F, 0.0 <@<= 1.0, Double]): Exponential.GenAux[F, 1, Double] =
     val standard: F[Double] =
       import AhrensDieterConstants.*
       val umin =
-        Vector.iterate(Uniform(0.0 <@<= 1.0), 16)(_.map2(Uniform(0.0 <@<= 1.0))(math.min))
+        Vector.iterate(Uniform(0.0 <=@< 1.0), 16)(_.map2(Uniform(0.0 <=@< 1.0))(math.min))
       Uniform(0.0 <@<= 1.0).flatMap { _u =>
         var a = 0.0
         var u = _u

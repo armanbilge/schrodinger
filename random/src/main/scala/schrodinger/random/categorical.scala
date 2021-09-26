@@ -28,8 +28,8 @@ import schrodinger.math.Interval.given
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
-  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]
-      : Categorical[Seq[Double], Int][F] with
+  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor](
+      using Uniform.Aux[F, 0.0 <=@< 1.0, Double]): Categorical[Seq[Double], Int][F] with
     override def apply(params: Categorical.Params[Seq[Double]]): F[Int] =
       import params.*
       val cumulative = support.toArray
@@ -43,8 +43,8 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
-  given schrodingerRandomCategoricalForIArrayLogDouble[
-      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]: Categorical[IArray[LogDouble], Int][F] with
+  given schrodingerRandomCategoricalForIArrayLogDouble[F[_]: Functor](
+      using Uniform.Aux[F, 0.0 <=@< 1.0, Double]): Categorical[IArray[LogDouble], Int][F] with
     override def apply(params: Categorical.Params[IArray[LogDouble]]): F[Int] =
       import params.*
       val cumulative = new Array[Double](support.size)

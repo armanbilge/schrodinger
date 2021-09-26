@@ -29,7 +29,7 @@ class ExponentialSpec extends Specification with ScalaCheck:
   "Exponential" should {
     "generate standard exponential variates" in {
       prop { (rng: SplitMix64) =>
-        val x = Exponential[RV[SplitMix64, _], Double](1.0).simulate(rng).value
+        val x = Exponential.standard[RV[SplitMix64, _], Double].simulate(rng).value
         val y = new AhrensDieterExponentialSampler(rng, 1.0).sample()
         x === y
       }
