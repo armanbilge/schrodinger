@@ -70,12 +70,11 @@ trait RVTestInstances extends LowPriorityRVInstances:
       case (a, alpha) if alpha.forall(_ == 1.0) =>
         Arbitrary(
           for
-            p <- alpha.foldLeft(Gen.const(List.empty[Double])) {
-              (list, _) =>
-                for
-                  tail <- list
-                  x <- Gen.exponential(1.0)
-                yield x :: tail
+            p <- alpha.foldLeft(Gen.const(List.empty[Double])) { (list, _) =>
+              for
+                tail <- list
+                x <- Gen.exponential(1.0)
+              yield x :: tail
             }
           yield Categorical(p).map(a)
         )
