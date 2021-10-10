@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.util
+package schrodinger.math
 
 import org.scalacheck.{Arbitrary, Gen}
 import org.specs2.ScalaCheck

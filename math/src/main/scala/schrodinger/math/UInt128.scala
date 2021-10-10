@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package schrodinger.util
+package schrodinger.math
 
 import java.lang.Long.*
 import scala.annotation.tailrec
 
-final private[schrodinger] case class UInt128(hi: Long, lo: Long):
+final case class UInt128(hi: Long, lo: Long):
 
   def +(that: UInt128): UInt128 =
     val lo = this.lo + that.lo

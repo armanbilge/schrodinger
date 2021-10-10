@@ -15,7 +15,7 @@
  */
 
 package schrodinger.rng
-import schrodinger.util.UInt128
+import schrodinger.math.UInt128
 
 import java.lang
 
