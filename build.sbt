@@ -96,7 +96,9 @@ lazy val randomTestkit = project
     name := "schrodinger-random-testkit",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.typelevel" %%% "vault" % VaultVersion
+      "org.typelevel" %%% "vault" % VaultVersion,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
   .settings(commonSettings: _*)

@@ -17,6 +17,7 @@
 package schrodinger.random.testkit
 
 import cats.Applicative
+import cats.Eval
 import cats.FlatMap
 import cats.Monad
 import cats.data.StateT
@@ -24,6 +25,8 @@ import org.typelevel.vault.InsertKey
 import org.typelevel.vault.LookupKey
 import org.typelevel.vault.Vault
 import schrodinger.kernel.PseudoRandom
+
+type PureRV[S, A] = PureRVT[Eval, S, A]
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 

@@ -23,20 +23,21 @@ trait PureRng[S]:
 object PureRng:
   def apply[S](using rng: PureRng[S]): rng.type = rng
 
-trait PureRng32[S] extends PureRng[S]:
-  def nextInt(s: S): (S, Int)
+trait PureRng64[S] extends PureRng[S]:
+  final def nextInt(s0: S): (S, Int) =
+    val (s1, x) = nextLong(s0)
+    (s1, (x >>> 32).toInt)
 
-  final def nextLong(s0: S): (S, Long) =
-    val (s1, i0) = nextInt(s0)
-    val (s2, i1) = nextInt(s1)
-    (s2, (i0.toLong << 32) | i1.toLong)
+  def nextLong(s: S): (S, Long)
 
-opaque type Pcg32 = Long
-object Pcg32:
-  def apply(state: Long): Pcg32 = state
+opaque type SplitMix64 = Long
+object SplitMix64:
+  def apply(state: Long): SplitMix64 = state
 
-  given PureRng[Pcg32] with PureRng32[Pcg32] with
-    def nextInt(s0: Long): (Long, Int) =
-      import Integer.*
-      val s1 = s0 * 6364136223846793005L + 1442695040888963407L
-      (s1, rotateRight(((s0 ^ (s0 >>> 18)) >>> 27).toInt, (s0 >>> 59).toInt))
+  given PureRng[SplitMix64] with PureRng64[SplitMix64] with
+    def nextLong(s0: Long): (Long, Long) =
+      val s1 = s0 + 0x9e3779b97f4a7c15L
+      var z = s1
+      z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L
+      z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL
+      (s1, z ^ (z >>> 31))
