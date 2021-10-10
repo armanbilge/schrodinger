@@ -14,15 +14,19 @@
  * limitations under the License.
  */
 
+package schrodinger.random.testkit
+
 import cats.Applicative
 import cats.FlatMap
 import cats.Monad
 import cats.data.StateT
-import org.typelevel.vault.Vault
 import org.typelevel.vault.InsertKey
 import org.typelevel.vault.LookupKey
+import org.typelevel.vault.Vault
+import schrodinger.kernel.PseudoRandom
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
+
 object PureRVT:
   extension [F[_], S, A](rv: PureRVT[F, S, A])
     def simulate(seed: S)(using FlatMap[F]): F[A] = rv.runA((seed, Vault.empty))
@@ -39,3 +43,25 @@ object PureRVT:
       fa.flatMap(f)
     def tailRecM[A, B](a: A)(f: A => PureRVT[F, S, Either[A, B]]): PureRVT[F, S, B] =
       Monad[StateT[F, (S, Vault), _]].tailRecM(a)(f)
+
+  given [F[_]: Monad, S0](using rng: PureRng[S0]): PseudoRandom[PureRVT[F, S0, _]] with
+    type G[A] = F[A]
+    type S = S0
+
+    def int: PureRVT[F, S, Int] =
+      for
+        (state0, extras) <- StateT.get[F, (S, Vault)]
+        (state1, x) = rng.nextInt(state0)
+        _ <- StateT.set((state1, extras))
+      yield x
+
+    def long: PureRVT[F, S, Long] =
+      for
+        (state0, extras) <- StateT.get[F, (S, Vault)]
+        (state1, x) = rng.nextLong(state0)
+        _ <- StateT.set((state1, extras))
+      yield x
+
+    extension [A](fa: PureRVT[F, S, A])
+      def simulate(seed: S): G[A] =
+        PureRVT.simulate(fa)(seed)
