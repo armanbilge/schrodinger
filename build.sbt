@@ -28,6 +28,7 @@ val CommonsRngVersion = "1.4"
 val Fs2Version = "3.1.5"
 val Specs2Version = "5.0.0-RC-11"
 val ScalaCheckVersion = "1.15.3"
+val VaultVersion = "3.1.0"
 val DisciplineSpecs2Version = "1.2-7-e3ce260"
 
 val commonSettings = Seq(
@@ -45,6 +46,7 @@ lazy val root =
       laws.js,
       math.jvm,
       math.js,
+      randomTestkit,
       random,
       stats,
       core,
@@ -87,9 +89,21 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   )
   .settings(commonSettings: _*)
 
+lazy val randomTestkit = project
+  .in(file("random-testkit"))
+  .dependsOn(kernel.jvm)
+  .settings(
+    name := "schrodinger-random-testkit",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "vault" % VaultVersion
+    )
+  )
+  .settings(commonSettings: _*)
+
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel.jvm, math.jvm)
+  .dependsOn(kernel.jvm, math.jvm, randomTestkit)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
