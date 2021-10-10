@@ -19,17 +19,15 @@ package schrodinger.random
 import cats.Functor
 import cats.Monad
 import cats.syntax.all.given
-import cats.mtl.Stateful
 import schrodinger.kernel.{Gaussian, GenGaussian, Uniform}
 import schrodinger.math.Interval.*
 import schrodinger.math.Interval.given
 
 object gaussian extends GaussianInstances
 
-opaque type CachedGaussian[A] = A
-object CachedGaussian:
-  def apply[A](a: A): CachedGaussian[A] = a
-  extension [A](cached: CachedGaussian[A]) def value: A = cached
+trait GaussianCache[F[_], A]:
+  def get: F[A]
+  def set(a: A): F[Unit]
 
 trait GaussianInstances:
   given schrodingerRandomGaussianForDouble[F[_]: Functor: GenGaussian[0, 1, Double]]
@@ -39,14 +37,12 @@ trait GaussianInstances:
       Gaussian.standard.map(_ * standardDeviation + mean)
 
   given schrodingerRandomStandardGaussianForDouble[F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]](
-      using state: Stateful[F, CachedGaussian[Double]]): GenGaussian[0, 1, Double][F] =
+      using cache: GaussianCache[F, Double]): GenGaussian[0, 1, Double][F] =
 
     final case class BoxMuller(x: Double, y: Double, s: Double)
     object BoxMuller:
       def apply(x: Double, y: Double): BoxMuller =
         BoxMuller(x, y, x * x + y * y)
-
-    val CachedNaN = CachedGaussian(Double.NaN)
 
     val boxMuller =
       Uniform(0.0 <=@< 1.0).map2(Uniform(0.0 <=@< 1.0)) { (x, y) =>
@@ -59,9 +55,9 @@ trait GaussianInstances:
       (scale * x, scale * y)
     }
 
-    val standard = state.get.flatMap { cached =>
-      if cached.value.isNaN then pair.flatMap { (x, y) => state.set(CachedGaussian(y)).as(x) }
-      else state.set(CachedNaN).as(cached.value)
+    val standard = cache.get.flatMap { cached =>
+      if cached.isNaN then pair.flatMap { (x, y) => cache.set(y).as(x) }
+      else cache.set(Double.NaN).as(cached)
     }
 
     _ => standard

@@ -31,11 +31,10 @@ import cats.Now
 import cats.SemigroupK
 import cats.data.AndThen
 import cats.effect.kernel.*
-import cats.mtl.Stateful
-import cats.syntax.all.given
+import cats.syntax.all.*
 import cats.~>
 import schrodinger.kernel.PseudoRandom
-import schrodinger.random.CachedGaussian
+import schrodinger.random.GaussianCache
 import schrodinger.rng.Rng
 import schrodinger.rng.SplittableRng
 
@@ -111,20 +110,13 @@ private[schrodinger] class RVTInstances extends RVTInstances0:
       Rng[S]): PseudoRandom.Aux[RVT[F, S, _], F, S] =
     new RVTPseudoRandom[F, S] {}
 
-  given schrodingerStatefulExtraGaussianDoubleForRVT[F[_], S](
-      using F: Monad[F]
-  ): Stateful[RVT[F, S, _], CachedGaussian[Double]] with
-    override val monad: Monad[RVT[F, S, _]] = schrodingerMonadForRVT[F, S]
-
-    private val key = CachedGaussian(classOf[Double])
-    private val empty = F.pure(CachedGaussian(Double.NaN))
-
-    override def get: RVT[F, S, CachedGaussian[Double]] =
-      RVT.fromSim(_.extra.get(key).fold(empty)(_.asInstanceOf[CachedGaussian[Double]].pure))
-
-    override def set(s: CachedGaussian[Double]): RVT[F, S, Unit] =
+  given schrodingerGaussianCacheDoubleForRVT[F[_], S](
+      using F: Monad[F]): GaussianCache[RVT[F, S, _], Double] with
+    def get: RVT[F, S, Double] =
+      RVT.fromSim(_.extra.get(this).fold(Double.NaN)(_.asInstanceOf[Double]).pure)
+    def set(a: Double): RVT[F, S, Unit] =
       RVT.fromSim { state =>
-        state.extra(key) = s
+        state.extra(this) = a
         F.unit
       }
 
