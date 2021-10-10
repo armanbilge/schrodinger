@@ -20,13 +20,10 @@ type GenGaussian[M, S, X] = [F[_]] =>> Distribution[F, Gaussian.Params[M, S], X]
 type Gaussian[R] = [F[_]] =>> GenGaussian[R, R, R][F]
 
 object Gaussian:
-  type GenAux[F[_], M, S, X] = Distribution[F, Gaussian.Params[M, S], X]
-  type Aux[F[_], R] = Distribution[F, Gaussian.Params[R, R], R]
-
   final case class Params[+M, +S](mean: M, standardDeviation: S)
 
-  inline def standard[F[_], X](using g: GenAux[F, 0, 1, X]): F[X] =
+  inline def standard[F[_], X](using g: GenGaussian[0, 1, X][F]): F[X] =
     g(Params(0, 1))
 
-  inline def apply[F[_], R](mean: R, standardDeviation: R)(using g: Aux[F, R]): F[R] =
+  inline def apply[F[_], R](mean: R, standardDeviation: R)(using g: Gaussian[R][F]): F[R] =
     g(Params(mean, standardDeviation))

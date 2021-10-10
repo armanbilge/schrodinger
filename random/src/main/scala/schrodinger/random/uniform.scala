@@ -51,7 +51,7 @@ trait UniformInstances:
     _ => x
 
   given `schrodingerRandomUniformDouble(0,1]`[F[_]: Functor: Random]
-      : Uniform.Aux[F, 0d <@<= 1d, Double] =
+      : Uniform[0d <@<= 1d, Double][F] =
     val x = Random[F].long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
     _ => x
 

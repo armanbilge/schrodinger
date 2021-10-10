@@ -30,8 +30,8 @@ trait BernoulliInstances:
     val fair = Random[F].int.map(_ >= 0)
     _ => fair
 
-  given schrodingerRandomBernoulliForDoubleBoolean[F[_]: Functor: Random](
-      using Uniform.Aux[F, 0.0 <=@< 1.0, Double]): Bernoulli[Double, Boolean][F] with
+  given schrodingerRandomBernoulliForDoubleBoolean[
+      F[_]: Functor: Random: Uniform[0.0 <=@< 1.0, Double]]: Bernoulli[Double, Boolean][F] with
     override def apply(params: Bernoulli.Params[Double]): F[Boolean] =
       import params.*
       Uniform(0.0 <=@< 1.0).map(_ < successProbability)
