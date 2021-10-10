@@ -28,6 +28,13 @@ import schrodinger.kernel.PseudoRandom
 
 type PureRV[S, A] = PureRVT[Eval, S, A]
 
+object PureRV:
+  def getExtra[S, A](key: LookupKey[A]): PureRV[S, Option[A]] =
+    PureRVT.getExtra(key)
+
+  def setExtra[S, A](key: InsertKey[A])(a: A): PureRV[S, Unit] =
+    PureRVT.setExtra(key)(a)
+
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 
 object PureRVT:

@@ -31,33 +31,30 @@ trait GaussianCache[F[_], A]:
 
 trait GaussianInstances:
   given schrodingerRandomGaussianForDouble[F[_]: Functor: GenGaussian[0, 1, Double]]
-      : GenGaussian[0, 1, Double][F] =
+      : Gaussian[Double][F] =
     params =>
       import params.*
       Gaussian.standard.map(_ * standardDeviation + mean)
 
-  given schrodingerRandomStandardGaussianForDouble[F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]](
+  given schrodingerRandomStandardGaussianForDouble[
+      F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]: Uniform[0.0 <@<= 1.0, Double]](
       using cache: GaussianCache[F, Double]): GenGaussian[0, 1, Double][F] =
 
-    final case class BoxMuller(x: Double, y: Double, s: Double)
-    object BoxMuller:
-      def apply(x: Double, y: Double): BoxMuller =
-        BoxMuller(x, y, x * x + y * y)
+    val sampleAndCache = for
+      x <- Uniform(0.0 <=@< 1.0)
+      y <- Uniform(0.0 <@<= 1.0)
+      alpha = 2 * math.Pi * x
+      r = math.sqrt(-2 * math.log(y))
+      g1 = r * math.cos(alpha)
+      g2 = r * math.sin(alpha)
+      _ <- cache.set(g2)
+    yield g1
 
-    val boxMuller =
-      Uniform(0.0 <=@< 1.0).map2(Uniform(0.0 <=@< 1.0)) { (x, y) =>
-        BoxMuller(x * 2 - 1, y * 2 - 1)
-      }
-
-    val pair = boxMuller.iterateWhile(bm => bm.s >= 1.0 | bm.s == 0.0).map { bm =>
-      import bm.*
-      val scale = math.sqrt(-2.0 * math.log(s) / s)
-      (scale * x, scale * y)
-    }
-
-    val standard = cache.get.flatMap { cached =>
-      if cached.isNaN then pair.flatMap { (x, y) => cache.set(y).as(x) }
-      else cache.set(Double.NaN).as(cached)
-    }
+    val standard = for
+      cached <- cache.get
+      sample <-
+        if cached.isNaN then sampleAndCache
+        else cache.set(Double.NaN).as(cached)
+    yield sample
 
     _ => standard
