@@ -105,11 +105,14 @@ lazy val randomTestkit = project
 
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel.jvm, math.jvm, randomTestkit)
+  .dependsOn(kernel.jvm, math.jvm, randomTestkit % Test)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
+      "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
   .settings(commonSettings: _*)

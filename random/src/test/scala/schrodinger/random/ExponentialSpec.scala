@@ -16,22 +16,29 @@
 
 package schrodinger.random
 
-import org.apache.commons.rng.core.source64.SplitMix64
+import cats.syntax.all.*
+import org.apache.commons.rng.core.source64
 import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampler
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.RV
 import schrodinger.kernel.Exponential
 import schrodinger.random.all.given
+import schrodinger.random.testkit.PureRV
+import schrodinger.random.testkit.SplitMix64
 
 class ExponentialSpec extends Specification with ScalaCheck:
+  val N = 100
 
   "Exponential" should {
-    "generate standard exponential variates" in {
-      prop { (rng: SplitMix64) =>
-        val x = Exponential.standard[RV[SplitMix64, _], Double].simulate(rng).value
-        val y = new AhrensDieterExponentialSampler(rng, 1.0).sample()
-        x === y
+    "match Apache implementation" in {
+      prop { (seed: Long) =>
+        val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
+        Exponential
+          .standard[PureRV[SplitMix64, _], Double]
+          .replicateA(N)
+          .simulate(SplitMix64(seed))
+          .value ===
+          List.fill(N)(apache.sample())
       }
     }
   }
