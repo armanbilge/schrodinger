@@ -17,7 +17,7 @@ sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
 
-val Scala3 = "3.1.1-RC1-bin-20211008-0a89c6f-NIGHTLY"
+val Scala3 = "3.1.1-RC1-bin-20211011-1ed25ce-NIGHTLY"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val AlgebraVersion = "2.2.3"
