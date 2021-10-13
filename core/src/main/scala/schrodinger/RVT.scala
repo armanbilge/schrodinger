@@ -56,6 +56,10 @@ import scala.concurrent.duration.*
 import RVT.*
 
 type RV[S, A] = RVT[Id, S, A]
+object RV:
+  def pure[S, A](a: A): RV[S, A] = RVT.pure(a)
+  def int[S]: RV[S, Int] = RVT.int
+  def long[S]: RV[S, Long] = RVT.long
 
 sealed abstract class RVT[F[_], S, A]:
 

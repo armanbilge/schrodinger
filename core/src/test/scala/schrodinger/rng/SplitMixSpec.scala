@@ -17,7 +17,6 @@
 package schrodinger
 package unsafe.rng
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
@@ -38,7 +37,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "generate ints" in {
       prop { (state: SplitMix) =>
-        val ints = RVT.int[SyncIO, SplitMix].replicateA(N).simulate(state).unsafeRunSync()
+        val ints = RV.int[SplitMix].replicateA(N).simulate(state)
         val random = new SplittableRandom(state.seed)
         val expectedInts = List.fill(N)(random.nextInt())
         ints === expectedInts
@@ -47,7 +46,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "generate longs" in {
       prop { (state: SplitMix) =>
-        val longs = RVT.long[SyncIO, SplitMix].replicateA(N).simulate(state).unsafeRunSync()
+        val longs = RV.long[SplitMix].replicateA(N).simulate(state)
         val random = new SplittableRandom(state.seed)
         val expectedLongs = List.fill(N)(random.nextLong())
         longs === expectedLongs
@@ -56,13 +55,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "split" in {
       prop { (state: SplitMix) =>
-        val ints = RVT
-          .int[SyncIO, SplitMix]
-          .split
-          .semiflatMap(identity)
-          .replicateA(N)
-          .simulate(state)
-          .unsafeRunSync()
+        val ints = RV.int[SplitMix].split.semiflatMap(identity).replicateA(N).simulate(state)
         val random = new SplittableRandom(state.seed)
         val expectedInts = List.fill(N)(random.split().nextInt())
         ints === expectedInts

@@ -17,7 +17,6 @@
 package schrodinger
 package unsafe.rng
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source32.PcgXshRr32 as ApachePcgXshRr32
 import org.scalacheck.Arbitrary
@@ -39,7 +38,7 @@ class PcgSpec extends Specification with ScalaCheck:
   "Pcg32XshRr" should {
     "generate ints" in {
       prop { (state: Pcg32) =>
-        val ints = RVT.int[SyncIO, Pcg32].replicateA(N + 1).simulate(state).unsafeRunSync().tail
+        val ints = RV.int[Pcg32].replicateA(N + 1).simulate(state).tail
         val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
         val expectedInts = List.fill(N)(provider.nextInt())
         ints === expectedInts
