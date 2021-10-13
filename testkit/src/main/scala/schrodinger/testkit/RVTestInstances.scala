@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.testkit
+package schrodinger
+package testkit
 
 import cats.Applicative
 import cats.Eq
 import cats.Id
 import cats.Monad
-import cats.effect.kernel.Sync
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
 import org.apache.commons.math3.special.Gamma
@@ -43,7 +43,8 @@ trait RVTestInstances extends LowPriorityRVInstances:
   )
 
   given schrodingerTestKitEqForRVT[F[_], S, A](
-      using Sync[F],
+      using Monad[F],
+      Simulator[F],
       Rng[S],
       Confidence,
       Discrete[A],
@@ -52,7 +53,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
       (F[Boolean] => Option[Boolean])): Eq[RVT[F, S, A]] =
     new RVTEq[F, A, S] {}
 
-  given schrodingerTestKitCogenForRVT[F[_]: Sync, S: Rng, A](
+  given schrodingerTestKitCogenForRVT[F[_]: Simulator, S: Rng, A](
       using cogen: Cogen[F[A]],
       seeds: ExhaustiveCheck[S]): Cogen[RVT[F, S, A]] =
     cogen.contramap(rv => rv.simulate(seeds.allValues.head))
@@ -89,7 +90,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
     a => Some(a)
 
 sealed trait LowPriorityRVInstances:
-  given schrodingerTestKitFallbackEqForRVT[F[_]: Sync, A, S: Rng: ExhaustiveCheck](
+  given schrodingerTestKitFallbackEqForRVT[F[_]: Simulator, A, S: Rng: ExhaustiveCheck](
       using Eq[F[A]]): Eq[RVT[F, S, A]] =
     RVTEq.fallback
 
@@ -118,12 +119,13 @@ object Discrete:
     instance(exhaustiveCheck.allValues)
 
 object RVTEq:
-  def fallback[F[_]: Sync, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =
+  def fallback[F[_]: Simulator, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
     Eq.by[RVT[F, S, A], S => F[A]](d => s => d.simulate(s))
 
 trait RVTEq[F[_], A, S](
-    using F: Sync[F],
+    using F: Monad[F],
+    sim: Simulator[F],
     S: Rng[S],
     confidence: Confidence,
     discrete: Discrete[A],
@@ -161,7 +163,7 @@ trait RVTEq[F[_], A, S](
     val marginal1 = dirichletMultinomialLogPmf(trial1, trial2, dirichletPrior)
     val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) +
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
-    math.exp(marginal1 - logPlus(marginal1, marginal2))
+    scala.math.exp(marginal1 - logPlus(marginal1, marginal2))
 
   private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): Double =
     import Gamma.*
@@ -208,7 +210,8 @@ trait RVTEq[F[_], A, S](
     sum
 
   private def logPlus(x: Double, y: Double): Double =
-    if x < y then y + math.log1p(math.exp(x - y))
-    else if x > y then x + math.log1p(math.exp(y - x))
+    import scala.math.*
+    if x < y then y + log1p(exp(x - y))
+    else if x > y then x + log1p(exp(y - x))
     else // x == y
-      math.log(2) + x
+      log(2) + x

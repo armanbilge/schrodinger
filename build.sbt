@@ -123,7 +123,6 @@ lazy val core = project
   .settings(
     name := "schrodinger",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect-kernel" % CatsEffectVersion,
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,

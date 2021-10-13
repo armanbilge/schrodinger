@@ -20,6 +20,7 @@ import cats.Alternative
 import cats.CommutativeMonad
 import cats.Defer
 import cats.FunctorFilter
+import cats.Id
 import cats.Monad
 import cats.MonadError
 import cats.MonoidK
@@ -54,6 +55,8 @@ import scala.concurrent.duration.*
 
 import RVT.*
 
+type RV[S, A] = RVT[Id, S, A]
+
 sealed abstract class RVT[F[_], S, A]:
 
   final def map[B](f: A => B): RVT[F, S, B] = FlatMap(this, a => Pure(f(a)))
@@ -66,46 +69,53 @@ sealed abstract class RVT[F[_], S, A]:
 
   final def split(using S: SplittableRng[S]): RVT[F, S, F[A]] = Split(this, S)
 
-  final def simulate(s: S)(using F: Sync[F], S: Rng[S]): F[A] =
-    F.delay(s.copy()).product(F.delay(mutable.Map[RVTCache[F, S, Any], Any]())).flatMap {
-      (rng, cache) =>
+  final def simulate(s: S)(using sim: Simulator[F], S: Rng[S]): F[A] =
+    type G[A] = sim.G[A]
+    given G: Sync[G] = sim.runtime
 
-        def go[B](rv: RVT[F[_], S, B]): F[B] = (rv: @unchecked) match
+    val ga =
+      G.delay(s.copy()).product(G.delay(mutable.Map[RVTCache[F, S, Any], Any]())).flatMap {
+        (rng, cache) =>
 
-          case Pure(b) => F.pure(b)
+          def go[B](rv: RVT[F[_], S, B]): G[B] = (rv: @unchecked) match
 
-          case Eval(fb) => fb
+            case Pure(b) => G.pure(b)
 
-          case FlatMap(rvc, f) => go(rvc).flatMap(c => go(f(c)))
+            case Eval(fb) => sim.upgrade(fb)
 
-          case Cont(body) =>
-            body(
-              new (RVT[F, S, _] ~> F):
-                def apply[A](rva: RVT[F, S, A]): F[A] = go(rva)
-            )
+            case FlatMap(rvc, f) => go(rvc).flatMap(c => go(f(c)))
 
-          case NextInt() => F.delay(rng.nextInt())
+            case Cont(body) =>
+              sim.upgrade(
+                body(
+                  new (RVT[F, S, _] ~> F):
+                    def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva))
+                ))
 
-          case NextLong() => F.delay(rng.nextLong())
+            case NextInt() => G.delay(rng.nextInt())
 
-          case Split(rvb, given SplittableRng[S]) => F.delay(rng.split()).map(rvb.simulate)
+            case NextLong() => G.delay(rng.nextLong())
 
-          case Dispatch(given SplittableRng[S]) => F.delay(rng.split())
+            case Split(rvb, given SplittableRng[S]) => G.delay(rng.split()).map(rvb.simulate)
 
-          case Retrieve(key) =>
-            F.delay {
-              val k = key.asInstanceOf[RVTCache[F, S, Any]]
-              cache.getOrElse(k, k.default).asInstanceOf[B]
-            }
+            case Dispatch(given SplittableRng[S]) => G.delay(rng.split())
 
-          case Store(key, value) =>
-            F.delay {
-              val k = key.asInstanceOf[RVTCache[F, S, Any]]
-              cache(k) = value
-            }
+            case Retrieve(key) =>
+              G.delay {
+                val k = key.asInstanceOf[RVTCache[F, S, Any]]
+                cache.getOrElse(k, k.default).asInstanceOf[B]
+              }
 
-        go(this)
-    }
+            case Store(key, value) =>
+              G.delay {
+                val k = key.asInstanceOf[RVTCache[F, S, Any]]
+                cache(k) = value
+              }
+
+          go(this)
+      }
+
+    sim.downgrade(ga)
 
 object RVT extends RVTInstances:
   def pure[F[_], S, A](a: A): RVT[F, S, A] = Pure(a)

@@ -25,6 +25,7 @@ import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.IO
 import cats.effect.SyncIO
+import cats.effect.kernel.Sync
 import cats.effect.laws.AsyncTests
 import cats.effect.testkit.TestInstances
 import cats.laws.discipline.AlternativeTests
@@ -83,12 +84,21 @@ class RVTSpec extends Specification, Discipline, ScalaCheck, TestInstances, RVTe
     AsyncTests[RVT[IO, SplitMix, _]].async[Boolean, Boolean, Boolean](10.millis))
   checkAll("Async[RVT]", SerializableTests.serializable(Async[RVT[IO, SplitMix, _]]))
 
-  // checkAll(
-  //   "CommutativeMonad[RVT]",
-  //   CommutativeMonadTests[RVT[Option, SplitMix, _]].commutativeMonad[Boolean, Boolean, Boolean])
-  // checkAll(
-  //   "CommutativeMonad[RVT]",
-  //   SerializableTests.serializable(CommutativeMonad[RVT[Option, SplitMix, _]]))
+  {
+    given Simulator[Option] with
+      type G[A] = OptionT[SyncIO, A]
+      given runtime: Sync[G] = Sync.syncForOptionT[SyncIO]
+      def upgrade[A](fa: Option[A]): G[A] = OptionT.fromOption(fa)
+      def downgrade[A](ga: G[A]): Option[A] = ga.value.unsafeRunSync()
+
+    checkAll(
+      "CommutativeMonad[RVT]",
+      CommutativeMonadTests[RVT[Option, SplitMix, _]]
+        .commutativeMonad[Boolean, Boolean, Boolean])
+    checkAll(
+      "CommutativeMonad[RVT]",
+      SerializableTests.serializable(CommutativeMonad[RVT[Option, SplitMix, _]]))
+  }
 
   checkAll(
     "FunctorFilter[RVT]",
