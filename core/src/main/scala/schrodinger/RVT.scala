@@ -234,6 +234,11 @@ sealed private[schrodinger] trait RVTGaussianDoubleCache[F[_], S]
   def get: RVT[F, S, Double] = key.get
   def set(a: Double): RVT[F, S, Unit] = key.set(a)
 
+sealed private[schrodinger] trait RVTRngDispatcher[F[_], S](using S: SplittableRng[S])
+    extends RngDispatcher[RVT[F, S, _], S]:
+  val rng = S
+  val dispatch: RVT[F, S, S] = RVT.dispatch
+
 sealed private[schrodinger] trait RVTMonad[F[_], S] extends StackSafeMonad[RVT[F, S, _]]:
 
   def pure[A](a: A): RVT[F, S, A] = RVT.pure(a)
