@@ -124,6 +124,7 @@ lazy val core = project
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect-kernel" % CatsEffectVersion,
+      "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
@@ -138,10 +139,10 @@ lazy val testkit = project
     name := "schrodinger-testkit",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-laws" % CatsVersion,
+      "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.typelevel" %%% "cats-effect" % CatsEffectVersion % Test
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
     )
   )
   .settings(commonSettings: _*)

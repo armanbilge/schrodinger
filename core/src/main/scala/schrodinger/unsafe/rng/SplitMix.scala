@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package schrodinger.rng
+package schrodinger.unsafe.rng
 
 import cats.Applicative
 import cats.effect.kernel.Clock
-import cats.syntax.all.given
+import cats.syntax.all.*
 
 import java.lang
 
-final class SplitMix private (private[rng] var seed: Long, private var gamma: Long)
-    extends Serializable
+final class SplitMix(private[rng] var seed: Long, val gamma: Long) extends Serializable
 
 object SplitMix:
-
-  def apply(seed: Long, gamma: Long): SplitMix =
-    new SplitMix(seed, gamma)
 
   def fromTime[F[_]: Applicative: Clock]: F[SplitMix] =
     (Clock[F].realTime.map(_.toMillis), Clock[F].monotonic.map(_.toNanos)).mapN {
@@ -37,26 +33,26 @@ object SplitMix:
         SplitMix(mix64(s), mixGamma(s + GoldenGamma))
     }
 
-  given schrodingerRngSplittableRngForSplitMix: SplittableRng[SplitMix] with
+  given SplittableRng[SplitMix] with
     extension (s: SplitMix)
 
-      override def copy: SplitMix = SplitMix(s.seed, s.gamma)
+      override def copy(): SplitMix = SplitMix(s.seed, s.gamma)
 
-      override def unsafeNextInt(): Int =
+      override def nextInt(): Int =
         s.seed += s.gamma
         mix32(s.seed)
 
-      override def unsafeNextLong(): Long =
+      override def nextLong(): Long =
         s.seed += s.gamma
         mix64(s.seed)
 
-      private def unsafeNextGamma(): Long =
+      private def nextGamma(): Long =
         s.seed += s.gamma
         mixGamma(s.seed)
 
-      override def unsafeSplit(): SplitMix =
-        val seed = s.unsafeNextLong()
-        val gamma = s.unsafeNextGamma()
+      override def split(): SplitMix =
+        val seed = s.nextLong()
+        val gamma = s.nextGamma()
         SplitMix(seed, gamma)
 
   private[rng] val GoldenGamma = 0x9e3779b97f4a7c15L

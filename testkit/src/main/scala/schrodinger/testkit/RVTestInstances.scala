@@ -18,13 +18,11 @@ package schrodinger.testkit
 
 import cats.Applicative
 import cats.Eq
-import cats.FlatMap
 import cats.Id
 import cats.Monad
-import cats.instances.list.given
-import cats.instances.vector.given
+import cats.effect.kernel.Sync
 import cats.laws.discipline.ExhaustiveCheck
-import cats.syntax.all.given
+import cats.syntax.all.*
 import org.apache.commons.math3.special.Gamma
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
@@ -32,8 +30,8 @@ import org.scalacheck.Gen
 import schrodinger.RVT
 import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Categorical
-import schrodinger.rng.Rng
-import schrodinger.rng.SplitMix
+import schrodinger.unsafe.rng.Rng
+import schrodinger.unsafe.rng.SplitMix
 
 trait RVTestInstances extends LowPriorityRVInstances:
 
@@ -45,7 +43,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
   )
 
   given schrodingerTestKitEqForRVT[F[_], S, A](
-      using Monad[F],
+      using Sync[F],
       Rng[S],
       Confidence,
       Discrete[A],
@@ -54,7 +52,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
       (F[Boolean] => Option[Boolean])): Eq[RVT[F, S, A]] =
     new RVTEq[F, A, S] {}
 
-  given schrodingerTestKitCogenForRVT[F[_]: FlatMap, S: Rng, A](
+  given schrodingerTestKitCogenForRVT[F[_]: Sync, S: Rng, A](
       using cogen: Cogen[F[A]],
       seeds: ExhaustiveCheck[S]): Cogen[RVT[F, S, A]] =
     cogen.contramap(rv => rv.simulate(seeds.allValues.head))
@@ -91,7 +89,7 @@ trait RVTestInstances extends LowPriorityRVInstances:
     a => Some(a)
 
 sealed trait LowPriorityRVInstances:
-  given schrodingerTestKitFallbackEqForRVT[F[_]: FlatMap, A, S: Rng: ExhaustiveCheck](
+  given schrodingerTestKitFallbackEqForRVT[F[_]: Sync, A, S: Rng: ExhaustiveCheck](
       using Eq[F[A]]): Eq[RVT[F, S, A]] =
     RVTEq.fallback
 
@@ -120,12 +118,12 @@ object Discrete:
     instance(exhaustiveCheck.allValues)
 
 object RVTEq:
-  def fallback[F[_]: FlatMap, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =
+  def fallback[F[_]: Sync, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
     Eq.by[RVT[F, S, A], S => F[A]](d => s => d.simulate(s))
 
 trait RVTEq[F[_], A, S](
-    using F: Monad[F],
+    using F: Sync[F],
     S: Rng[S],
     confidence: Confidence,
     discrete: Discrete[A],

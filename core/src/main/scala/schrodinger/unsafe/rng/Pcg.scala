@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.rng
+package schrodinger.unsafe.rng
 import schrodinger.math.UInt128
 
 import java.lang
@@ -27,19 +27,19 @@ object Pcg32:
 
   sealed abstract class Pcg32Rng extends SplittableRng[Pcg32]:
     extension (s: Pcg32)
-      final override def copy: Pcg32 =
+      final override def copy(): Pcg32 =
         Pcg32(s.state, s.inc)
 
-      final override def unsafeNextInt(): Int =
+      final override def nextInt(): Int =
         val x = output(s.state)
         s.state = s.state * 6364136223846793005L + s.inc
         x
 
-      final override def unsafeNextLong(): Long =
-        (s.unsafeNextInt().toLong << 32) | s.unsafeNextInt().toLong
+      final override def nextLong(): Long =
+        (s.nextInt().toLong << 32) | s.nextInt().toLong
 
-      final override def unsafeSplit(): Pcg32 =
-        val inc = s.unsafeNextLong()
+      final override def split(): Pcg32 =
+        val inc = s.nextLong()
         Pcg32(s.state, inc)
 
     protected def output(state: Long): Int
@@ -62,13 +62,13 @@ object Pcg64:
 
   sealed abstract class Pcg64Rng extends SplittableRng[Pcg64]:
     extension (s: Pcg64)
-      final override def copy: Pcg64 =
+      final override def copy(): Pcg64 =
         Pcg64(s.stateHi, s.stateLo, s.incHi, s.incLo)
 
-      final override def unsafeNextInt(): Int =
-        (s.unsafeNextLong() >>> 32).toInt
+      final override def nextInt(): Int =
+        (s.nextLong() >>> 32).toInt
 
-      final override def unsafeNextLong(): Long =
+      final override def nextLong(): Long =
         import s.*
         val x = output(stateHi, stateLo)
         val state = UInt128(stateHi, stateLo) *
@@ -78,9 +78,9 @@ object Pcg64:
         stateLo = state.lo
         x
 
-      final override def unsafeSplit(): Pcg64 =
-        val incHi = s.unsafeNextLong()
-        val incLo = s.unsafeNextLong()
+      final override def split(): Pcg64 =
+        val incHi = s.nextLong()
+        val incLo = s.nextLong()
         Pcg64(s.stateHi, s.stateLo, incHi, incLo)
 
     protected def output(hi: Long, lo: Long): Long

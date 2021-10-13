@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-package schrodinger.rng
+package schrodinger
+package unsafe.rng
 
-import cats.syntax.all.given
-import org.scalacheck.{Arbitrary, Gen}
+import cats.effect.SyncIO
+import cats.syntax.all.*
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.RV
-import schrodinger.kernel.Random
 
 import java.util.SplittableRandom
 
@@ -33,15 +34,12 @@ class SplitMixSpec extends Specification with ScalaCheck:
     Gen.long.map(SplitMix(_, SplitMix.GoldenGamma))
   )
 
-  def splittableRandom(state: SplitMix) =
-    new SplittableRandom(state.seed)
-
   "SplitMix" should {
 
     "generate ints" in {
       prop { (state: SplitMix) =>
-        val ints = List.fill(N)(Random[RV[SplitMix, _]].int).sequence.simulate(state).value
-        val random = splittableRandom(state)
+        val ints = RVT.int[SyncIO, SplitMix].replicateA(N).simulate(state).unsafeRunSync()
+        val random = new SplittableRandom(state.seed)
         val expectedInts = List.fill(N)(random.nextInt())
         ints === expectedInts
       }
@@ -49,8 +47,8 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "generate longs" in {
       prop { (state: SplitMix) =>
-        val longs = List.fill(N)(Random[RV[SplitMix, _]].long).sequence.simulate(state).value
-        val random = splittableRandom(state)
+        val longs = RVT.long[SyncIO, SplitMix].replicateA(N).simulate(state).unsafeRunSync()
+        val random = new SplittableRandom(state.seed)
         val expectedLongs = List.fill(N)(random.nextLong())
         longs === expectedLongs
       }
@@ -58,9 +56,14 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "split" in {
       prop { (state: SplitMix) =>
-        val random = splittableRandom(state)
-        import SplitMix.schrodingerRngSplittableRngForSplitMix.given
-        val ints = List.fill(N)(state.unsafeSplit().unsafeNextInt())
+        val ints = RVT
+          .int[SyncIO, SplitMix]
+          .split
+          .semiflatMap(identity)
+          .replicateA(N)
+          .simulate(state)
+          .unsafeRunSync()
+        val random = new SplittableRandom(state.seed)
         val expectedInts = List.fill(N)(random.split().nextInt())
         ints === expectedInts
       }
