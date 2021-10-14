@@ -111,22 +111,9 @@ object PureRVT extends PureRVTLowPriority:
 
 sealed abstract private[testkit] class PureRVTLowPriority:
 
-  given [S: PureRng, A: Eq](
-      using exhaustive: ExhaustiveCheck[S],
-      confidence: Confidence): Eq[PureRV[S, A]] =
-    given (Eval[Boolean] => Boolean) = _.value
-    given_Eq_PureRVT(using summon, summon, summon, summon, summon, summon)
-
-  given [F[_]: Monad, S: PureRng, A: Eq](
+  given [F[_]: Monad, S: PureRng, A](
       using exhaustive: ExhaustiveCheck[S],
       confidence: Confidence,
-      run: F[Boolean] => Boolean): Eq[PureRVT[F, S, A]] =
-    exhaustive
-      .allValues
-      .map { seed =>
-        given (PureRVT[F, S, Boolean] => Boolean) = rv => run(rv.simulate(seed))
-        new Eq[PureRVT[F, S, A]]:
-          def eqv(x: PureRVT[F, S, A], y: PureRVT[F, S, A]) =
-            run((x, y).mapN(_ === _).simulate(seed))
-      }
-      .reduce(Eq.and)
+      eqF: Eq[F[A]]): Eq[PureRVT[F, S, A]] =
+    import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
+    Eq.by[PureRVT[F, S, A], S => F[A]](rv => s => rv.simulate(s))
