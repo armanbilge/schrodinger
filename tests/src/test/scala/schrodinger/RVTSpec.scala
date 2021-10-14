@@ -59,9 +59,9 @@ class RVTSpec extends Specification, Discipline, ScalaCheck, TestInstances, RVTe
     ExhaustiveCheck.instance(List(SplitMix.fromTime[SyncIO].unsafeRunSync()))
 
   given discreteEitherUnitBoolean: Discrete[Either[Unit, Boolean]] =
-    Discrete.instance(List(Left(()), Right(false), Right(true)))
+    Discrete.of(List(Left(()), Right(false), Right(true)))
   given discreteEitherBooleanUnit: Discrete[Either[Boolean, Unit]] =
-    Discrete.instance(List(Right(()), Left(false), Left(true)))
+    Discrete.of(List(Right(()), Left(false), Left(true)))
 
   given (using Ticker): Conversion[RVT[IO, SplitMix, Boolean], Prop] =
     sbool => ioBooleanToProp(seeds.allValues.forallM(sbool.simulate(_)))

@@ -14,17 +14,24 @@
  * limitations under the License.
  */
 
-package schrodinger.random.testkit
+package schrodinger.kernel
+package testkit
 
+import cats.syntax.all.*
 import cats.Applicative
 import cats.Eval
 import cats.FlatMap
 import cats.Monad
 import cats.data.StateT
+import cats.data.IndexedStateT
+import cats.effect.kernel.testkit.MonadGenerators
+import cats.kernel.Eq
+import cats.laws.discipline.ExhaustiveCheck
+import org.scalacheck.Arbitrary
+import org.scalacheck.Cogen
 import org.typelevel.vault.InsertKey
 import org.typelevel.vault.LookupKey
 import org.typelevel.vault.Vault
-import schrodinger.kernel.PseudoRandom
 
 type PureRV[S, A] = PureRVT[Eval, S, A]
 
@@ -37,7 +44,7 @@ object PureRV:
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 
-object PureRVT:
+object PureRVT extends PureRVTLowPriority:
   extension [F[_], S, A](rv: PureRVT[F, S, A])
     def simulate(seed: S)(using FlatMap[F]): F[A] = rv.runA((seed, Vault.empty))
 
@@ -52,7 +59,7 @@ object PureRVT:
     def flatMap[A, B](fa: PureRVT[F, S, A])(f: A => PureRVT[F, S, B]): PureRVT[F, S, B] =
       fa.flatMap(f)
     def tailRecM[A, B](a: A)(f: A => PureRVT[F, S, Either[A, B]]): PureRVT[F, S, B] =
-      Monad[StateT[F, (S, Vault), _]].tailRecM(a)(f)
+      IndexedStateT.catsDataMonadForIndexedStateT[F, (S, Vault)].tailRecM(a)(f)
 
   given [F[_]: Monad, S0](using rng: PureRng[S0]): PseudoRandom[PureRVT[F, S0, _]] with
     type G[A] = F[A]
@@ -75,3 +82,51 @@ object PureRVT:
     extension [A](fa: PureRVT[F, S, A])
       def simulate(seed: S): G[A] =
         PureRVT.simulate(fa)(seed)
+
+  given [F[_]: Monad, S: PureRng, A: Arbitrary: Cogen]: Arbitrary[PureRVT[F, S, A]] =
+    val generators = new RandomGenerators[PureRVT[F, S, _]]
+      with MonadGenerators[PureRVT[F, S, _]]:
+      override val maxDepth = 3
+      implicit val F = given_Monad_PureRVT
+
+    Arbitrary(generators.generators[A])
+
+  given [S: PureRng, A: Eq: ExhaustiveCheck](
+      using exhaustive: ExhaustiveCheck[S],
+      confidence: Confidence): Eq[PureRV[S, A]] =
+    given (Eval[Boolean] => Boolean) = _.value
+    given_Eq_PureRVT(using summon, summon, summon, summon, summon, summon, summon)
+
+  given [F[_]: Monad, S: PureRng, A: Eq: ExhaustiveCheck](
+      using exhaustive: ExhaustiveCheck[S],
+      confidence: Confidence,
+      run: F[Boolean] => Boolean): Eq[PureRVT[F, S, A]] =
+    exhaustive
+      .allValues
+      .map { seed =>
+        given (PureRVT[F, S, Boolean] => Boolean) = rv => run(rv.simulate(seed))
+        RandomEq[PureRVT[F, S, _], A](): Eq[PureRVT[F, S, A]]
+      }
+      .reduce(Eq.and)
+
+sealed abstract private[testkit] class PureRVTLowPriority:
+
+  given [S: PureRng, A: Eq](
+      using exhaustive: ExhaustiveCheck[S],
+      confidence: Confidence): Eq[PureRV[S, A]] =
+    given (Eval[Boolean] => Boolean) = _.value
+    given_Eq_PureRVT(using summon, summon, summon, summon, summon, summon)
+
+  given [F[_]: Monad, S: PureRng, A: Eq](
+      using exhaustive: ExhaustiveCheck[S],
+      confidence: Confidence,
+      run: F[Boolean] => Boolean): Eq[PureRVT[F, S, A]] =
+    exhaustive
+      .allValues
+      .map { seed =>
+        given (PureRVT[F, S, Boolean] => Boolean) = rv => run(rv.simulate(seed))
+        new Eq[PureRVT[F, S, A]]:
+          def eqv(x: PureRVT[F, S, A], y: PureRVT[F, S, A]) =
+            run((x, y).mapN(_ === _).simulate(seed))
+      }
+      .reduce(Eq.and)

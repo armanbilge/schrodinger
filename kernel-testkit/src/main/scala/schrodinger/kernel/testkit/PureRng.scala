@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random.testkit
+package schrodinger.kernel.testkit
 
 trait PureRng[S]:
   def nextInt(s: S): (S, Int)

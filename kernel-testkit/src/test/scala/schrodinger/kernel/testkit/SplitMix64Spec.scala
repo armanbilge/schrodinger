@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random.testkit
+package schrodinger.kernel.testkit
 
 import cats.syntax.all.*
 import cats.Traverse

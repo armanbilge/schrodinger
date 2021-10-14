@@ -80,12 +80,6 @@ trait RVTestInstances extends LowPriorityRVInstances:
       case _ =>
         ??? // TODO Sample probabilities from Dirichlet to create a categorical distribution
 
-  given schrodingerTestKitDiscreteForUnit: Discrete[Unit] =
-    Discrete.instance[Unit](List(()))
-
-  given schrodingerTestKitDiscreteForBoolean: Discrete[Boolean] =
-    Discrete.instance(List(false, true))
-
   given schrodingerTestKitEvalForId[A]: (Id[A] => Option[A]) =
     a => Some(a)
 
@@ -99,24 +93,6 @@ sealed trait LowPriorityRVInstances:
     Arbitrary(ev.arbitrary.map(a => RVT.pure(a)))
 
 final case class Confidence(replicates: Int, threshold: Double)
-
-trait Discrete[A] extends ExhaustiveCheck[A]:
-  def dirichletPrior: List[Double]
-
-object Discrete:
-  def apply[A](ev: Discrete[A]): Discrete[A] = ev
-
-  def instance[A](values: List[A]): Discrete[A] =
-    instance(values, values.map(_ => 1.0))
-
-  def instance[A](values: List[A], prior: List[Double]): Discrete[A] =
-    new Discrete[A] {
-      override val allValues: List[A] = values
-      override val dirichletPrior: List[Double] = prior
-    }
-
-  given fromExhaustiveCheck[A](using exhaustiveCheck: ExhaustiveCheck[A]): Discrete[A] =
-    instance(exhaustiveCheck.allValues)
 
 object RVTEq:
   def fallback[F[_]: Simulator, S: Rng: ExhaustiveCheck, A](using Eq[F[A]]): Eq[RVT[F, S, A]] =

@@ -22,9 +22,9 @@ import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampl
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.kernel.Exponential
+import schrodinger.kernel.testkit.PureRV
+import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.random.all.given
-import schrodinger.random.testkit.PureRV
-import schrodinger.random.testkit.SplitMix64
 
 class ExponentialSpec extends Specification with ScalaCheck:
   val N = 100

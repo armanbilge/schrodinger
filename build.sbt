@@ -27,7 +27,7 @@ val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.4"
 val Fs2Version = "3.1.5"
 val Specs2Version = "5.0.0-RC-15"
-val ScalaCheckVersion = "1.15.3"
+val ScalaCheckVersion = "1.15.4"
 val VaultVersion = "3.1.0"
 val DisciplineSpecs2Version = "1.2-7-e3ce260"
 
@@ -42,11 +42,11 @@ lazy val root =
     .aggregate(
       kernel.jvm,
       kernel.js,
+      kernelTestkit,
       laws.jvm,
       laws.js,
       math.jvm,
       math.js,
-      randomTestkit,
       random,
       stats,
       core,
@@ -60,6 +60,25 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .in(file("kernel"))
   .settings(
     name := "schrodinger-kernel"
+  )
+  .settings(commonSettings: _*)
+
+lazy val kernelTestkit = project
+  .in(file("kernel-testkit"))
+  .dependsOn(kernel.jvm)
+  .settings(
+    name := "schrodinger-kernel-testkit",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion,
+      "org.typelevel" %%% "cats-effect-kernel-testkit" % CatsEffectVersion,
+      "org.typelevel" %%% "vault" % VaultVersion,
+      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
+      "org.scalacheck" %%% "scalacheck" % ScalaCheckVersion,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
+    )
   )
   .settings(commonSettings: _*)
 
@@ -89,23 +108,9 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   )
   .settings(commonSettings: _*)
 
-lazy val randomTestkit = project
-  .in(file("random-testkit"))
-  .dependsOn(kernel.jvm)
-  .settings(
-    name := "schrodinger-random-testkit",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.typelevel" %%% "vault" % VaultVersion,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
-    )
-  )
-  .settings(commonSettings: _*)
-
 lazy val random = project
   .in(file("random"))
-  .dependsOn(kernel.jvm, math.jvm, randomTestkit % Test)
+  .dependsOn(kernel.jvm, math.jvm, kernelTestkit % Test)
   .settings(
     name := "schrodinger-random",
     libraryDependencies ++= Seq(
@@ -138,7 +143,7 @@ lazy val testkit = project
     name := "schrodinger-testkit",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-laws" % CatsVersion,
-      "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
+      "org.typelevel" %%% "cats-effect-kernel-testkit" % CatsEffectVersion,
       "org.apache.commons" % "commons-math3" % "3.6.1",
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test

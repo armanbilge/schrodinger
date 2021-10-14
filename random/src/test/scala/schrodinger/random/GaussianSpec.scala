@@ -25,9 +25,9 @@ import org.specs2.mutable.Specification
 import org.typelevel.vault.Key
 import schrodinger.kernel.Gaussian
 import schrodinger.random.all.given
+import schrodinger.kernel.testkit.PureRV
+import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.random.GaussianCache
-import schrodinger.random.testkit.PureRV
-import schrodinger.random.testkit.SplitMix64
 
 class GaussianSpec extends Specification with ScalaCheck:
   val N = 100
