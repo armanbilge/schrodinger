@@ -23,14 +23,18 @@ import cats.laws.discipline.MonadTests
 import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.ExhaustiveCheck
 import org.scalacheck.Arbitrary
+import org.specs2.scalacheck.Parameters
 
 class PureRVTSpec extends Specification, Discipline:
-  given Confidence = Confidence(1000, 0.8)
+  given Confidence = Confidence(1000, 0.9, 0.9)
   given ExhaustiveCheck[SplitMix64] = ExhaustiveCheck.instance(List(SplitMix64(1234567890L)))
   // TODO PureRV needs a cogen
   given Arbitrary[(PureRV[SplitMix64, Boolean] => PureRV[SplitMix64, Boolean])] =
     Arbitrary(
       Arbitrary.arbitrary[Boolean => Boolean].map(f => (_: PureRV[SplitMix64, Boolean]).map(f)))
 
-  checkAll("PureRV", EqTests[PureRV[SplitMix64, Boolean]].eqv)
-  checkAll("PureRV", MonadTests[PureRV[SplitMix64, _]].monad[Boolean, Boolean, Boolean])
+  given Parameters =
+    Parameters(seed = Parameters.makeSeed("InZXKRfzpRf8Ujb786p43rDN_G7LkKV64730MJvidUO="))
+
+  checkAll("PureRV", EqTests[PureRV[SplitMix64, Boolean]].eqv.random)
+  checkAll("PureRV", MonadTests[PureRV[SplitMix64, _]].monad[Boolean, Boolean, Boolean].random)

@@ -22,15 +22,16 @@ import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
 import org.apache.commons.math3.special.Gamma
 
-final case class Confidence(replicates: Int, threshold: Double)
+final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
 
 class RandomEq[F[_]: Monad, A: Eq](
     using confidence: Confidence,
     exhaustive: ExhaustiveCheck[A],
     simulate: F[Boolean] => Boolean
 ) extends Eq[F[A]]:
+
   def eqv(x: F[A], y: F[A]): Boolean =
-    val Confidence(replicates, threshold) = confidence
+    val Confidence(replicates, eqvThreshold, neqvThreshold) = confidence
     import exhaustive.allValues
 
     val xs = x.replicateA(replicates)
@@ -45,13 +46,11 @@ class RandomEq[F[_]: Monad, A: Eq](
         ycounts(i) = ys.count(_ === a)
       }
 
-      // TODO Even when X === Y it is difficult to be certain of their equivalence
-      // So unless we find evidence that X !== Y, we assume that X === Y
-      // This works best if when X !== Y then they are very different
-      // If X !== Y but they are similar, they may be falsely indicated as equivalent
-      val p = 1 - equidistributedBelief(xcounts, ycounts, Array.fill(allValues.size)(1.0))
-      println((xcounts.toList, ycounts.toList, p, !(p > threshold)))
-      !(p > threshold)
+      val p = equidistributedBelief(xcounts, ycounts, Array.fill(allValues.size)(1.0))
+
+      if p > eqvThreshold then true
+      else if (1 - p) > neqvThreshold then false
+      else throw new EqUndecidableException
     }
 
     simulate(eqF)

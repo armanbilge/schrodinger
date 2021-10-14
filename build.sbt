@@ -29,6 +29,7 @@ val Fs2Version = "3.1.5"
 val Specs2Version = "5.0.0-RC-15"
 val ScalaCheckVersion = "1.15.4"
 val VaultVersion = "3.1.0"
+val DisciplineVersion = "1.1.5"
 val DisciplineSpecs2Version = "1.2-7-e3ce260"
 
 val commonSettings = Seq(
