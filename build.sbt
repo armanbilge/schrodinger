@@ -43,17 +43,17 @@ lazy val root =
     .aggregate(
       kernel.jvm,
       kernel.js,
+      math.jvm,
+      math.js,
       kernelTestkit,
       laws.jvm,
       laws.js,
-      math.jvm,
-      math.js,
       random,
-      stats,
       core,
-      monteCarlo,
       testkit,
-      tests)
+      tests,
+      stats,
+      monteCarlo)
     .enablePlugins(NoPublishPlugin)
 
 lazy val kernel = crossProject(JVMPlatform, JSPlatform)
@@ -62,11 +62,25 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-kernel"
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
+
+lazy val math = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("math"))
+  .settings(
+    name := "schrodinger-math",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "algebra" % AlgebraVersion,
+      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
+      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "algebra-laws" % AlgebraVersion % Test
+    )
+  )
+  .settings(commonSettings)
 
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
-  .dependsOn(kernel.jvm)
+  .dependsOn(kernel.jvm, math.jvm)
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
@@ -81,7 +95,7 @@ lazy val kernelTestkit = project
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
 
 lazy val laws = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -93,21 +107,7 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "cats-laws" % CatsVersion
     )
   )
-  .settings(commonSettings: _*)
-
-lazy val math = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("math"))
-  .settings(
-    name := "schrodinger-math",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "algebra" % AlgebraVersion,
-      "org.specs2" %%% "specs2-core" % Specs2Version,
-      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %%% "algebra-laws" % AlgebraVersion % Test
-    )
-  )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
 
 lazy val random = project
   .in(file("random"))
@@ -121,7 +121,7 @@ lazy val random = project
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
 
 lazy val core = project
   .in(file("core"))
@@ -130,7 +130,6 @@ lazy val core = project
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
-      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
@@ -139,18 +138,11 @@ lazy val core = project
 
 lazy val testkit = project
   .in(file("testkit"))
-  .dependsOn(core, random)
+  .dependsOn(core, kernelTestkit)
   .settings(
-    name := "schrodinger-testkit",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-laws" % CatsVersion,
-      "org.typelevel" %%% "cats-effect-kernel-testkit" % CatsEffectVersion,
-      "org.apache.commons" % "commons-math3" % "3.6.1",
-      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test
-    )
+    name := "schrodinger-testkit"
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
 
 lazy val tests = project
   .in(file("tests"))
@@ -165,7 +157,7 @@ lazy val tests = project
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
   .enablePlugins(NoPublishPlugin)
 
 lazy val stats = project
@@ -179,7 +171,7 @@ lazy val stats = project
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
@@ -196,4 +188,4 @@ lazy val monteCarlo = project
       "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
