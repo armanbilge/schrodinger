@@ -37,13 +37,13 @@ import cats.syntax.all.*
 import org.scalacheck.Prop
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
+import org.specs2.scalacheck.Parameters
 import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.laws.PseudoRandomTests
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.rng.SplitMix
-import org.specs2.scalacheck.Parameters
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
@@ -52,27 +52,19 @@ class RVTSpec extends Specification, Discipline, ScalaCheck, RVTestkit:
 
   sequential
 
+  given Parameters =
+    Parameters(seed = Parameters.makeSeed("Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="))
+
   given Confidence = Confidence(1000, 0.9, 0.9)
 
   given seeds: ExhaustiveCheck[SplitMix] =
     ExhaustiveCheck.instance(List(SplitMix(1234567890L, SplitMix.GoldenGamma)))
-
-  // given (using Ticker): Conversion[RVT[IO, SplitMix, Boolean], Prop] =
-  //   rv => ioBooleanToProp(seeds.allValues.forallM(rv.simulate(_)))
-
-  // given Ticker = Ticker()
-  // checkAll(
-  //   "RVT",
-  //   AsyncTests[RVT[IO, SplitMix, _]].async[Boolean, Boolean, Boolean](10.millis).random)
 
   given Simulator[Option] with
     type G[A] = OptionT[SyncIO, A]
     given runtime: Sync[G] = Sync.syncForOptionT[SyncIO]
     def upgrade[A](fa: Option[A]): G[A] = OptionT.fromOption(fa)
     def downgrade[A](ga: G[A]): Option[A] = ga.value.unsafeRunSync()
-
-  given Parameters =
-    Parameters(seed = Parameters.makeSeed("Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="))
 
   checkAll(
     "RVT",
