@@ -55,7 +55,7 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
     "split" in {
       prop { (state: SplitMix) =>
-        val ints = RV.int[SplitMix].split.semiflatMap(identity).replicateA(N).simulate(state)
+        val ints = RV.int[SplitMix].split.evalMap(identity).replicateA(N).simulate(state)
         val random = new SplittableRandom(state.seed)
         val expectedInts = List.fill(N)(random.split().nextInt())
         ints === expectedInts

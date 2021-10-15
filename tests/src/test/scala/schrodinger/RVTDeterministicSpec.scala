@@ -65,7 +65,7 @@ class RVTDeterministicSpec
       Discipline,
       ScalaCheck,
       cats.effect.testkit.TestInstances:
-  
+
   sequential
 
   given Ticker = Ticker()
@@ -76,8 +76,8 @@ class RVTDeterministicSpec
     Order.by[RVT[IO, SplitMix, FiniteDuration], List[IO[FiniteDuration]]](rv =>
       seeds.allValues.map(rv.simulate))
 
-  given [A](using
-      seeds: ExhaustiveCheck[SplitMix],
+  given [A](
+      using seeds: ExhaustiveCheck[SplitMix],
       orderF: Eq[IO[A]]): Eq[RVT[IO, SplitMix, A]] =
     Eq.by[RVT[IO, SplitMix, A], List[IO[A]]](rv => seeds.allValues.map(rv.simulate))
 

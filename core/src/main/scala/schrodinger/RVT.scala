@@ -65,7 +65,7 @@ sealed abstract class RVT[F[_], S, A]:
 
   final def map[B](f: A => B): RVT[F, S, B] = FlatMap(this, a => Pure(f(a)))
 
-  final def semiflatMap[B](f: A => F[B]): RVT[F, S, B] = FlatMap(this, a => Eval(f(a)))
+  final def evalMap[B](f: A => F[B]): RVT[F, S, B] = FlatMap(this, a => Eval(f(a)))
 
   final def flatMap[B](f: A => RVT[F, S, B]): RVT[F, S, B] = FlatMap(this, f)
 
@@ -319,7 +319,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E](
   val cede: RVT[F, S, Unit] = RVT.eval(F.cede)
 
   def start[A](rva: RVT[F, S, A]): RVT[F, S, Fiber[RVT[F, S, _], E, A]] =
-    rva.split.semiflatMap(_.start.map(liftFiber))
+    rva.split.evalMap(_.start.map(liftFiber))
 
   def racePair[A, B](rva: RVT[F, S, A], rvb: RVT[F, S, B]): RVT[
     F,
@@ -327,7 +327,7 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E](
     Either[
       (Outcome[RVT[F, S, _], E, A], Fiber[RVT[F, S, _], E, B]),
       (Fiber[RVT[F, S, _], E, A], Outcome[RVT[F, S, _], E, B])]] =
-    rva.split.product(rvb.split).semiflatMap { (fa, fb) =>
+    rva.split.product(rvb.split).evalMap { (fa, fb) =>
       F.racePair(fa, fb).map {
         case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
         case Right((fib, oc)) => Right((liftFiber(fib), liftOutcome(oc)))
