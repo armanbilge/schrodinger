@@ -23,26 +23,23 @@ import org.scalacheck.Cogen
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
-trait WeightedTestInstances:
+given [W: Arbitrary: Eq: Rig, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
+  Arbitrary(
+    for {
+      w <- Arbitrary.arbitrary[W]
+      d <- Arbitrary.arbitrary[W]
+      a <- Arbitrary.arbitrary[A]
+    } yield Weighted(w, d, a)
+  )
 
-  given [W: Arbitrary: Eq: Rig, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
-    Arbitrary(
-      for {
-        w <- Arbitrary.arbitrary[W]
-        d <- Arbitrary.arbitrary[W]
-        a <- Arbitrary.arbitrary[A]
-      } yield Weighted(w, d, a)
-    )
+given [A](using cogen: Cogen[Option[A]]): Cogen[Weighted[Int, A]] =
+  cogen.contramap {
+    case Heavy(_, _, a) => Some(a)
+    case Weightless(_) => None
+  }
 
-  given [A](using Cogen[Option[A]]): Cogen[Weighted[Int, A]] =
-    Cogen[Option[A]].contramap {
-      case Heavy(_, _, a) => Some(a)
-      case Weightless(_) => None
-    }
+given [F[_], W, A](using arb: Arbitrary[F[Weighted[W, A]]]): Arbitrary[WeightedT[F, W, A]] =
+  Arbitrary(arb.arbitrary.map(WeightedT(_)))
 
-  given [F[_], W, A](using ev: Arbitrary[F[Weighted[W, A]]]): Arbitrary[WeightedT[F, W, A]] =
-    Arbitrary(ev.arbitrary.map(WeightedT(_)))
-
-  given schrodingerTestKitCogenForWeightedT[F[_], A](
-      using ev: Cogen[F[Weighted[Int, A]]]): Cogen[WeightedT[F, Int, A]] =
-    ev.contramap(_.value)
+given [F[_], A](using cogen: Cogen[F[Weighted[Int, A]]]): Cogen[WeightedT[F, Int, A]] =
+  cogen.contramap(_.value)

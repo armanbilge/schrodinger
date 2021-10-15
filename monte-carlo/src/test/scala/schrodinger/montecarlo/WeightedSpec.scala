@@ -26,11 +26,7 @@ import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
 
-class WeightedSpec
-    extends Specification
-    with Discipline
-    with ScalaCheck
-    with WeightedTestInstances:
+class WeightedSpec extends Specification with Discipline with ScalaCheck:
 
   checkAll(
     "CommutativeMonad[Weighted]",

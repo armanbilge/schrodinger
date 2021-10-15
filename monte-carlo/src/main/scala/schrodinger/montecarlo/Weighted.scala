@@ -36,11 +36,11 @@ import cats.Show
 import cats.data.Ior
 import cats.kernel.CommutativeMonoid
 import cats.kernel.CommutativeSemigroup
-import cats.syntax.all.given
-import schrodinger.montecarlo.Weighted.Heavy
-import schrodinger.montecarlo.Weighted.Weightless
+import cats.syntax.all.*
 import schrodinger.math.Semifield
 import schrodinger.math.syntax.*
+import schrodinger.montecarlo.Weighted.Heavy
+import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.annotation.tailrec
 
@@ -104,64 +104,48 @@ object Weighted extends WeightedInstances, WeightedFunctions:
       Weightless(W.zero)
 
 sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
-  given schrodingerMonteCarloCommutativeMonadForWeighted[W](
-      using CommutativeRig[W],
-      Eq[W]): CommutativeMonad[Weighted[W, _]] =
+  given [W](using CommutativeRig[W], Eq[W]): CommutativeMonad[Weighted[W, _]] =
     new WeightedCommutativeMonad[W]
 
-  given schrodingerMonteCarloAlignForWeighted[W](using Rig[W], Eq[W]): Align[Weighted[W, _]] =
+  given [W](using Rig[W], Eq[W]): Align[Weighted[W, _]] =
     new WeightedAlign[W]
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
-  // given schrodingerMonteCarloParticleForWeighted[W]: Particle[Weighted[W, _], W] with
-  //   extension [A](wa: Weighted[W, A])
-  //     override def weight: W = wa.weight
-  //     override def withWeight(w: W): Weighted[W, A] = ???
-  //     override def importance[F[_]: Functor](f: A => F[W]): F[Weighted[W, A]] = ???
-
-  given schrodingerMonteCarloMonadForWeighted[W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
+  given [W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
     new WeightedMonad[W]
 
-  given schrodingerMonteCarloEqForWeighted[W: Eq, A: Eq]: Eq[Weighted[W, A]] with
+  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
     override def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
 
-  given schrodingerMonteCarloShowForWeighted[W: Show, A: Show]: Show[Weighted[W, A]] with
+  given [W: Show, A: Show]: Show[Weighted[W, A]] with
     override def show(t: Weighted[W, A]): String = t.show
 
-  given schrodingerMonteCarloCommutativeMonoidForWeighted[W, A](
+  given [W, A](
       using CommutativeRig[W],
       Eq[W],
       CommutativeMonoid[A]): CommutativeMonoid[Weighted[W, A]] =
     new WeightedCommutativeMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances1 extends WeightedInstances2:
-  given schrodingerMonteCarloMonoidForWeighted[W, A](
-      using Rig[W],
-      Eq[W],
-      Monoid[A]): Monoid[Weighted[W, A]] =
+  given [W, A](using Rig[W], Eq[W], Monoid[A]): Monoid[Weighted[W, A]] =
     new WeightedMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances2 extends WeightedInstances3:
-  given schrodingerMonteCarloCommutativeSemigroupForWeighted[W, A](
+  given [W, A](
       using CommutativeRig[W],
       Eq[W],
       CommutativeSemigroup[A]): CommutativeSemigroup[Weighted[W, A]] =
     new WeightedCommutativeSemigroup[W, A]
 
-  given schrodingerMonteCarloInvariantMonoidalForWeighted[F[_], W](
-      using Rig[W],
-      Eq[W]): InvariantMonoidal[Weighted[W, _]] =
+  given [F[_], W](using Rig[W], Eq[W]): InvariantMonoidal[Weighted[W, _]] =
     new WeightedInvariantMonoidal[W]
 
 sealed private[montecarlo] class WeightedInstances3:
 
-  given schrodingerMonteCarloSemigroupForWeighted[W, A](
-      using Rig[W],
-      Eq[W],
-      Semigroup[A]): Semigroup[Weighted[W, A]] =
+  given [W, A](using Rig[W], Eq[W], Semigroup[A]): Semigroup[Weighted[W, A]] =
     new WeightedSemigroup[W, A]
 
-  given schrodingerMonteCarloInvariantForWeighted[W]: Invariant[Weighted[W, _]] =
+  given [W]: Invariant[Weighted[W, _]] =
     new WeightedInvariant[W]
 
 sealed private[montecarlo] class WeightedFunctor[W] extends Functor[Weighted[W, _]]:
@@ -244,7 +228,7 @@ sealed private[montecarlo] class WeightedInvariantMonoidal[W](using Rig[W], Eq[W
 sealed private[montecarlo] class WeightedAlign[W](using Rig[W], Eq[W])
     extends Align[Weighted[W, _]]:
 
-  override def functor = Weighted.schrodingerMonteCarloMonadForWeighted
+  override def functor = Weighted.given_Monad_Weighted
 
   override def align[A, B](fa: Weighted[W, A], fb: Weighted[W, B]): Weighted[W, Ior[A, B]] =
     (fa, fb) match

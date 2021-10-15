@@ -50,12 +50,7 @@ import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.concurrent.duration.DurationInt
 
-class WeightedTSpec
-    extends Specification,
-      Discipline,
-      ScalaCheck,
-      WeightedTestInstances,
-      TestInstances:
+class WeightedTSpec extends Specification, Discipline, ScalaCheck, TestInstances:
 
   sequential
 
