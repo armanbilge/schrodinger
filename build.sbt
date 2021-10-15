@@ -140,7 +140,10 @@ lazy val testkit = project
   .in(file("testkit"))
   .dependsOn(core, kernelTestkit)
   .settings(
-    name := "schrodinger-testkit"
+    name := "schrodinger-testkit",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion
+    )
   )
   .settings(commonSettings)
 
@@ -152,7 +155,6 @@ lazy val tests = project
     libraryDependencies ++= Seq(
       "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
-      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )

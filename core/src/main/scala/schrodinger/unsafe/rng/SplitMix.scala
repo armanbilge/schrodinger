@@ -55,7 +55,7 @@ object SplitMix:
         val gamma = s.nextGamma()
         SplitMix(seed, gamma)
 
-  private[rng] val GoldenGamma = 0x9e3779b97f4a7c15L
+  val GoldenGamma = 0x9e3779b97f4a7c15L
 
   private def mix64(_z: Long) =
     var z = _z

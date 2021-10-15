@@ -14,30 +14,40 @@
  * limitations under the License.
  */
 
-package schrodinger.kernel.testkit
+package schrodinger.kernel
+package testkit
 
 import cats.Eq
 import cats.Monad
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
 import org.apache.commons.math3.special.Gamma
+import schrodinger.math.LogDouble
+import scala.collection.mutable
 
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
 
-class RandomEq[F[_]: Monad, A: Eq](
-    using confidence: Confidence,
-    exhaustive: ExhaustiveCheck[A],
-    simulate: F[Boolean] => Boolean
-) extends Eq[F[A]]:
+object PseudoRandomEq:
+  def apply[F[_]: Monad, G[_], S, A: Eq](
+      using pseudo: PseudoRandom.Aux[F, G, S],
+      seeds: ExhaustiveCheck[S],
+      confidence: Confidence,
+      eq: Eq[G[SimulationResult[A]]]
+  ): Eq[F[A]] =
+    import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
+    Eq.by[F[A], S => G[SimulationResult[A]]](rv =>
+      s => rv.replicateA(confidence.replicates).map(SimulationResult(_)).simulate(s))
 
-  def eqv(x: F[A], y: F[A]): Boolean =
-    val Confidence(replicates, eqvThreshold, neqvThreshold) = confidence
-    import exhaustive.allValues
+final case class SimulationResult[A](samples: List[A])
 
-    val xs = x.replicateA(replicates)
-    val ys = y.replicateA(replicates)
+object SimulationResult:
+  given [A: Eq](using confidence: Confidence): Eq[SimulationResult[A]] =
+    case (SimulationResult(xs), SimulationResult(ys)) =>
+      import confidence.*
 
-    val eqF = (xs, ys).mapN { (xs, ys) =>
+      val allValues = mutable.ArrayBuffer[A]()
+      xs.foreach(a => if allValues.forall(_ =!= a) then allValues += a)
+      ys.foreach(a => if allValues.forall(_ =!= a) then allValues += a)
 
       val xcounts = new Array[Int](allValues.size)
       val ycounts = new Array[Int](allValues.size)
@@ -51,46 +61,44 @@ class RandomEq[F[_]: Monad, A: Eq](
       if p > eqvThreshold then true
       else if (1 - p) > neqvThreshold then false
       else throw new EqUndecidableException
-    }
-
-    simulate(eqF)
 
   private def equidistributedBelief(
       trial1: Array[Int],
       trial2: Array[Int],
       dirichletPrior: Array[Double]): Double =
     val marginal1 = dirichletMultinomialLogPmf(trial1, trial2, dirichletPrior)
-    val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) +
+    val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) *
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
-    math.exp(marginal1 - logPlus(marginal1, marginal2))
+    (marginal1 / (marginal1 + marginal2)).real
 
-  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): Double =
-    import Gamma.*
+  private def gamma(x: Double): LogDouble =
+    LogDouble.exp(Gamma.logGamma(x))
+
+  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): LogDouble =
     val A = sum(alpha)
     val n = sum(x)
-    var logPmf = logGamma(A) + logGamma(n + 1.0) - logGamma(n + A)
+    var pmf = gamma(A) * gamma(n + 1.0) / gamma(n + A)
     var k = 0
     while k < x.length do
-      logPmf += logGamma(x(k) + alpha(k)) - logGamma(alpha(k)) - logGamma(x(k) + 1.0)
+      pmf *= gamma(x(k) + alpha(k)) / gamma(alpha(k)) / gamma(x(k) + 1.0)
       k += 1
-    logPmf
+    pmf
 
   private def dirichletMultinomialLogPmf(
       x1: Array[Int],
       x2: Array[Int],
-      alpha: Array[Double]): Double =
-    import Gamma.*
+      alpha: Array[Double]): LogDouble =
     val A = sum(alpha)
     val n1 = sum(x1)
     val n2 = sum(x2)
     val n = n1 + n2
-    var logPmf = logGamma(A) + logGamma(n1 + 1.0) + logGamma(n2 + 1.0) - logGamma(n + A)
+    var pmf = gamma(A) * gamma(n1 + 1.0) * gamma(n2 + 1.0) / gamma(n + A)
     var k = 0
     while k < x1.length do
-      logPmf += logGamma(x1(k) + x2(k) + alpha(k)) - logGamma(alpha(k)) - logGamma(
-        x1(k) + 1.0) - logGamma(x2(k) + 1.0)
+      pmf *= gamma(x1(k) + x2(k) + alpha(k)) / gamma(alpha(k)) / gamma(x1(k) + 1.0) / gamma(
+        x2(k) + 1.0)
       k += 1
-    logPmf
+    pmf
 
   private def sum(x: Array[Int]): Int =
     var i = 0
@@ -107,10 +115,3 @@ class RandomEq[F[_]: Monad, A: Eq](
       sum += x(i)
       i += 1
     sum
-
-  private def logPlus(x: Double, y: Double): Double =
-    import math.*
-    if x < y then y + log1p(exp(x - y))
-    else if x > y then x + log1p(exp(y - x))
-    else // x == y
-      log(2) + x

@@ -44,7 +44,7 @@ object PureRV:
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 
-object PureRVT extends PureRVTLowPriority:
+object PureRVT:
   extension [F[_], S, A](rv: PureRVT[F, S, A])
     def simulate(seed: S)(using FlatMap[F]): F[A] = rv.runA((seed, Vault.empty))
 
@@ -91,29 +91,7 @@ object PureRVT extends PureRVTLowPriority:
 
     Arbitrary(generators.generators[A])
 
-  given [S: PureRng, A: Eq: ExhaustiveCheck](
-      using exhaustive: ExhaustiveCheck[S],
-      confidence: Confidence): Eq[PureRV[S, A]] =
-    given (Eval[Boolean] => Boolean) = _.value
-    given_Eq_PureRVT(using summon, summon, summon, summon, summon, summon, summon)
-
-  given [F[_]: Monad, S: PureRng, A: Eq: ExhaustiveCheck](
-      using exhaustive: ExhaustiveCheck[S],
-      confidence: Confidence,
-      run: F[Boolean] => Boolean): Eq[PureRVT[F, S, A]] =
-    exhaustive
-      .allValues
-      .map { seed =>
-        given (PureRVT[F, S, Boolean] => Boolean) = rv => run(rv.simulate(seed))
-        RandomEq[PureRVT[F, S, _], A](): Eq[PureRVT[F, S, A]]
-      }
-      .reduce(Eq.and)
-
-sealed abstract private[testkit] class PureRVTLowPriority:
-
-  given [F[_]: Monad, S: PureRng, A](
-      using exhaustive: ExhaustiveCheck[S],
-      confidence: Confidence,
-      eqF: Eq[F[A]]): Eq[PureRVT[F, S, A]] =
-    import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
-    Eq.by[PureRVT[F, S, A], S => F[A]](rv => s => rv.simulate(s))
+  given [F[_]: Monad, S: PureRng: ExhaustiveCheck, A: Eq](
+      using Confidence,
+      Eq[F[SimulationResult[A]]]): Eq[PureRVT[F, S, A]] =
+    PseudoRandomEq[PureRVT[F, S, _], F, S, A]

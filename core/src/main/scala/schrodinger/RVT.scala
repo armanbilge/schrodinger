@@ -171,7 +171,7 @@ sealed private[schrodinger] trait RVTInstances8 extends RVTInstances7:
   given [F[_], S: SplittableRng, E](using F: GenTemporal[F, E]): GenTemporal[RVT[F, S, _], E] =
     new RVTTemporal[F, S, E] {}
 
-  given [F[_], S: SplittableRng](using F: Sync[F]): Sync[RVT[F, S, _]] with RVTSync[F, S] with
+  given [F[_], S: Rng](using F: Sync[F]): Sync[RVT[F, S, _]] with RVTSync[F, S] with
     override def applicative = this
     def rootCancelScope: CancelScope = F.rootCancelScope
 
@@ -212,13 +212,13 @@ sealed private[schrodinger] trait RVTInstances0:
 
   given [F[_]: FunctorFilter, S]: FunctorFilter[RVT[F, S, _]] = new RVTFunctorFilter[F, S] {}
 
-  given [F[_]: Sync, S: Rng]: PseudoRandom.Aux[RVT[F, S, _], F, S] =
+  given [F[_]: Simulator, S: Rng]: PseudoRandom.Aux[RVT[F, S, _], F, S] =
     new RVTPseudoRandom[F, S] {}
 
   given [F[_], S]: GaussianCache[RVT[F, S, _], Double] =
     new RVTGaussianDoubleCache[F, S] {}
 
-sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Sync, S0: Rng]
+sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Simulator, S0: Rng]
     extends PseudoRandom[RVT[F0, S0, _]]:
   type G[X] = F0[X]
   type S = S0

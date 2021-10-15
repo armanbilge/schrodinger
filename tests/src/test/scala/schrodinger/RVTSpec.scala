@@ -14,103 +14,78 @@
  * limitations under the License.
  */
 
-// package schrodinger
+package schrodinger
 
-// import cats.Alternative
-// import cats.CommutativeMonad
-// import cats.Eval
-// import cats.FunctorFilter
-// import cats.Order
-// import cats.data.OptionT
-// import cats.effect.Async
-// import cats.effect.IO
-// import cats.effect.SyncIO
-// import cats.effect.kernel.Sync
-// import cats.effect.laws.AsyncTests
-// import cats.effect.testkit.TestInstances
-// import cats.laws.discipline.AlternativeTests
-// import cats.laws.discipline.CommutativeMonadTests
-// import cats.laws.discipline.ExhaustiveCheck
-// import cats.laws.discipline.FunctorFilterTests
-// import cats.laws.discipline.SerializableTests
-// import cats.syntax.all.*
-// import org.scalacheck.Prop
-// import org.specs2.ScalaCheck
-// import org.specs2.mutable.Specification
-// import org.typelevel.discipline.specs2.mutable.Discipline
-// import schrodinger.kernel.PseudoRandom
-// import schrodinger.kernel.laws.PseudoRandomTests
-// import schrodinger.kernel.testkit.Confidence
-// import schrodinger.testkit.RVTestInstances
-// import schrodinger.unsafe.rng.SplitMix
+import cats.Alternative
+import cats.CommutativeMonad
+import cats.Eval
+import cats.FunctorFilter
+import cats.Order
+import cats.data.OptionT
+import cats.effect.Async
+import cats.effect.IO
+import cats.effect.SyncIO
+import cats.effect.kernel.Sync
+import cats.effect.laws.AsyncTests
+import cats.effect.testkit.TestInstances
+import cats.laws.discipline.AlternativeTests
+import cats.laws.discipline.CommutativeMonadTests
+import cats.laws.discipline.ExhaustiveCheck
+import cats.laws.discipline.FunctorFilterTests
+import cats.laws.discipline.SerializableTests
+import cats.syntax.all.*
+import org.scalacheck.Prop
+import org.specs2.ScalaCheck
+import org.specs2.mutable.Specification
+import org.typelevel.discipline.specs2.mutable.Discipline
+import schrodinger.kernel.PseudoRandom
+import schrodinger.kernel.laws.PseudoRandomTests
+import schrodinger.kernel.testkit.Confidence
+import schrodinger.testkit.RVTestkit
+import schrodinger.unsafe.rng.SplitMix
+import org.specs2.scalacheck.Parameters
 
-// import scala.concurrent.duration.DurationInt
-// import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration.DurationInt
+import scala.concurrent.duration.FiniteDuration
 
-// class RVTSpec extends Specification, Discipline, ScalaCheck, TestInstances, RVTestInstances:
+class RVTSpec extends Specification, Discipline, ScalaCheck, RVTestkit:
 
-//   sequential
+  sequential
 
-//   given Ticker = Ticker()
-//   given Confidence = Confidence(1000, 0.9, 0.9)
+  given Confidence = Confidence(1000, 0.9, 0.9)
 
-//   given seeds: ExhaustiveCheck[SplitMix] =
-//     ExhaustiveCheck.instance(List(SplitMix.fromTime[SyncIO].unsafeRunSync()))
+  given seeds: ExhaustiveCheck[SplitMix] =
+    ExhaustiveCheck.instance(List(SplitMix(1234567890L, SplitMix.GoldenGamma)))
 
-//   given discreteEitherUnitBoolean: Discrete[Either[Unit, Boolean]] =
-//     Discrete.of(List(Left(()), Right(false), Right(true)))
-//   given discreteEitherBooleanUnit: Discrete[Either[Boolean, Unit]] =
-//     Discrete.of(List(Right(()), Left(false), Left(true)))
+  // given (using Ticker): Conversion[RVT[IO, SplitMix, Boolean], Prop] =
+  //   rv => ioBooleanToProp(seeds.allValues.forallM(rv.simulate(_)))
 
-//   given (using Ticker): Conversion[RVT[IO, SplitMix, Boolean], Prop] =
-//     sbool => ioBooleanToProp(seeds.allValues.forallM(sbool.simulate(_)))
+  // given Ticker = Ticker()
+  // checkAll(
+  //   "RVT",
+  //   AsyncTests[RVT[IO, SplitMix, _]].async[Boolean, Boolean, Boolean](10.millis).random)
 
-//   given (using Ticker): Conversion[IO[Boolean], Option[Boolean]] = ioa =>
-//     unsafeRun(ioa).fold(None, _ => None, identity)
+  given Simulator[Option] with
+    type G[A] = OptionT[SyncIO, A]
+    given runtime: Sync[G] = Sync.syncForOptionT[SyncIO]
+    def upgrade[A](fa: Option[A]): G[A] = OptionT.fromOption(fa)
+    def downgrade[A](ga: G[A]): Option[A] = ga.value.unsafeRunSync()
 
-//   given (using Ticker): Order[RVT[IO, SplitMix, FiniteDuration]] =
-//     Order.by(_.simulate(seeds.allValues.head))
+  given Parameters =
+    Parameters(seed = Parameters.makeSeed("Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="))
 
-//   checkAll(
-//     "PseudoRandom[RVT]",
-//     PseudoRandomTests[RVT[SyncIO, SplitMix, _], SyncIO, SplitMix].pseudoRandom[Boolean])
-//   checkAll(
-//     "PseudoRandom[RVT]",
-//     SerializableTests.serializable(PseudoRandom[RVT[IO, SplitMix, _]]))
+  checkAll(
+    "RVT",
+    CommutativeMonadTests[RVT[Option, SplitMix, _]]
+      .commutativeMonad[Boolean, Boolean, Boolean]
+      .random)
 
-//   checkAll(
-//     "Async[RVT]",
-//     AsyncTests[RVT[IO, SplitMix, _]].async[Boolean, Boolean, Boolean](10.millis))
-//   checkAll("Async[RVT]", SerializableTests.serializable(Async[RVT[IO, SplitMix, _]]))
+  checkAll(
+    "RVT",
+    FunctorFilterTests[RVT[Option, SplitMix, _]]
+      .functorFilter[Boolean, Boolean, Boolean]
+      .random)
 
-//   {
-//     given Simulator[Option] with
-//       type G[A] = OptionT[SyncIO, A]
-//       given runtime: Sync[G] = Sync.syncForOptionT[SyncIO]
-//       def upgrade[A](fa: Option[A]): G[A] = OptionT.fromOption(fa)
-//       def downgrade[A](ga: G[A]): Option[A] = ga.value.unsafeRunSync()
-
-//     checkAll(
-//       "CommutativeMonad[RVT]",
-//       CommutativeMonadTests[RVT[Option, SplitMix, _]]
-//         .commutativeMonad[Boolean, Boolean, Boolean])
-//     checkAll(
-//       "CommutativeMonad[RVT]",
-//       SerializableTests.serializable(CommutativeMonad[RVT[Option, SplitMix, _]]))
-//   }
-
-//   checkAll(
-//     "FunctorFilter[RVT]",
-//     FunctorFilterTests[RVT[OptionT[SyncIO, _], SplitMix, _]]
-//       .functorFilter[Boolean, Boolean, Boolean])
-//   checkAll(
-//     "FunctorFilter[RVT]",
-//     SerializableTests.serializable(FunctorFilter[RVT[Option, SplitMix, _]]))
-
-//   checkAll(
-//     "Alternative[RVT]",
-//     AlternativeTests[RVT[OptionT[SyncIO, _], SplitMix, _]]
-//       .alternative[Boolean, Boolean, Boolean])
-//   checkAll(
-//     "Alternative[RVT]",
-//     SerializableTests.serializable(Alternative[RVT[Option, SplitMix, _]]))
+  checkAll(
+    "RVT",
+    AlternativeTests[RVT[Option, SplitMix, _]].alternative[Boolean, Boolean, Boolean].random)
