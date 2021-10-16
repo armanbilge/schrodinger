@@ -24,9 +24,11 @@ import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
 import algebra.ring.Semiring
 import cats.Align
+import cats.Applicative
 import cats.CommutativeMonad
 import cats.Eq
 import cats.Functor
+import cats.Id
 import cats.Invariant
 import cats.InvariantMonoidal
 import cats.Monad
@@ -71,11 +73,15 @@ sealed abstract class Weighted[W, +A] extends Product, Serializable:
       case (_, weightless @ Weightless(_)) => weightless
 
   final def importance(f: A => W)(using Semifield[W], Eq[W]): Weighted[W, A] =
+    given Applicative[Id] = cats.catsInstancesForId
+    importanceA[Id, A](f)
+
+  final def importanceA[F[_]: Applicative, B >: A](
+      f: B => F[W])(using Semifield[W], Eq[W]): F[Weighted[W, B]] =
     this match
       case Heavy(w, d, a) =>
-        val fa = f(a)
-        Weighted(w * (fa / d), fa, a)
-      case weightless @ Weightless(_) => weightless
+        f(a).map(fa => Weighted(w * (fa / d), fa, a))
+      case weightless @ Weightless(_) => weightless.pure
 
   final override def toString: String =
     show(using Show.fromToString, Show.fromToString)
@@ -145,8 +151,8 @@ sealed private[montecarlo] class WeightedInstances3:
   given [W, A](using Rig[W], Eq[W], Semigroup[A]): Semigroup[Weighted[W, A]] =
     new WeightedSemigroup[W, A]
 
-  given [W]: Invariant[Weighted[W, _]] =
-    new WeightedInvariant[W]
+  given [W]: Functor[Weighted[W, _]] =
+    new WeightedFunctor[W]
 
 sealed private[montecarlo] class WeightedFunctor[W] extends Functor[Weighted[W, _]]:
   override def map[A, B](fa: Weighted[W, A])(f: A => B): Weighted[W, B] =
@@ -210,13 +216,8 @@ sealed private[montecarlo] class WeightedCommutativeMonoid[W, A](
     Eq[W])
     extends WeightedMonoid[W, A],
       CommutativeMonoid[Weighted[W, A]]
-
-sealed private[montecarlo] class WeightedInvariant[W] extends Invariant[Weighted[W, _]]:
-  override def imap[A, B](fa: Weighted[W, A])(f: A => B)(g: B => A): Weighted[W, B] =
-    fa.map(f)
-
 sealed private[montecarlo] class WeightedInvariantMonoidal[W](using Rig[W], Eq[W])
-    extends WeightedInvariant[W],
+    extends WeightedFunctor[W],
       InvariantMonoidal[Weighted[W, _]]:
 
   override def unit: Weighted[W, Unit] =
