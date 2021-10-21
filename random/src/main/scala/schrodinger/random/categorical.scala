@@ -63,3 +63,20 @@ trait CategoricalInstances:
           java.util.Arrays.binarySearch(cumulative, U * cumulative(cumulative.length - 1))
         if i >= 0 then i else -(i + 1)
       }
+
+  given [F[_]: Functor: Categorical[Vector[R], Int], R, A]: Categorical[Map[A, R], A][F] with
+    override def apply(params: Categorical.Params[Map[A, R]]): F[A] =
+      import params.*
+
+      val as = Vector.newBuilder[A]
+      as.sizeHint(support)
+      val ps = Vector.newBuilder[R]
+      ps.sizeHint(support)
+      support.foreach {
+        case a -> p =>
+          as += a
+          ps += p
+      }
+
+      val a = as.result
+      Categorical(ps.result).map(a)

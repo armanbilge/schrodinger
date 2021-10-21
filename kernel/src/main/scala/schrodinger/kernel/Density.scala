@@ -16,4 +16,9 @@
 
 package schrodinger.kernel
 
-type Density[F[_], R] = [X] =>> (X => F[R])
+type Density[F[_], R] = [X] =>> Density.Normalized[F, R, X]
+type UnnormalizedDensity[F[_], R] = [X] =>> Density.Unnormalized[F, R, X]
+
+object Density:
+  trait Unnormalized[F[_], R, X] extends (X => F[R])
+  trait Normalized[F[_], R, X] extends Unnormalized[F, R, X]

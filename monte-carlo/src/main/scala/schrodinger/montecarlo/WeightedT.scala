@@ -130,12 +130,7 @@ object WeightedT extends WeightedTInstances:
 
     def importanceF(
         f: A => F[W])(using F: Monad[F], W0: Semifield[W], W1: Eq[W]): WeightedT[F, W, A] =
-      WeightedT {
-        F.flatMap(value) {
-          case heavy @ Heavy(_, _, a) => F.map(f(a))(fa => heavy.importance(_ => fa))
-          case weightless @ Weightless(_) => F.pure(weightless)
-        }
-      }
+      F.flatMap(value)(_.importanceA(f))
 
     def show(using F: Show[F[Weighted[W, A]]]): String = F.show(value)
 
