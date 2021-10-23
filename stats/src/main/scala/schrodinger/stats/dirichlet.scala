@@ -31,8 +31,9 @@ trait DirichletInstances:
       : Dirichlet[Vector[Double], Vector[Double]][Density[F, LogDouble]] =
     case Dirichlet.Params(concentration) =>
       def Gamma(x: Double) = LogDouble.exp(logGamma(x))
-      val normalization = concentration.map(Gamma).reduce(_ * _) / Gamma(concentration.sum)
+      val normalizingConstant =
+        Gamma(concentration.sum) / concentration.map(Gamma).reduce(_ * _)
       x =>
-        ((concentration, x)
-          .parMapN((alpha, x) => LogDouble(x) ** (alpha - 1))
-          .reduce(_ * _) / normalization).pure[F]
+        val density =
+          (concentration, x).parMapN((alpha, x) => LogDouble(x) ** (alpha - 1)).reduce(_ * _)
+        (normalizingConstant * density).pure[F]
