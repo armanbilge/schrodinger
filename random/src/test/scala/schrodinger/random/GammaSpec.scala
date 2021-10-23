@@ -16,28 +16,25 @@
 
 package schrodinger.random
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64
-import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
+import org.apache.commons.rng.sampling.distribution.AhrensDieterMarsagliaTsangGammaSampler
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import org.typelevel.vault.Key
-import schrodinger.kernel.Gaussian
-import schrodinger.random.all.given
+import schrodinger.kernel.Gamma
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.random.GaussianCache
+import schrodinger.random.all.given
 
-class GaussianSpec extends Specification with ScalaCheck:
+class GammaSpec extends Specification with ScalaCheck:
   val N = 100
 
-  "Gaussian" should {
+  "Gamma" should {
     "match Apache implementation" in {
-      prop { (seed: Long) =>
-        val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
-        Gaussian
-          .standard[PureRV[SplitMix64, _], Double]
+      prop { (seed: Long, _shape: Double) =>
+        val shape = 2.0
+        val apache = new AhrensDieterMarsagliaTsangGammaSampler(new source64.SplitMix64(seed), math.abs(shape), 1.0)
+        Gamma[PureRV[SplitMix64, _], Double, Double, Double](math.abs(shape), 1.0)
           .replicateA(N)
           .simulate(SplitMix64(seed))
           .value ===

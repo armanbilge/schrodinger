@@ -16,12 +16,13 @@
 
 package schrodinger.random
 
-object all
-    extends BernoulliInstances,
-      CategoricalInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      MultinomialInstances,
-      UniformInstances
+import cats.effect.SyncIO
+import cats.syntax.all.*
+import org.typelevel.vault.Key
+import schrodinger.kernel.testkit.PureRV
+import schrodinger.kernel.testkit.SplitMix64
+
+given GaussianCache[PureRV[SplitMix64, _], Double] with
+  val key = Key.newKey[SyncIO, Double].unsafeRunSync()
+  def get: PureRV[SplitMix64, Double] = PureRV.getExtra(key).map(_.getOrElse(Double.NaN))
+  def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key)(a)
