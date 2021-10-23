@@ -34,11 +34,11 @@ trait GammaInstances:
       val U = Uniform(0.0 <=@< 1.0)
       val G = Gaussian.standard
       val scale = 1 / rate
+      val none = Option.empty[Double].pure
 
       lazy val ahrensDieter: F[Double] =
         val oneOverAlpha = 1 / shape
         val bGSOptim = 1 + shape / math.E
-        val none = Option.empty[Double].pure
 
         val go: F[Option[Double]] = U.flatMap { u =>
           val p = bGSOptim * u
@@ -62,19 +62,21 @@ trait GammaInstances:
         val dOptim = shape - 1 / 3.0
         val cOptim = (1 / 3.0) / math.sqrt(dOptim)
 
-        G.flatMap { x =>
+        val go: F[Option[Double]] = G.flatMap { x =>
           val oPcTx = 1 + cOptim * x
           val v = oPcTx * oPcTx * oPcTx
 
-          if v <= 0 then marsagliaTsang
+          if v <= 0 then none
           else
             val x2 = x * x
             U.flatMap { u =>
-              if u < 1 - 0.0331 * x2 * x2 then (scale * dOptim * v).pure
+              if u < 1 - 0.0331 * x2 * x2 then Some(scale * dOptim * v).pure
               else if math.log(u) < 0.5 * x2 + dOptim * (1 - v + math.log(v)) then
-                (scale * dOptim * v).pure
-              else marsagliaTsang
+                Some(scale * dOptim * v).pure
+              else none
             }
         }
+
+        go.untilDefinedM
 
       if shape < 1 then ahrensDieter else marsagliaTsang
