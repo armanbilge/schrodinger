@@ -16,7 +16,6 @@
 
 package schrodinger.random
 
-import cats.Defer
 import cats.Monad
 import cats.syntax.all.*
 import schrodinger.kernel.Gamma
@@ -30,7 +29,7 @@ object gamma extends GammaInstances
 trait GammaInstances:
 
   given schrodingerRandomGammaForDouble[
-      F[_]: Monad: Defer: Uniform[0.0 <=@< 1.0, Double]: GenGaussian[0, 1, Double]]: Gamma[Double][F] =
+      F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]: GenGaussian[0, 1, Double]]: Gamma[Double][F] =
     case Gamma.Params(shape, rate) =>
       val U = Uniform(0.0 <=@< 1.0)
       val G = Gaussian.standard
@@ -39,28 +38,25 @@ trait GammaInstances:
       lazy val ahrensDieter: F[Double] =
         val oneOverAlpha = 1 / shape
         val bGSOptim = 1 + shape / math.E
+        val none = Option.empty[Double].pure
 
-        lazy val step1: F[Double] = U.flatMap { u =>
+        val go: F[Option[Double]] = U.flatMap { u =>
           val p = bGSOptim * u
-          if p <= 1 then step2(p)
-          else step3(p)
+          if p <= 1 then
+            val x = math.pow(p, oneOverAlpha)
+            U.flatMap { u2 =>
+              if u2 > math.exp(-x) then none
+              else (scale * x).some.pure
+            }
+          else
+            val x = -math.log((bGSOptim - p) * oneOverAlpha)
+            U.flatMap { u2 =>
+              if u2 <= math.pow(x, shape - 1) then (scale * x).some.pure
+              else none
+            }
         }
 
-        def step2(p: Double): F[Double] =
-          val x = math.pow(p, oneOverAlpha)
-          U.flatMap { u2 =>
-            if u2 > math.exp(-x) then step1
-            else (scale * x).pure
-          }
-
-        def step3(p: Double): F[Double] =
-          val x = -math.log((bGSOptim - p) * oneOverAlpha)
-          U.flatMap { u2 =>
-            if u2 <= math.pow(x, shape - 1) then (scale * x).pure
-            else step1
-          }
-
-        step1
+        go.untilDefinedM
 
       lazy val marsagliaTsang: F[Double] =
         val dOptim = shape - 1 / 3.0

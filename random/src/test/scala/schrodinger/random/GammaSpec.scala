@@ -32,7 +32,7 @@ class GammaSpec extends Specification with ScalaCheck:
   "Gamma" should {
     "match Apache implementation" in {
       prop { (seed: Long, _shape: Double) =>
-        val shape = 2.0
+        val shape = 1/2.0
         val apache = new AhrensDieterMarsagliaTsangGammaSampler(new source64.SplitMix64(seed), math.abs(shape), 1.0)
         Gamma[PureRV[SplitMix64, _], Double, Double, Double](math.abs(shape), 1.0)
           .replicateA(N)
