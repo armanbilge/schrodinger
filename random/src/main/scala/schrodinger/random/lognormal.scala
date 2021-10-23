@@ -16,11 +16,14 @@
 
 package schrodinger.random
 
-object all
-    extends BernoulliInstances,
-      CategoricalInstances,
-      ExponentialInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      MultinomialInstances,
-      UniformInstances
+import cats.Functor
+import cats.syntax.all.*
+import schrodinger.kernel.Gaussian
+import schrodinger.kernel.LogNormal
+
+object lognormal extends LogNormalInstances
+
+trait LogNormalInstances:
+  given schrodingerRandomLogNormalForDouble[F[_]: Functor: Gaussian[Double]]
+      : LogNormal[Double][F] =
+    case LogNormal.Params(mu, sigma) => Gaussian(mu, sigma).map(math.exp)

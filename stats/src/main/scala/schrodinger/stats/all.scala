@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.stats
 
 object all
     extends BernoulliInstances,
@@ -22,5 +22,4 @@ object all
       ExponentialInstances,
       GaussianInstances,
       LogNormalInstances,
-      MultinomialInstances,
       UniformInstances

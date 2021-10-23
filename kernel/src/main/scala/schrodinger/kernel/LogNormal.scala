@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
-object all
-    extends BernoulliInstances,
-      CategoricalInstances,
-      ExponentialInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      MultinomialInstances,
-      UniformInstances
+type GenLogNormal[M, S, X] = [F[_]] =>> Distribution[F, LogNormal.Params[M, S], X]
+type LogNormal[R] = [F[_]] =>> GenLogNormal[R, R, R][F]
+
+object LogNormal:
+  final case class Params[+M, +S](mu: M, sigma: S)
+
+  inline def apply[F[_], R](mu: R, sigma: R)(using ln: LogNormal[R][F]): F[R] =
+    ln(Params(mu, sigma))
