@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger.kernel
 
-object all
-    extends BernoulliInstances,
-      CategoricalInstances,
-      DirichletInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      UniformInstances
+type Dirichlet[C, X] = [F[_]] =>> Distribution[F, Dirichlet.Params[C], X]
+
+object Dirichlet:
+  final case class Params[+C](concentration: C)
+
+  inline def apply[F[_], C, X](concentration: C)(using d: Dirichlet[C, X][F]): F[X] =
+    d(Params(concentration))

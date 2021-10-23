@@ -54,6 +54,7 @@ object LogDouble:
       else if y > x then math.log1p(math.exp(x - y)) + y
       else Two * x
     def *(y: LogDouble): LogDouble = (x: Double) + (y: Double)
+    def **(y: Double): LogDouble = (x: Double) * y
     def /(y: LogDouble): LogDouble = x - y
     def reciprocal: LogDouble = -x
     infix def max(y: LogDouble): LogDouble = math.max(x, y)

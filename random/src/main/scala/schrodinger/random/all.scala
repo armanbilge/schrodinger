@@ -19,6 +19,7 @@ package schrodinger.random
 object all
     extends BernoulliInstances,
       CategoricalInstances,
+      DirichletInstances,
       ExponentialInstances,
       GammaInstances,
       GaussianInstances,

@@ -14,14 +14,20 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger.random
 
-object all
-    extends BernoulliInstances,
-      CategoricalInstances,
-      DirichletInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      UniformInstances
+import cats.Applicative
+import cats.syntax.all.*
+import schrodinger.kernel.Gamma
+import schrodinger.kernel.Dirichlet
+
+object dirichlet extends DirichletInstances
+
+trait DirichletInstances:
+  given schrodingerRandomDirichletForVectorDouble[F[_]: Applicative: Gamma[Double]]
+      : Dirichlet[Vector[Double], Vector[Double]][F] =
+    case Dirichlet.Params(concentration) =>
+      concentration.traverse(Gamma(_, 1.0)).map { xs =>
+        val sum = xs.sum
+        xs.map(_ / sum)
+      }
