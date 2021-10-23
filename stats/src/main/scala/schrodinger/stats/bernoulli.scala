@@ -29,7 +29,7 @@ trait BernoulliInstances:
   given schrodingerStatsFairBernoulliForBoolean[F[_]: Applicative]
       : Bernoulli[0.5, Boolean][Density[F, LogDouble]] =
     val half = LogDouble(0.5).pure[F]
-    val fair = (_: Boolean) => half
+    val fair: Density[F, LogDouble][Boolean] = _ => half
     _ => fair
 
   given schrodingerStatsBernoulliForDoubleBoolean[F[_]: Applicative]

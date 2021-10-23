@@ -31,23 +31,21 @@ trait UniformInstances:
 
   given schrodingerStatsStandardUniformForInt[F[_]: Applicative]
       : Uniform[Int.MinValue.type <=@<= Int.MaxValue.type, Int][Density[F, LogDouble]] =
-    val density =
-      (_: Int) =>
-        LogDouble(Int.MaxValue.toDouble - Int.MinValue.toDouble + 1).reciprocal.pure[F]
+    val density: Density[F, LogDouble][Int] =
+      _ => LogDouble(Int.MaxValue.toDouble - Int.MinValue.toDouble + 1).reciprocal.pure[F]
     _ => density
 
   given schrodingerStatsStandardUniformForLong[F[_]: Applicative]
       : Uniform[Long.MinValue.type <=@<= Long.MaxValue.type, Long][Density[F, LogDouble]] =
-    val density =
-      (_: Long) =>
-        LogDouble(Long.MaxValue.toDouble - Long.MinValue.toDouble + 1).reciprocal.pure[F]
+    val density: Density[F, LogDouble][Long] =
+      _ => LogDouble(Long.MaxValue.toDouble - Long.MinValue.toDouble + 1).reciprocal.pure[F]
     _ => density
 
   given schrodingerStatsStandardUniformForDouble[F[_]: Applicative]
       : Uniform[0.0 <=@< 1.0, Double][Density[F, LogDouble]] =
     val zero = LogDouble.Zero.pure[F]
     val one = LogDouble.One.pure[F]
-    val density = (x: Double) => if 0 <= x && x <= 1 then one else zero
+    val density: Density[F, LogDouble][Double] = x => if 0 <= x && x <= 1 then one else zero
     _ => density
 
   given schrodingerStatsUniformForIntRange[F[_]: Applicative]
