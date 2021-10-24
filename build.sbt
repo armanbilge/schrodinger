@@ -37,6 +37,10 @@ val commonSettings = Seq(
   sonatypeCredentialHost := "s01.oss.sonatype.org"
 )
 
+val commonJvmSettings = Seq(
+  Test / run / fork := true
+)
+
 lazy val root =
   project
     .in(file("."))
@@ -63,6 +67,7 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
     name := "schrodinger-kernel"
   )
   .settings(commonSettings)
+  .jvmSettings(commonJvmSettings)
 
 lazy val math = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -77,6 +82,7 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
     )
   )
   .settings(commonSettings)
+  .jvmSettings(commonJvmSettings)
 
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
@@ -96,6 +102,7 @@ lazy val kernelTestkit = project
     )
   )
   .settings(commonSettings)
+  .settings(commonJvmSettings)
 
 lazy val laws = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -108,6 +115,7 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
     )
   )
   .settings(commonSettings)
+  .jvmSettings(commonJvmSettings)
 
 lazy val random = project
   .in(file("random"))
@@ -122,6 +130,7 @@ lazy val random = project
     )
   )
   .settings(commonSettings)
+  .settings(commonJvmSettings)
 
 lazy val core = project
   .in(file("core"))
@@ -134,7 +143,8 @@ lazy val core = project
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings: _*)
+  .settings(commonSettings)
+  .settings(commonJvmSettings)
 
 lazy val testkit = project
   .in(file("testkit"))
@@ -146,9 +156,11 @@ lazy val testkit = project
     )
   )
   .settings(commonSettings)
+  .settings(commonJvmSettings)
 
 lazy val tests = project
   .in(file("tests"))
+  .enablePlugins(NoPublishPlugin)
   .dependsOn(testkit % Test, laws.jvm % Test)
   .settings(
     name := "schrodinger-tests",
@@ -160,7 +172,7 @@ lazy val tests = project
     )
   )
   .settings(commonSettings)
-  .enablePlugins(NoPublishPlugin)
+  .settings(commonJvmSettings)
 
 lazy val stats = project
   .in(file("stats"))
@@ -174,6 +186,7 @@ lazy val stats = project
     )
   )
   .settings(commonSettings)
+  .settings(commonJvmSettings)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
@@ -191,3 +204,4 @@ lazy val monteCarlo = project
     )
   )
   .settings(commonSettings)
+  .settings(commonJvmSettings)
