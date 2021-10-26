@@ -16,6 +16,10 @@ ThisBuild / scmInfo := Some(
 sonatypeCredentialHost := "s01.oss.sonatype.org"
 
 addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
+replaceCommandAlias(
+  "ci",
+  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
+)
 
 val Scala3 = "3.1.1-RC1"
 ThisBuild / crossScalaVersions := Seq(Scala3)
