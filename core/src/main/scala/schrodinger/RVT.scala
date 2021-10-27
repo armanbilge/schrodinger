@@ -218,6 +218,9 @@ sealed private[schrodinger] trait RVTInstances0:
   given [F[_], S]: GaussianCache[RVT[F, S, _], Double] =
     new RVTGaussianDoubleCache[F, S] {}
 
+  given [F[_], S: SplittableRng]: RngDispatcher.Aux[RVT[F, S, _], S] =
+    new RVTRngDispatcher[F, S] {}
+
 sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Simulator, S0: Rng]
     extends PseudoRandom[RVT[F0, S0, _]]:
   type G[X] = F0[X]
@@ -234,8 +237,9 @@ sealed private[schrodinger] trait RVTGaussianDoubleCache[F[_], S]
   def get: RVT[F, S, Double] = key.get
   def set(a: Double): RVT[F, S, Unit] = key.set(a)
 
-sealed private[schrodinger] trait RVTRngDispatcher[F[_], S](using S: SplittableRng[S])
-    extends RngDispatcher[RVT[F, S, _], S]:
+sealed private[schrodinger] trait RVTRngDispatcher[F[_], S0](using S: SplittableRng[S0])
+    extends RngDispatcher[RVT[F, S0, _]]:
+  type S = S0
   val rng = S
   val dispatch: RVT[F, S, S] = RVT.dispatch
 

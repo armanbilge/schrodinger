@@ -21,9 +21,12 @@ import schrodinger.unsafe.rng.Rng
 /**
  * Provides the capability to "dispatch" an independent rng that can be used in unsafe lands.
  */
-trait RngDispatcher[F[_], S]:
+trait RngDispatcher[F[_]]:
+  type S
   def rng: Rng[S]
   def dispatch: F[S]
 
 object RngDispatcher:
-  inline def apply[F[_], S](using d: RngDispatcher[F, S]): d.type = d
+  type Aux[F[_], S0] = RngDispatcher[F] { type S = S0 }
+
+  inline def apply[F[_]](using d: RngDispatcher[F]): d.type = d
