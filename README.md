@@ -2,43 +2,44 @@
 
 [![Latest version](https://index.scala-lang.org/armanbilge/schrodinger/schrodinger/latest.svg?color=orange)](https://index.scala-lang.org/armanbilge/schrodinger/schrodinger)
 
-<img align="right" width="384px" style="padding: 100px" src="https://user-images.githubusercontent.com/3119428/116948367-09f10780-ac34-11eb-816a-8ffeea165d21.png"/>
+<img align="right" width="384px" src="https://user-images.githubusercontent.com/3119428/139197953-1abbf14c-0484-4a79-b6d0-927bd05a4546.png"/>
 
-Schrodinger is an (early-stage) project for probabilistic programming built for the [Cats](https://github.com/typelevel/cats) ecosystem.
-At its heart is the `RandomT` monad transformer which enables you to safely inject randomness into your program by describing it as a random variable while also interleaving with other effects, such as [Cats Effect](https://github.com/typelevel/cats-effect)'s `IO` monad.
-The goal is that this construct will facilitate the implementation of high-performance, concurrent Monte Carlo algorithms for simulation and inference.
+Schrodinger is an (early-stage) project for probabilistic programming in Scala 3, built for the [Cats](https://github.com/typelevel/cats) ecosystem. At its heart is the `RVT` monad transformer for modeling pseudo-random effects that is designed to fully compose with asynchronous effects such as `IO`. The goal is that this construct will facilitate the implementation of high-performance, concurrent Monte Carlo algorithms for simulation and inference. 
 
-Notably, via the use of "splittable" RNGs (versus a synchronized global or thread-locals), every random number generated can be deterministically traced back to the initial seed irrespective of execution order or thread assignment at runtime.
-This substantially improves the reproducibility of concurrent programs.
+Furthermore, Schrodinger encodes the foundational probability distributions as a set of typeclasses to be used to write "universal" probabilistic programs, for which simulators and inference algorithms can be automatically derived by implementing interpreters in terms of these same typeclasses.
 
 ## Usage
 
 ```scala
-libraryDependencies += "com.armanbilge" %% "schrodinger" % "0.2.0"
-// (optional) provides additional instances for cats-effect typeclasses
-libraryDependencies += "com.armanbilge" %% "schrodinger-effect" % "0.2.0"
+libraryDependencies += "com.armanbilge" %% "schrodinger" % "0.3-193-ed9a8ba"
 ```
 
-## Datatypes
+## Modules
 
-* `schrodinger.RandomT`: a monad transformer for a random variable that describes a probabilistic program.
-  It is a light wrapper for Cats' [`StateT`](https://typelevel.org/cats/datatypes/state.html) with its own typeclass instances.
-  Hints:
-    1. (Flat)Map the "primitive" random variables provided in `schrodinger.random.*` to create `RandomT` instances for your own datatypes.
-    2. Use typeclasses to defer binding the RNG state type `S` to a specific implementation until the (terminal) simulation step.
+* `kernel`: essential typeclasses for writing probabilistic programs.
+  - `Random[F[_]]` encodes the primitive of generating random bits in the form of `Int` and `Long`.
+  - `PseudoRandom[F[_], G[_], S]`: encodes the ability to pseudo-randomly simulate ("compile") a `Random` effect `F` to another effect `G` via a seed `S`. Extends `Random[F]`.
+  - `Distribution[F[_], P, X]`: the Kleisli `P => F[X]`, encoding the mapping from parameters `P` (e.g., the mean and standard deviation of a Gaussian) for a distribution on `X` (e.g., the reals represented as `Double`) to an instance of an effect `F[X]` (e.g., an effect implementing the `Random` typeclass).
+  - Various `case class`es parameterizing different distribution families, to be used as arguments for `P` above, as well as convenient aliases that can be used with the usual typeclass syntax.
+  - `Density[F[_], X, R]`: the Kleisli `X => F[R]`, encoding the probability density (or probability mass) function in some effect `F`.
+* `random`: samplers for the distribution families in `kernel`. These are implemented purely monadically, in terms of `Random[F]` or each other.
+* `schrodinger`: the core module, also brings in `random`.
+  - `RVT[F[_], S, A]`: a monad transformer for pseudo-random effects. Use this to simulate your probabilistic programs. Externally it is pure, although internally it is implemented with a mutable RNG for performance. Notably, it implements all the Cats Effect typeclasses up to `Async` (given that `F` is equally capable) by utilizing the underlying RNG's capability to deterministically ["split"](https://docs.oracle.com/javase/8/docs/api/java/util/SplittableRandom.html) itself, such that each fiber has its own source of randomness. Not only does this avoid contention and synchronization, it makes it possible to write pseudo-random programs that are concurrent yet _deterministic_, and thus reproducible. Anyone who has debugged a complex Monte Carlo algorithm knows this is a big deal.
+  - `Rng[S]`: a mutable and thus unsafe random number generator with state `S`.
+  - `RngDispatcher[F[_], S]`: "dispatches" a mutable RNG that can be used to run pseudo-random imperative programs, for interop with unsafe lands. This also relies on the splitting capability described above.
+* `stats`: `Density` implementations for the distribution families in `kernel`. 
+* `monte-carlo`: algorithms and datastructures for Monte Carlo inference.
+  - `Weighted` and `WeightedT`: encodes a sample from a distribution along with its weight and probability density. This is useful for implementing importance sampling-based algorithms.
+  - `ImportanceSampler`: derives a sampler for a distribution `P` in terms of a sampler for a distribution `Q`.
+* `math`: assorted math stuff.
+  - `LogDouble` for [probability calculations in log space](https://en.wikipedia.org/wiki/Log_probability).
+* `laws`: currently empty besides a silly law for `PseudoRandom`. Still figuring this one out in [#2](https://github.com/armanbilge/schrodinger/issues/2).
+* `kernel-testkit`: currently mostly used to test `random`.
+  - the `PureRVT` monad, implemented in terms of Cats' `StateT`. It is completely pure, unlike `RVT` in core which is run with an unsafe mutable RNG.
+  - \*waves hands\* `Eq` for a pseudo-random effect `F`.
+* `testkit`: used to test `RVT`.
 
-  See this in action in the [example](#example-schrödingers-cat).
-* `schrodinger.data.Weighted`: represents a "weighted" sample from a probability distribution.
-  It is similar to Cats' [`Writer`](https://typelevel.org/cats/datatypes/writer.html) datatype with the additional feature that it short-circuits computation (like `Option`) if the weight goes to zero (see also [`Chronicle`](https://typelevel.org/cats-mtl/mtl-classes/chronicle.html) from Cats MTL).
-  This is useful for (nested) [importance sampling](https://en.wikipedia.org/wiki/Importance_sampling) where samples from an auxiliary distribution are reweighted to sample from a target distribution.
-
-## Example: Schrödinger's cat
-
-In the [example project](https://github.com/armanbilge/schrodinger/blob/main/example/src/main/scala/schrodinger/ThoughtExperiment.scala) we reimagine the famous [thought experiment](https://en.wikipedia.org/wiki/Schr%C3%B6dinger%27s_cat) with the help of Cats Effect.
-The experiment is modeled with three concurrent components:
-
-* an atom that decays after a random exponentially-distributed time and is sensed by the Geiger counter
-* a relay that is triggered by the Geiger counter to release poison and kill the cat :(
-* an observer who starts the experiment, waits 1 second, and then checks on the cat
-
-Although the only randomness in the program is the atom's decay, we build the entire program as a `RandomT[F[_], S, _]` and defer simulating it until "right before the end of the world" at which point we provide the initial seed for the RNG.
+If not readily apparent, various aspects of the design are heavily influenced by the [Cats Effect 3](https://github.com/typelevel/cats-effect).
+* `monte-carlo` is like a "`std`" lib, and so-called middlewares can ideally be implemented only in terms of that and `kernel`. The implementations provided by the `random` and `stats` modules and `RVT` itself are only needed at runtime and indeed can be substituted with (more performant!) alternatives.
+* The unsafe `Rng` that is used to simulate an `RVT` is kind of like the unsafe `IORuntime` that runs `IO`.
+* `RngDispatcher` facilitates interop with "unsafe lands" inspired by the `Dispatcher` in CE3.
