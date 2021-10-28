@@ -39,7 +39,7 @@ libraryDependencies += "com.armanbilge" %% "schrodinger" % "0.3-193-ed9a8ba"
   - \*waves hands\* `Eq` for a pseudo-random effect `F`.
 * `testkit`: used to test `RVT`.
 
-If not readily apparent, various aspects of the design are heavily influenced by the [Cats Effect 3](https://github.com/typelevel/cats-effect).
+If not readily apparent, various aspects of the design are heavily influenced by [Cats Effect 3](https://github.com/typelevel/cats-effect).
 * `monte-carlo` is like a "`std`" lib, and so-called middlewares can ideally be implemented only in terms of that and `kernel`. The implementations provided by the `random` and `stats` modules and `RVT` itself are only needed at runtime and indeed can be substituted with (more performant!) alternatives.
 * The unsafe `Rng` that is used to simulate an `RVT` is kind of like the unsafe `IORuntime` that runs `IO`.
 * `RngDispatcher` facilitates interop with "unsafe lands" inspired by the `Dispatcher` in CE3.
