@@ -57,7 +57,12 @@ import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
 import cats.effect.kernel.Sync.Type
 import cats.effect.kernel.Unique
-import cats.syntax.all.*
+import cats.syntax.applicative.*
+import cats.syntax.bifunctor.*
+import cats.syntax.bitraverse.*
+import cats.syntax.flatMap.*
+import cats.syntax.functor.*
+import cats.syntax.semigroup.*
 import cats.~>
 import schrodinger.kernel.Density
 import schrodinger.kernel.Distribution
