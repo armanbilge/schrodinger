@@ -14,15 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger.kernel
 
-object all
-    extends BernoulliInstances,
-      BetaInstances,
-      CategoricalInstances,
-      DirichletInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      UniformInstances
+type GenBeta[A, B, X] = [F[_]] =>> Distribution[F, Beta.Params[A, B], X]
+type Beta[R] = [F[_]] =>> GenBeta[R, R, R][F]
+
+object Beta:
+  final case class Params[+A, +B](alpha: A, beta: B)
+
+  inline def apply[F[_], A, B, X](alpha: A, beta: B)(using b: GenBeta[A, B, X][F]): F[X] =
+    b(Params(alpha, beta))

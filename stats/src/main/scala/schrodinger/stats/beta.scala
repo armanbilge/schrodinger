@@ -14,15 +14,21 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
-object all
-    extends BernoulliInstances,
-      BetaInstances,
-      CategoricalInstances,
-      DirichletInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      UniformInstances
+import cats.Applicative
+import cats.syntax.all.*
+import org.apache.commons.math3.distribution.BetaDistribution
+import schrodinger.kernel.Density
+import schrodinger.kernel.Beta
+import schrodinger.math.LogDouble
+
+object beta extends BetaInstances
+
+trait BetaInstances:
+
+  given schrodingerStatsBetaForDouble[F[_]: Applicative]: Beta[Double][Density[F, LogDouble]] =
+    case Beta.Params(alpha, beta) =>
+      val distribution = new BetaDistribution(null, alpha, beta)
+      x => LogDouble.exp(distribution.logDensity(x)).pure[F]
