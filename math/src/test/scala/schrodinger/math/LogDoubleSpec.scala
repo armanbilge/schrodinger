@@ -23,37 +23,42 @@ import cats.kernel.laws.discipline.OrderTests
 import cats.kernel.laws.discipline.SerializableTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
+import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
 
-class LogDoubleSpec extends Specification, Discipline, ScalaCheck {
+class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 
-  given Arbitrary[LogDouble] = Arbitrary(
-    Arbitrary.arbDouble.arbitrary.map(x => LogDouble(math.abs(x))))
+  given Arbitrary[LogDouble] = Arbitrary(Gen.double.map(LogDouble.exp))
   given Cogen[LogDouble] = Cogen.cogenDouble.contramap(_.log)
 
-  def approxEq(eps: Double): Eq[LogDouble] = {
-    case (LogDouble.NaN, LogDouble.NaN) => true
+  def approxEq(eps: Double): Eq[LogDouble] =
     case (LogDouble.Zero, LogDouble.Zero) => true
     case (LogDouble.One, LogDouble.One) => true
+    case (x, y) if x.isNaN & y.isNaN => true
     case (x, y) => ((x.log - y.log) / (x.log max y.log)).abs < eps
-  }
 
   {
-    given Eq[LogDouble] = approxEq(1e-8)
-    checkAll("CommutativeRig[LogDouble]", RingLaws[LogDouble].commutativeRig)
-    checkAll(
-      "MultiplicativeCommutativeGroup[LogDouble]",
-      RingLaws[LogDouble].multiplicativeCommutativeGroup)
+    given eq: Eq[LogDouble] = approxEq(1e-8)
+    checkAll("LogDouble", RingLaws[LogDouble].commutativeRig)
+    checkAll("LogDouble", RingLaws[LogDouble].multiplicativeCommutativeGroup)
+
+    "LogDouble" should {
+      "have alley-lawful subtraction" in {
+        prop { (x: LogDouble, y: LogDouble) =>
+          val z = x - y
+          if x > y then eq.eqv(z + y, x)
+          else z.isNaN
+        }
+      }
+    }
   }
 
-  checkAll("Order[LogDouble]", OrderTests[LogDouble].order)
-  checkAll("Hash[LogDouble]", HashTests[LogDouble].hash)
+  checkAll("LogDouble", OrderTests[LogDouble].order)
+  checkAll("LogDouble", HashTests[LogDouble].hash)
   checkAll(
-    "Serializable[LogDoubleAlgebra]",
+    "LogDoubleAlgebra",
     SerializableTests.serializable(
       LogDouble.given_CommutativeRig_LogDouble_MultiplicativeCommutativeGroup_LogDouble_Order_LogDouble_Hash_LogDouble)
   )
-
-}
