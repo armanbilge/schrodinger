@@ -17,6 +17,7 @@
 package schrodinger.kernel
 
 type Categorical[S, X] = [F[_]] =>> Distribution[F, Categorical.Params[S], X]
+type CategoricalMap[A, R] = [F[_]] =>> Categorical[Map[A, R], A][F]
 
 object Categorical:
   final case class Params[+S](support: S)

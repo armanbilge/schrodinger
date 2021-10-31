@@ -17,6 +17,7 @@
 package schrodinger.kernel
 
 type Uniform[S, X] = [F[_]] =>> Distribution[F, Uniform.Params[S], X]
+type UniformRange[F[_]] = Uniform[Range, Int][F]
 
 object Uniform:
   final case class Params[+S](support: S)
