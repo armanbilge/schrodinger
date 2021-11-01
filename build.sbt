@@ -34,7 +34,7 @@ val Specs2Version = "5.0.0-RC-16"
 val ScalaCheckVersion = "1.15.4"
 val VaultVersion = "3.1.0"
 val DisciplineVersion = "1.1.5"
-val DisciplineSpecs2Version = "1.2-7-e3ce260"
+val DisciplineSpecs2Version = "2.0-17-76e46a4"
 
 val commonSettings = Seq(
   scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
@@ -81,7 +81,7 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "algebra" % AlgebraVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
-      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "algebra-laws" % AlgebraVersion % Test
     )
   )
@@ -101,7 +101,7 @@ lazy val kernelTestkit = project
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.scalacheck" %%% "scalacheck" % ScalaCheckVersion,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
@@ -169,7 +169,7 @@ lazy val tests = project
   .settings(
     name := "schrodinger-tests",
     libraryDependencies ++= Seq(
-      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
@@ -204,7 +204,7 @@ lazy val monteCarlo = project
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
-      "io.vasilev" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
   .settings(commonSettings)
