@@ -34,17 +34,17 @@ object LogDouble:
   def exp(x: Double): LogDouble = x
 
   def sum(xs: IArray[LogDouble]): LogDouble =
-    var max = LogDouble.Zero.log
+    var max = LogDouble.Zero
     var i = 0
     while i < xs.length do
-      max = max.max(xs(i))
+      max = LogDouble.max(max)(xs(i))
       i += 1
     var sum = 0.0
     i = 0
     while i < xs.length do
-      sum += (xs(i) / max).real
+      sum += LogDouble./(xs(i))(max).real
       i += 1
-    LogDouble(sum) * max
+    LogDouble.*(LogDouble(sum))(max)
 
   extension (x: LogDouble)
     def real: Double = math.exp(x)

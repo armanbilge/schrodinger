@@ -52,13 +52,15 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
           else z.isNaN
         }
       }
+
+      "have consistent sum" in {
+        prop { (xs: List[LogDouble]) =>
+          eq.eqv(LogDouble.sum(IArray.from(xs)), Semifield[LogDouble].sum(xs))
+        }
+      }
     }
   }
 
   checkAll("LogDouble", OrderTests[LogDouble].order)
   checkAll("LogDouble", HashTests[LogDouble].hash)
-  checkAll(
-    "LogDoubleAlgebra",
-    SerializableTests.serializable(
-      LogDouble.given_CommutativeRig_LogDouble_MultiplicativeCommutativeGroup_LogDouble_Order_LogDouble_Hash_LogDouble)
-  )
+  checkAll("LogDoubleAlgebra", SerializableTests.serializable(Semifield[LogDouble]))

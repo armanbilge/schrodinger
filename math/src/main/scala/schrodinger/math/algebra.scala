@@ -26,6 +26,9 @@ import algebra.ring.Rig
 type Semifield[A] = Rig[A] & MultiplicativeGroup[A]
 type CommutativeSemifield[A] = CommutativeRig[A] & MultiplicativeCommutativeGroup[A]
 
+object Semifield:
+  inline def apply[A](using A: Semifield[A]): A.type = A
+
 object syntax:
   extension [A](x: A)
     def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
