@@ -45,6 +45,10 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
     checkAll("LogDouble", RingLaws[LogDouble].multiplicativeCommutativeGroup)
 
     "LogDouble" should {
+      "correctly add identical values" in prop { (x: LogDouble) =>
+        (x + x) === LogDouble.Two * x
+      }
+
       "have alley-lawful subtraction" in {
         prop { (x: LogDouble, y: LogDouble) =>
           val z = x - y

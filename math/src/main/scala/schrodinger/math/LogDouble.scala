@@ -52,7 +52,7 @@ object LogDouble:
     def +(y: LogDouble): LogDouble =
       if x > y then math.log1p(math.exp(y - x)) + x
       else if y > x then math.log1p(math.exp(x - y)) + y
-      else Two * x
+      else LogDouble.*(Two)(x)
     def -(y: LogDouble): LogDouble = math.log1p(-math.exp(y - x)) + x
     def *(y: LogDouble): LogDouble = (x: Double) + (y: Double)
     def **(y: Double): LogDouble = (x: Double) * y
