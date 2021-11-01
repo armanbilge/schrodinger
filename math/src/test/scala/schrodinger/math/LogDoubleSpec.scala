@@ -30,7 +30,7 @@ import org.typelevel.discipline.specs2.mutable.Discipline
 
 class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 
-  given Arbitrary[LogDouble] = Arbitrary(Gen.double.map(LogDouble.exp))
+  given Arbitrary[LogDouble] = Arbitrary(Gen.double.map(LogDouble.exp(_)))
   given Cogen[LogDouble] = Cogen.cogenDouble.contramap(_.log)
 
   def approxEq(eps: Double): Eq[LogDouble] =

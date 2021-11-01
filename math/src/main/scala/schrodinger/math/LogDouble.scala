@@ -30,8 +30,8 @@ object LogDouble:
   val Two: LogDouble = 0.6931471805599453
   val NaN: LogDouble = Double.NaN
 
-  def apply(x: Double): LogDouble = math.log(x)
-  def exp(x: Double): LogDouble = x
+  inline def apply(x: Double): LogDouble = math.log(x)
+  inline def exp(x: Double): LogDouble = x
 
   def sum(xs: IArray[LogDouble]): LogDouble =
     var max = LogDouble.Zero
@@ -47,25 +47,25 @@ object LogDouble:
     LogDouble.*(LogDouble(sum))(max)
 
   extension (x: LogDouble)
-    def real: Double = math.exp(x)
-    def log: Double = x
-    def +(y: LogDouble): LogDouble =
+    inline def real: Double = math.exp(x)
+    inline def log: Double = x
+    inline def +(y: LogDouble): LogDouble =
       if x > y then math.log1p(math.exp(y - x)) + x
       else if y > x then math.log1p(math.exp(x - y)) + y
       else LogDouble.*(Two)(x)
-    def -(y: LogDouble): LogDouble = math.log1p(-math.exp(y - x)) + x
-    def *(y: LogDouble): LogDouble = (x: Double) + (y: Double)
-    def **(y: Double): LogDouble = (x: Double) * y
-    def /(y: LogDouble): LogDouble = x - y
-    def reciprocal: LogDouble = -x
-    def isNaN: Boolean = java.lang.Double.isNaN(x)
-    infix def max(y: LogDouble): LogDouble = math.max(x, y)
-    infix def min(y: LogDouble): LogDouble = math.min(x, y)
-    infix def compare(y: LogDouble): Int = java.lang.Double.compare(x, y)
-    def <(y: LogDouble): Boolean = (x: Double) < (y: Double)
-    def <=(y: LogDouble): Boolean = (x: Double) <= (y: Double)
-    def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
-    def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
+    inline def -(y: LogDouble): LogDouble = math.log1p(-math.exp(y - x)) + x
+    inline def *(y: LogDouble): LogDouble = (x: Double) + (y: Double)
+    inline def **(y: Double): LogDouble = (x: Double) * y
+    inline def /(y: LogDouble): LogDouble = x - y
+    inline def reciprocal: LogDouble = -x
+    inline def isNaN: Boolean = java.lang.Double.isNaN(x)
+    inline infix def max(y: LogDouble): LogDouble = math.max(x, y)
+    inline infix def min(y: LogDouble): LogDouble = math.min(x, y)
+    inline infix def compare(y: LogDouble): Int = java.lang.Double.compare(x, y)
+    inline def <(y: LogDouble): Boolean = (x: Double) < (y: Double)
+    inline def <=(y: LogDouble): Boolean = (x: Double) <= (y: Double)
+    inline def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
+    inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
   given CommutativeRig[LogDouble]
     with MultiplicativeCommutativeGroup[LogDouble]
