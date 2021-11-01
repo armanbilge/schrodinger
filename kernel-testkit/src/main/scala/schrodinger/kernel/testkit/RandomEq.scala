@@ -49,18 +49,20 @@ object SimulationResult:
       xs.foreach(a => if allValues.forall(_ =!= a) then allValues += a)
       ys.foreach(a => if allValues.forall(_ =!= a) then allValues += a)
 
-      val xcounts = new Array[Int](allValues.size)
-      val ycounts = new Array[Int](allValues.size)
-      allValues.zipWithIndex.foreach { (a, i) =>
-        xcounts(i) = xs.count(_ === a)
-        ycounts(i) = ys.count(_ === a)
-      }
+      if allValues.size == 1 then true
+      else
+        val xcounts = new Array[Int](allValues.size)
+        val ycounts = new Array[Int](allValues.size)
+        allValues.zipWithIndex.foreach { (a, i) =>
+          xcounts(i) = xs.count(_ === a)
+          ycounts(i) = ys.count(_ === a)
+        }
 
-      val p = equidistributedBelief(xcounts, ycounts, Array.fill(allValues.size)(1.0))
+        val p = equidistributedBelief(xcounts, ycounts, Array.fill(allValues.size)(1.0))
 
-      if p > eqvThreshold then true
-      else if (1 - p) > neqvThreshold then false
-      else throw new EqUndecidableException
+        if p > eqvThreshold then true
+        else if (1 - p) > neqvThreshold then false
+        else throw new EqUndecidableException
 
   private def equidistributedBelief(
       trial1: Array[Int],
