@@ -39,7 +39,6 @@ import cats.laws.discipline.AlternativeTests
 import cats.laws.discipline.ContravariantMonoidalTests
 import cats.laws.discipline.DeferTests
 import cats.laws.discipline.ParallelTests
-import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import org.scalacheck.Prop
 import org.specs2.ScalaCheck
@@ -82,43 +81,16 @@ class WeightedTSpec extends Specification, Discipline, ScalaCheck, TestInstances
 
   {
     given Ticker = Ticker()
-    checkAll(
-      "Async[WeightedT]",
-      AsyncTests[WeightedT[IO, Int, _]].async[Int, Int, Int](10.millis))
+    checkAll("WeightedT", AsyncTests[WeightedT[IO, Int, _]].async[Int, Int, Int](10.millis))
   }
-  checkAll("Async[WeightedT]", SerializableTests.serializable(Async[WeightedT[IO, Int, _]]))
 
-  checkAll("Defer[WeightedT]", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
-  checkAll("Defer[WeightedT]", SerializableTests.serializable(Defer[WeightedT[Eval, Int, _]]))
+  checkAll("WeightedT", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
+  checkAll("WeightedT", OrderTests[WeightedT[Option, Int, Int]].order)
+  checkAll("WeightedT", ParallelTests[WeightedT[Either[String, _], Int, _]].parallel[Int, Int])
+  checkAll("WeightedT", MonoidTests[WeightedT[List, Int, Int]].monoid)
 
-  checkAll("Order[WeightedT]", OrderTests[WeightedT[Option, Int, Int]].order)
+  checkAll("WeightedT", AlternativeTests[WeightedT[List, Int, _]].alternative[Int, Int, Int])
   checkAll(
-    "Order[WeightedT]",
-    SerializableTests.serializable(Order[WeightedT[Option, Int, Int]]))
-
-  checkAll(
-    "Parallel[WeightedT]",
-    ParallelTests[WeightedT[Either[String, _], Int, _]].parallel[Int, Int])
-  checkAll(
-    "Parallel[WeightedT]",
-    SerializableTests.serializable(Parallel[WeightedT[Either[String, _], Int, _]]))
-
-  checkAll("Monoid[WeightedT]", MonoidTests[WeightedT[List, Int, Int]].monoid)
-  checkAll(
-    "Monoid[WeightedT]",
-    SerializableTests.serializable(Monoid[WeightedT[List, Int, Int]]))
-
-  checkAll(
-    "Alternative[WeightedT]",
-    AlternativeTests[WeightedT[List, Int, _]].alternative[Int, Int, Int])
-  checkAll(
-    "Alternative[WeightedT]",
-    SerializableTests.serializable(Alternative[WeightedT[List, Int, _]]))
-
-  checkAll(
-    "ContravariantMonoidal[WeightedT]",
+    "WeightedT",
     ContravariantMonoidalTests[WeightedT[Const[Int, _], Int, _]]
       .contravariantMonoidal[Int, Int, Int])
-  checkAll(
-    "ContravariantMonoidal[WeightedT]",
-    SerializableTests.serializable(ContravariantMonoidal[WeightedT[Const[Int, _], Int, _]]))
