@@ -23,15 +23,13 @@ import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import schrodinger.kernel.Random
 
-class SplitMix64Spec extends Specification with ScalaCheck:
+class SplitMix64Spec extends Specification, ScalaCheck:
   val N = 100
 
   "SplitMix64" should {
-    "match Apache implementation" in {
-      prop { (seed: Long) =>
-        val apache = new source64.SplitMix64(seed)
-        Random[PureRV[SplitMix64, _]].long.replicateA(N).simulate(SplitMix64(seed)).value ===
-          List.fill(N)(apache.nextLong())
-      }
+    "match Apache implementation" in prop { (seed: Long) =>
+      val apache = new source64.SplitMix64(seed)
+      Random[PureRV[SplitMix64, _]].long.replicateA(N).simulate(SplitMix64(seed)).value ===
+        List.fill(N)(apache.nextLong())
     }
   }

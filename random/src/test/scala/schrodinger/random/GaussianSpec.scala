@@ -29,19 +29,17 @@ import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.random.GaussianCache
 
-class GaussianSpec extends Specification with ScalaCheck:
+class GaussianSpec extends Specification, ScalaCheck:
   val N = 100
 
   "Gaussian" should {
-    "match Apache implementation" in {
-      prop { (seed: Long) =>
-        val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
-        Gaussian
-          .standard[PureRV[SplitMix64, _], Double]
-          .replicateA(N)
-          .simulate(SplitMix64(seed))
-          .value ===
-          List.fill(N)(apache.sample())
-      }
+    "match Apache implementation" in prop { (seed: Long) =>
+      val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
+      Gaussian
+        .standard[PureRV[SplitMix64, _], Double]
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
     }
   }

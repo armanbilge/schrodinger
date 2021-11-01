@@ -16,17 +16,22 @@
 
 package schrodinger.montecarlo
 
-import algebra.instances.int.given
+import algebra.instances.int.*
+import cats.Align
+import cats.CommutativeMonad
+import cats.InvariantMonoidal
 import cats.kernel.CommutativeMonoid
-import cats.kernel.laws.discipline.{CommutativeMonoidTests, SerializableTests}
-import cats.laws.discipline.arbitrary.given
-import cats.laws.discipline.{AlignTests, CommutativeMonadTests, InvariantMonoidalTests}
-import cats.{Align, CommutativeMonad, InvariantMonoidal}
+import cats.kernel.laws.discipline.CommutativeMonoidTests
+import cats.kernel.laws.discipline.SerializableTests
+import cats.laws.discipline.AlignTests
+import cats.laws.discipline.CommutativeMonadTests
+import cats.laws.discipline.InvariantMonoidalTests
+import cats.laws.discipline.arbitrary.*
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
 
-class WeightedSpec extends Specification with Discipline with ScalaCheck:
+class WeightedSpec extends Specification, Discipline, ScalaCheck:
 
   checkAll(
     "CommutativeMonad[Weighted]",

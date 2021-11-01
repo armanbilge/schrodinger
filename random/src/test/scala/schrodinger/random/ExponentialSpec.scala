@@ -26,19 +26,17 @@ import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.random.all.given
 
-class ExponentialSpec extends Specification with ScalaCheck:
+class ExponentialSpec extends Specification, ScalaCheck:
   val N = 100
 
   "Exponential" should {
-    "match Apache implementation" in {
-      prop { (seed: Long) =>
-        val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
-        Exponential
-          .standard[PureRV[SplitMix64, _], Double]
-          .replicateA(N)
-          .simulate(SplitMix64(seed))
-          .value ===
-          List.fill(N)(apache.sample())
-      }
+    "match Apache implementation" in prop { (seed: Long) =>
+      val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
+      Exponential
+        .standard[PureRV[SplitMix64, _], Double]
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
     }
   }

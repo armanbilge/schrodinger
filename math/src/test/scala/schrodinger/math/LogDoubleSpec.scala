@@ -49,19 +49,16 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
         (x + x) === LogDouble.Two * x
       }
 
-      "have alley-lawful subtraction" in {
-        prop { (x: LogDouble, y: LogDouble) =>
-          val z = x - y
-          if x > y then eq.eqv(z + y, x)
-          else z.isNaN
-        }
+      "have alley-lawful subtraction" in prop { (x: LogDouble, y: LogDouble) =>
+        val z = x - y
+        if x > y then eq.eqv(z + y, x)
+        else z.isNaN
       }
 
-      "have consistent sum" in {
-        prop { (xs: List[LogDouble]) =>
-          eq.eqv(LogDouble.sum(IArray.from(xs)), Semifield[LogDouble].sum(xs))
-        }
+      "have consistent sum" in prop { (xs: List[LogDouble]) =>
+        eq.eqv(LogDouble.sum(IArray.from(xs)), Semifield[LogDouble].sum(xs))
       }
+
     }
   }
 

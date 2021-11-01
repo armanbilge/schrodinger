@@ -16,11 +16,12 @@
 
 package schrodinger.math
 
-import org.scalacheck.{Arbitrary, Gen}
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
-class UInt128Spec extends Specification with ScalaCheck:
+class UInt128Spec extends Specification, ScalaCheck:
 
   given Arbitrary[UInt128] = Arbitrary(
     for
@@ -29,45 +30,32 @@ class UInt128Spec extends Specification with ScalaCheck:
     yield UInt128(hi, lo)
   )
 
+  final case class Shift(shift: Int)
+  given Arbitrary[Shift] = Arbitrary(Gen.chooseNum(0, 127).map(Shift(_)))
+
   "UInt128" should {
 
-    "roundtrip with BigInt" in {
-      prop { (x: UInt128) => UInt128(x.toBigInt) === x }
+    "roundtrip with BigInt" in prop { (x: UInt128) => UInt128(x.toBigInt) === x }
+
+    "add" in prop { (x: UInt128, y: UInt128) =>
+      (x + y).toBigInt === (x.toBigInt + y.toBigInt) % BigInt(2).pow(128)
     }
 
-    "add" in {
-      prop { (x: UInt128, y: UInt128) =>
-        (x + y).toBigInt === (x.toBigInt + y.toBigInt) % BigInt(2).pow(128)
-      }
+    "multiply" in prop { (x: UInt128, y: UInt128) =>
+      (x * y).toBigInt === (x.toBigInt * y.toBigInt) % BigInt(2).pow(128)
     }
 
-    "multiply" in {
-      prop { (x: UInt128, y: UInt128) =>
-        (x * y).toBigInt === (x.toBigInt * y.toBigInt) % BigInt(2).pow(128)
-      }
+    "or" in prop { (x: UInt128, y: UInt128) => (x | y).toBigInt === (x.toBigInt | y.toBigInt) }
+
+    "and" in prop { (x: UInt128, y: UInt128) => (x & y).toBigInt === (x.toBigInt & y.toBigInt) }
+
+    "xor" in prop { (x: UInt128, y: UInt128) => (x ^ y).toBigInt === (x.toBigInt ^ y.toBigInt) }
+
+    "shift left" in prop { (x: UInt128, y: Shift) =>
+      (x << y.shift).toBigInt === (x.toBigInt << y.shift) % BigInt(2).pow(128)
     }
 
-    "or" in {
-      prop { (x: UInt128, y: UInt128) => (x | y).toBigInt === (x.toBigInt | y.toBigInt) }
-    }
-
-    "and" in {
-      prop { (x: UInt128, y: UInt128) => (x & y).toBigInt === (x.toBigInt & y.toBigInt) }
-    }
-
-    "xor" in {
-      prop { (x: UInt128, y: UInt128) => (x ^ y).toBigInt === (x.toBigInt ^ y.toBigInt) }
-    }
-
-    "shift left" in {
-      given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
-      prop { (x: UInt128, y: Int) =>
-        (x << y).toBigInt === (x.toBigInt << y) % BigInt(2).pow(128)
-      }
-    }
-
-    "shift right" in {
-      given Arbitrary[Int] = Arbitrary(Gen.chooseNum(0, 127))
-      prop { (x: UInt128, y: Int) => (x >> y).toBigInt === x.toBigInt >> y }
+    "shift right" in prop { (x: UInt128, y: Shift) =>
+      (x >> y.shift).toBigInt === x.toBigInt >> y.shift
     }
   }

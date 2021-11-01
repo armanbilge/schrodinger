@@ -16,7 +16,7 @@
 
 package schrodinger.montecarlo
 
-import algebra.instances.int.given
+import algebra.instances.int.*
 import cats.Alternative
 import cats.ContravariantMonoidal
 import cats.Defer
@@ -29,10 +29,10 @@ import cats.effect.kernel.Async
 import cats.effect.laws.AsyncTests
 import cats.effect.testkit.TestInstances
 import cats.kernel.Monoid
-import cats.kernel.instances.finiteDuration.given
+import cats.kernel.instances.finiteDuration.*
 import cats.kernel.instances.int.catsKernelStdOrderForInt
-import cats.kernel.instances.list.given
-import cats.kernel.instances.option.given
+import cats.kernel.instances.list.*
+import cats.kernel.instances.option.*
 import cats.kernel.laws.discipline.MonoidTests
 import cats.kernel.laws.discipline.OrderTests
 import cats.laws.discipline.AlternativeTests
@@ -40,7 +40,7 @@ import cats.laws.discipline.ContravariantMonoidalTests
 import cats.laws.discipline.DeferTests
 import cats.laws.discipline.ParallelTests
 import cats.laws.discipline.SerializableTests
-import cats.laws.discipline.arbitrary.given
+import cats.laws.discipline.arbitrary.*
 import org.scalacheck.Prop
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification

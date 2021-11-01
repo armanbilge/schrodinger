@@ -29,7 +29,7 @@ import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.random.all.given
 
-class GammaSpec extends Specification with ScalaCheck:
+class GammaSpec extends Specification, ScalaCheck:
   val N = 100
 
   given Arbitrary[Gamma.Params[Double, Double]] =
@@ -41,8 +41,8 @@ class GammaSpec extends Specification with ScalaCheck:
     )
 
   "Gamma" should {
-    "match Apache implementation" in {
-      prop { (seed: Long, params: Gamma.Params[Double, Double]) =>
+    "match Apache implementation" in prop {
+      (seed: Long, params: Gamma.Params[Double, Double]) =>
         val Gamma.Params(shape, rate) = params
         val apache =
           if shape < 1 then
@@ -60,6 +60,5 @@ class GammaSpec extends Specification with ScalaCheck:
           .simulate(SplitMix64(seed))
           .value ===
           List.fill(N)(apache.sample())
-      }
     }
   }
