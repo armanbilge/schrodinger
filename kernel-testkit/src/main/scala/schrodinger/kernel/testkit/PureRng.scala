@@ -16,6 +16,8 @@
 
 package schrodinger.kernel.testkit
 
+import org.scalacheck.Arbitrary
+
 trait PureRng[S]:
   def nextInt(s: S): (S, Int)
   def nextLong(s: S): (S, Long)
@@ -41,3 +43,5 @@ object SplitMix64:
       z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L
       z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL
       (s1, z ^ (z >>> 31))
+
+  given Arbitrary[SplitMix64] = Arbitrary(Arbitrary.arbitrary[Long].map(SplitMix64(_)))
