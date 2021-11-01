@@ -28,6 +28,9 @@ object LogDouble:
   val Zero: LogDouble = Double.NegativeInfinity
   val One: LogDouble = 0.0
   val Two: LogDouble = 0.6931471805599453
+  val MinValue: LogDouble = Double.MinValue
+  val MaxValue: LogDouble = Double.MaxValue
+  val PositiveInfinity: LogDouble = Double.PositiveInfinity
   val NaN: LogDouble = Double.NaN
 
   inline def apply(x: Double): LogDouble = math.log(x)
