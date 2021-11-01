@@ -24,7 +24,7 @@ import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 
-class PcgSpec extends Specification with ScalaCheck:
+class PcgSpec extends Specification, ScalaCheck:
 
   val N = 100
 
@@ -36,12 +36,10 @@ class PcgSpec extends Specification with ScalaCheck:
   )
 
   "Pcg32XshRr" should {
-    "generate ints" in {
-      prop { (state: Pcg32) =>
-        val ints = RV.int[Pcg32].replicateA(N + 1).simulate(state).tail
-        val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
-        val expectedInts = List.fill(N)(provider.nextInt())
-        ints === expectedInts
-      }
+    "generate ints" in prop { (state: Pcg32) =>
+      val ints = RV.int[Pcg32].replicateA(N + 1).simulate(state).tail
+      val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
+      val expectedInts = List.fill(N)(provider.nextInt())
+      ints === expectedInts
     }
   }

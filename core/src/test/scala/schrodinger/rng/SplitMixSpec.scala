@@ -25,7 +25,7 @@ import org.specs2.mutable.Specification
 
 import java.util.SplittableRandom
 
-class SplitMixSpec extends Specification with ScalaCheck:
+class SplitMixSpec extends Specification, ScalaCheck:
 
   val N = 100
 
@@ -35,30 +35,24 @@ class SplitMixSpec extends Specification with ScalaCheck:
 
   "SplitMix" should {
 
-    "generate ints" in {
-      prop { (state: SplitMix) =>
-        val ints = RV.int[SplitMix].replicateA(N).simulate(state)
-        val random = new SplittableRandom(state.seed)
-        val expectedInts = List.fill(N)(random.nextInt())
-        ints === expectedInts
-      }
+    "generate ints" in prop { (state: SplitMix) =>
+      val ints = RV.int[SplitMix].replicateA(N).simulate(state)
+      val random = new SplittableRandom(state.seed)
+      val expectedInts = List.fill(N)(random.nextInt())
+      ints === expectedInts
     }
 
-    "generate longs" in {
-      prop { (state: SplitMix) =>
-        val longs = RV.long[SplitMix].replicateA(N).simulate(state)
-        val random = new SplittableRandom(state.seed)
-        val expectedLongs = List.fill(N)(random.nextLong())
-        longs === expectedLongs
-      }
+    "generate longs" in prop { (state: SplitMix) =>
+      val longs = RV.long[SplitMix].replicateA(N).simulate(state)
+      val random = new SplittableRandom(state.seed)
+      val expectedLongs = List.fill(N)(random.nextLong())
+      longs === expectedLongs
     }
 
-    "split" in {
-      prop { (state: SplitMix) =>
-        val ints = RV.int[SplitMix].split.evalMap(identity).replicateA(N).simulate(state)
-        val random = new SplittableRandom(state.seed)
-        val expectedInts = List.fill(N)(random.split().nextInt())
-        ints === expectedInts
-      }
+    "split" in prop { (state: SplitMix) =>
+      val ints = RV.int[SplitMix].split.evalMap(identity).replicateA(N).simulate(state)
+      val random = new SplittableRandom(state.seed)
+      val expectedInts = List.fill(N)(random.split().nextInt())
+      ints === expectedInts
     }
   }

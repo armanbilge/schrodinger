@@ -30,7 +30,7 @@ import schrodinger.random.all.given
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class BetaSpec extends Specification with ScalaCheck:
+class BetaSpec extends Specification, ScalaCheck:
   val N = 100
 
   given Arbitrary[Beta.Params[Double, Double]] =
@@ -42,15 +42,13 @@ class BetaSpec extends Specification with ScalaCheck:
     )
 
   "Beta" should {
-    "match Apache implementation" in {
-      prop { (seed: Long, params: Beta.Params[Double, Double]) =>
-        val apache =
-          new ChengBetaSampler(new source64.SplitMix64(seed), params.alpha, params.beta)
-        Beta[PureRV[SplitMix64, _], Double, Double, Double](params.alpha, params.beta)
-          .replicateA(N)
-          .simulate(SplitMix64(seed))
-          .value ===
-          List.fill(N)(apache.sample())
-      }
+    "match Apache implementation" in prop { (seed: Long, params: Beta.Params[Double, Double]) =>
+      val apache =
+        new ChengBetaSampler(new source64.SplitMix64(seed), params.alpha, params.beta)
+      Beta[PureRV[SplitMix64, _], Double, Double, Double](params.alpha, params.beta)
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
     }
   }
