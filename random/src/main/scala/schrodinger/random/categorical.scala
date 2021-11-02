@@ -18,20 +18,19 @@ package schrodinger
 package random
 
 import cats.Functor
-import cats.syntax.all.given
+import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Uniform
-import schrodinger.math.LogDouble
 import schrodinger.math.Interval.*
-import schrodinger.math.Interval.given
+import schrodinger.math.LogDouble
+import scala.reflect.ClassTag
 
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
   given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]
-      : Categorical[Seq[Double], Int][F] with
-    override def apply(params: Categorical.Params[Seq[Double]]): F[Int] =
-      import params.*
+      : Categorical[Seq[Double], Int][F] =
+    case Categorical.Params(support) =>
       val cumulative = support.toArray
       var i = 1
       while i < cumulative.length do
@@ -43,10 +42,9 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
-  given schrodingerRandomCategoricalForIArrayLogDouble[
-      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]: Categorical[IArray[LogDouble], Int][F] with
-    override def apply(params: Categorical.Params[IArray[LogDouble]]): F[Int] =
-      import params.*
+  given schrodingerRandomCategoricalForSeqLogDouble[
+      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]: Categorical[Seq[LogDouble], Int][F] =
+    case Categorical.Params(support) =>
       val cumulative = new Array[Double](support.size)
       var max = LogDouble.Zero
       var i = 0

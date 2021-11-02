@@ -44,4 +44,4 @@ object SplitMix64:
       z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL
       (s1, z ^ (z >>> 31))
 
-  given Arbitrary[SplitMix64] = Arbitrary(Arbitrary.arbitrary[Long].map(SplitMix64(_)))
+  given Arbitrary[SplitMix64] = Arbitrary(Arbitrary.arbLong.arbitrary.map(SplitMix64(_)))
