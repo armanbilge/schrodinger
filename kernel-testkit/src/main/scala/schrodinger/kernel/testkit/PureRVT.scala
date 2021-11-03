@@ -17,21 +17,24 @@
 package schrodinger.kernel
 package testkit
 
-import cats.syntax.all.*
 import cats.Applicative
 import cats.Eval
 import cats.FlatMap
 import cats.Monad
-import cats.data.StateT
 import cats.data.IndexedStateT
+import cats.data.StateT
+import cats.effect.kernel.Sync
 import cats.effect.kernel.testkit.MonadGenerators
 import cats.kernel.Eq
 import cats.laws.discipline.ExhaustiveCheck
+import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.typelevel.vault.InsertKey
 import org.typelevel.vault.LookupKey
 import org.typelevel.vault.Vault
+
+import scala.util.NotGiven
 
 type PureRV[S, A] = PureRVT[Eval, S, A]
 
@@ -54,12 +57,10 @@ object PureRVT:
   def setExtra[F[_]: Applicative, S, A](key: InsertKey[A])(a: A): PureRVT[F, S, Unit] =
     StateT.modify { (state, extras) => (state, extras.insert(key, a)) }
 
-  given [F[_]: Monad, S]: Monad[PureRVT[F, S, _]] with
-    def pure[A](a: A): PureRVT[F, S, A] = StateT.pure(a)
-    def flatMap[A, B](fa: PureRVT[F, S, A])(f: A => PureRVT[F, S, B]): PureRVT[F, S, B] =
-      fa.flatMap(f)
-    def tailRecM[A, B](a: A)(f: A => PureRVT[F, S, Either[A, B]]): PureRVT[F, S, B] =
-      IndexedStateT.catsDataMonadForIndexedStateT[F, (S, Vault)].tailRecM(a)(f)
+  given [F[_]: Sync, S]: Sync[PureRVT[F, S, _]] = Sync.syncForStateT
+
+  given [F[_]: Monad, S](using NotGiven[Sync[F]]): Monad[PureRVT[F, S, _]] =
+    IndexedStateT.catsDataMonadForIndexedStateT
 
   given [F[_]: Monad, S0](using rng: PureRng[S0]): PseudoRandom[PureRVT[F, S0, _]] with
     type G[A] = F[A]
