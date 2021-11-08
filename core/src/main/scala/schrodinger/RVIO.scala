@@ -27,12 +27,14 @@ import cats.effect.kernel.Async
 import cats.effect.kernel.Cont
 import cats.effect.kernel.Deferred
 import cats.effect.kernel.Fiber
+import cats.effect.kernel.Par.ParallelF
 import cats.effect.kernel.Poll
 import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
 import cats.effect.std.Console
 import cats.kernel.Monoid
 import cats.kernel.Semigroup
+import cats.~>
 import schrodinger.kernel.PseudoRandom
 import schrodinger.random.GaussianCache
 import schrodinger.unsafe.rng.SplittableRng
@@ -44,6 +46,13 @@ import scala.util.NotGiven
 opaque type RVIO[S, +A] = IO[A]
 
 object RVIO:
+  type Par[S, A] = ParallelF[RVIO[S, _], A]
+
+  def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
+
+  def evalK[S]: IO ~> RVIO[S, _] =
+    new:
+      def apply[A](ioa: IO[A]): RVIO[S, A] = ioa
 
   given [S0: SplittableRng]: Async[RVIO[S0, _]]
     with PseudoRandom[RVIO[S0, _]]
