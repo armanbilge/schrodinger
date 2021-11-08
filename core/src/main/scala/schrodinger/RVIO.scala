@@ -16,8 +16,13 @@
 
 package schrodinger
 
+import cats.Align
+import cats.Parallel
+import cats.SemigroupK
+import cats.Show
 import cats.effect.IO
 import cats.effect.IOLocal
+import cats.effect.instances.spawn
 import cats.effect.kernel.Async
 import cats.effect.kernel.Cont
 import cats.effect.kernel.Deferred
@@ -25,12 +30,16 @@ import cats.effect.kernel.Fiber
 import cats.effect.kernel.Poll
 import cats.effect.kernel.Ref
 import cats.effect.kernel.Sync
+import cats.effect.std.Console
+import cats.kernel.Monoid
+import cats.kernel.Semigroup
 import schrodinger.kernel.PseudoRandom
 import schrodinger.random.GaussianCache
 import schrodinger.unsafe.rng.SplittableRng
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+import scala.util.NotGiven
 
 opaque type RVIO[S, +A] = IO[A]
 
@@ -115,3 +124,15 @@ object RVIO:
     def set(x: Double): RVIO[S, Unit] = state.get.flatMap(s => IO(s.cachedGaussian = x))
 
     def suspend[A](hint: Sync.Type)(thunk: => A): RVIO[S, A] = IO.suspend(hint)(thunk)
+
+  given [S, A](using show: Show[IO[A]]): Show[RVIO[S, A]] with
+    def show(rv: RVIO[S, A]): String = s"RV${show.show(rv)}"
+
+  given [S, A](using m: Monoid[IO[A]]): Monoid[RVIO[S, A]] = m
+  given [S, A](
+      using s: Semigroup[IO[A]],
+      not: NotGiven[Monoid[RVIO[S, A]]]): Semigroup[RVIO[S, A]] = s
+  given [S, A]: SemigroupK[RVIO[S, _]] = IO.semigroupKForIO
+  given [S, A]: Align[RVIO[S, _]] = IO.alignForIO
+  given [S, A]: Parallel[RVIO[S, _]] = spawn.parallelForGenSpawn
+  given [S, A]: Console[RVIO[S, _]] = IO.consoleForIO
