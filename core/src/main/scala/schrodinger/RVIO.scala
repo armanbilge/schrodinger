@@ -54,20 +54,22 @@ object RVIO:
     new:
       def apply[A](ioa: IO[A]): RVIO[S, A] = ioa
 
-  given [S0: SplittableRng]: Async[RVIO[S0, _]]
-    with PseudoRandom[RVIO[S0, _]]
-    with RngDispatcher[RVIO[S0, _]]
-    with GaussianCache[RVIO[S0, _], Double]
-    with
+  def algebra[S: SplittableRng]: IO[Algebra[S]] = IOLocal[State[S]](null).map(Algebra(_))
+
+  final private class State[S](
+      val rng: S = null.asInstanceOf[S],
+      var cachedGaussian: Double = Double.NaN)
+
+  final class Algebra[S0: SplittableRng] private[RVIO] (state: IOLocal[State[S0]])
+      extends Async[RVIO[S0, _]],
+        PseudoRandom[RVIO[S0, _]],
+        RngDispatcher[RVIO[S0, _]],
+        GaussianCache[RVIO[S0, _], Double]:
+
     type G[A] = IO[A]
     type S = S0
 
-    def rng = summon[SplittableRng[S0]]
-
-    final class State(
-        val rng: S = null.asInstanceOf[S],
-        var cachedGaussian: Double = Double.NaN)
-    private val state = IOLocal[State](null).syncStep.unsafeRunSync().toOption.get
+    def rng = summon[SplittableRng[S]]
 
     def pure[A](x: A): RVIO[S, A] = IO.pure(x)
 
