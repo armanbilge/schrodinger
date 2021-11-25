@@ -27,6 +27,7 @@ import cats.effect.kernel.Async
 import cats.effect.kernel.Cont
 import cats.effect.kernel.Deferred
 import cats.effect.kernel.Fiber
+import cats.effect.kernel.Outcome
 import cats.effect.kernel.Par.ParallelF
 import cats.effect.kernel.Poll
 import cats.effect.kernel.Ref
@@ -78,6 +79,8 @@ object RVIO:
 
     def raiseError[A](e: Throwable): RVIO[S, A] = IO.raiseError(e)
 
+    override def attempt[A](fa: RVIO[S, A]): RVIO[S, Either[Throwable, A]] = fa.attempt
+
     def cont[K, R](body: Cont[RVIO[S, _], K, R]): RVIO[S0, R] = IO.cont(body)
 
     def evalOn[A](fa: RVIO[S, A], ec: ExecutionContext): RVIO[S, A] = fa.evalOn(ec)
@@ -87,6 +90,8 @@ object RVIO:
     def monotonic: RVIO[S, FiniteDuration] = IO.monotonic
 
     def realTime: RVIO[S, FiniteDuration] = IO.realTime
+
+    override def map[A, B](fa: RVIO[S, A])(f: A => B): RVIO[S, B] = fa.map(f)
 
     def flatMap[A, B](fa: RVIO[S, A])(f: A => RVIO[S0, B]): RVIO[S, B] =
       fa.flatMap(f)
@@ -101,10 +106,21 @@ object RVIO:
     def cede: RVIO[S, Unit] = IO.cede
 
     def start[A](fa: RVIO[S, A]): RVIO[S, Fiber[RVIO[S, _], Throwable, A]] =
-      for
-        rng <- dispatch
-        f <- (state.set(State(rng)) *> fa).start
-      yield f
+      dispatch.flatMap(rng => (state.set(State(rng)) *> fa).start)
+
+    override def racePair[A, B](fa: RVIO[S, A], fb: RVIO[S, B]): RVIO[
+      S,
+      Either[
+        (Outcome[RVIO[S, _], Throwable, A], Fiber[RVIO[S, _], Throwable, B]),
+        (Fiber[RVIO[S, _], Throwable, A], Outcome[RVIO[S, _], Throwable, B])]] =
+      dispatch.flatMap { rng1 =>
+        dispatch.flatMap { rng2 =>
+          IO.racePair(
+            state.set(State(rng1)) *> fa,
+            state.set(State(rng2)) *> fb
+          )
+        }
+      }
 
     def sleep(time: FiniteDuration): RVIO[S, Unit] = IO.sleep(time)
 
@@ -116,6 +132,18 @@ object RVIO:
 
     def uncancelable[A](body: Poll[RVIO[S, _]] => RVIO[S, A]): RVIO[S, A] =
       IO.uncancelable(body)
+
+    override def bracketFull[A, B](acquire: Poll[RVIO[S, _]] => RVIO[S, A])(
+        use: A => RVIO[S, B])(
+        release: (A, Outcome[RVIO[S, _], Throwable, B]) => RVIO[S, Unit]): RVIO[S, B] =
+      IO.bracketFull(acquire)(use)(release)
+
+    override def guarantee[A](fa: RVIO[S, A])(finalizer: RVIO[S, Unit]): RVIO[S, A] =
+      fa.guarantee(finalizer)
+
+    override def guaranteeCase[A](fa: RVIO[S, A])(
+        finalizer: Outcome[RVIO[S, _], Throwable, A] => RVIO[S, Unit]): RVIO[S, A] =
+      fa.guaranteeCase(finalizer)
 
     extension [A](fa: RVIO[S, A])
       def simulate(seed: S): IO[A] = IO(State(seed.copy())).flatMap(state.set) *> fa
