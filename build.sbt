@@ -34,7 +34,7 @@ val Specs2Version = "5.0.0-RC-21"
 val ScalaCheckVersion = "1.15.4"
 val VaultVersion = "3.1.0"
 val DisciplineVersion = "1.1.5"
-val DisciplineSpecs2Version = "2.0-28-0698f3a"
+val DisciplineSpecs2Version = "2.0-34-8c36a37"
 
 val commonSettings = Seq(
   scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
