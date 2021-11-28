@@ -68,10 +68,7 @@ object LogDouble:
     inline def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
     inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
-  given CommutativeSemifield[LogDouble]
-    with Order[LogDouble]
-    with Hash[LogDouble]
-    with
+  given CommutativeSemifield[LogDouble] with Order[LogDouble] with Hash[LogDouble] with
     override def zero: LogDouble = LogDouble.Zero
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)
