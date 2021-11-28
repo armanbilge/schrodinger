@@ -73,7 +73,7 @@ sealed abstract class Weighted[W, +A] extends Product, Serializable:
       case (_, weightless @ Weightless(_)) => weightless
 
   final def importance(f: A => W)(using Semifield[W], Eq[W]): Weighted[W, A] =
-    given Applicative[Id] = cats.catsInstancesForId
+    import cats.catsInstancesForId
     importanceA[Id, A](f)
 
   final def importanceA[F[_]: Applicative, B >: A](

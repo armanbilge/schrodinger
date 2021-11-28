@@ -35,7 +35,7 @@ object Simulator extends SimulatorLowPriority:
     def downgrade[A](ga: G[A]): F[A] = ga
 
 sealed abstract private[schrodinger] class SimulatorLowPriority:
-  given Simulator[Id](using cats.catsInstancesForId) with
+  given Simulator[Id] with
     type G[A] = SyncIO[A]
     given runtime: Sync[G] = SyncIO.syncForSyncIO
     def upgrade[A](a: A): SyncIO[A] = SyncIO.pure(a)
