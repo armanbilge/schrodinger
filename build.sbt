@@ -24,8 +24,7 @@ replaceCommandAlias(
 val Scala3 = "3.1.1-RC1"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
-val AlgebraVersion = "2.2.3"
-val CatsVersion = "2.6.1"
+val CatsVersion = "2.7.0"
 val CatsEffectVersion = "3.2.9"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.4"
@@ -79,10 +78,10 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-math",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "algebra" % AlgebraVersion,
+      "org.typelevel" %%% "algebra" % CatsVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %%% "algebra-laws" % AlgebraVersion % Test
+      "org.typelevel" %%% "algebra-laws" % CatsVersion % Test
     )
   )
   .settings(commonSettings)
@@ -199,7 +198,7 @@ lazy val monteCarlo = project
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
       "co.fs2" %%% "fs2-core" % Fs2Version,
-      "org.typelevel" %%% "algebra" % AlgebraVersion,
+      "org.typelevel" %%% "algebra" % CatsVersion,
       "org.typelevel" %%% "cats-effect-std" % CatsEffectVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
