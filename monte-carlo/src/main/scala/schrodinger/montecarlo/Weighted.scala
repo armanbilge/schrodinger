@@ -22,6 +22,7 @@ import algebra.ring.MultiplicativeCommutativeMonoid
 import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
+import algebra.ring.Semifield
 import algebra.ring.Semiring
 import cats.Align
 import cats.Applicative
@@ -39,7 +40,6 @@ import cats.data.Ior
 import cats.kernel.CommutativeMonoid
 import cats.kernel.CommutativeSemigroup
 import cats.syntax.all.*
-import schrodinger.math.Semifield
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless

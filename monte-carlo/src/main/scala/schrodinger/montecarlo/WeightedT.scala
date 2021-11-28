@@ -19,6 +19,7 @@ package schrodinger.montecarlo
 import algebra.ring.CommutativeRig
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
+import algebra.ring.Semifield
 import algebra.ring.Semiring
 import cats.Alternative
 import cats.Applicative
@@ -66,7 +67,6 @@ import cats.syntax.semigroup.*
 import cats.~>
 import schrodinger.kernel.Density
 import schrodinger.kernel.Distribution
-import schrodinger.math.Semifield
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless

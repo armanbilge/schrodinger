@@ -17,6 +17,7 @@
 package schrodinger.math
 
 import algebra.laws.RingLaws
+import algebra.ring.CommutativeSemifield
 import cats.kernel.Eq
 import cats.kernel.laws.discipline.HashTests
 import cats.kernel.laws.discipline.OrderTests
@@ -41,8 +42,7 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 
   {
     given eq: Eq[LogDouble] = approxEq(1e-8)
-    checkAll("LogDouble", RingLaws[LogDouble].commutativeRig)
-    checkAll("LogDouble", RingLaws[LogDouble].multiplicativeCommutativeGroup)
+    checkAll("LogDouble", RingLaws[LogDouble].commutativeSemifield)
 
     "LogDouble" should {
       "correctly add identical values" in prop { (x: LogDouble) =>
@@ -56,7 +56,7 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
       }
 
       "have consistent sum" in prop { (xs: List[LogDouble]) =>
-        eq.eqv(LogDouble.sum(IArray.from(xs)), Semifield[LogDouble].sum(xs))
+        eq.eqv(LogDouble.sum(IArray.from(xs)), CommutativeSemifield[LogDouble].sum(xs))
       }
 
     }
@@ -64,4 +64,4 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 
   checkAll("LogDouble", OrderTests[LogDouble].order)
   checkAll("LogDouble", HashTests[LogDouble].hash)
-  checkAll("LogDoubleAlgebra", SerializableTests.serializable(Semifield[LogDouble]))
+  checkAll("LogDoubleAlgebra", SerializableTests.serializable(CommutativeSemifield[LogDouble]))

@@ -17,17 +17,8 @@
 package schrodinger.math
 
 import algebra.ring.AdditiveSemigroup
-import algebra.ring.CommutativeRig
-import algebra.ring.MultiplicativeCommutativeGroup
 import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeSemigroup
-import algebra.ring.Rig
-
-type Semifield[A] = Rig[A] & MultiplicativeGroup[A]
-type CommutativeSemifield[A] = CommutativeRig[A] & MultiplicativeCommutativeGroup[A]
-
-object Semifield:
-  inline def apply[A](using A: Semifield[A]): A.type = A
 
 object syntax:
   extension [A](x: A)

@@ -16,9 +16,7 @@
 
 package schrodinger.math
 
-import algebra.ring.CommutativeRig
-import algebra.ring.Field
-import algebra.ring.MultiplicativeCommutativeGroup
+import algebra.ring.CommutativeSemifield
 import cats.kernel.Hash
 import cats.kernel.Order
 
@@ -70,8 +68,7 @@ object LogDouble:
     inline def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
     inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
-  given CommutativeRig[LogDouble]
-    with MultiplicativeCommutativeGroup[LogDouble]
+  given CommutativeSemifield[LogDouble]
     with Order[LogDouble]
     with Hash[LogDouble]
     with

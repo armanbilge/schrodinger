@@ -16,13 +16,13 @@
 
 package schrodinger.montecarlo
 
+import algebra.ring.Semifield
 import cats.Monad
 import cats.kernel.Eq
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Distribution
 import schrodinger.kernel.UnnormalizedDensity
-import schrodinger.math.Semifield
 import schrodinger.math.syntax.*
 
 type ImportanceSampler[P, Q, X] = [F[_]] =>> Distribution[F, ImportanceSampler.Params[P, Q], X]
