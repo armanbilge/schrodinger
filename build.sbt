@@ -30,6 +30,7 @@ val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.4"
 val Fs2Version = "3.2.3"
 val Specs2Version = "5.0.0-RC-22"
+val Specs2CatsVersion = "1.0.0-ALPHA-04"
 val ScalaCheckVersion = "1.15.4"
 val VaultVersion = "3.1.0"
 val DisciplineVersion = "1.1.5"
@@ -170,6 +171,8 @@ lazy val tests = project
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.specs2" %%% "specs2-cats-effect" % Specs2CatsVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
