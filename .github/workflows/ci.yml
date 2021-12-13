@@ -114,7 +114,6 @@ jobs:
           rm targets.tar
 
       - name: Import signing key
-        if: github.ref_type == 'tag'
         run: echo $PGP_SECRET | base64 -d | gpg --import
 
       - run: sbt ++${{ matrix.scala }} release
