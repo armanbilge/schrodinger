@@ -8,6 +8,7 @@ ThisBuild / startYear := Some(2021)
 enablePlugins(SonatypeCiReleasePlugin)
 ThisBuild / spiewakCiReleaseSnapshots := true
 ThisBuild / spiewakMainBranches := Seq("main")
+ThisBuild / publishSnapshotsAsHashReleases := true
 ThisBuild / homepage := Some(url("https://github.com/armanbilge/schrodinger"))
 ThisBuild / scmInfo := Some(
   ScmInfo(
