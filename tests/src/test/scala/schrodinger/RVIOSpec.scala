@@ -24,10 +24,12 @@ import org.specs2.mutable.Specification
 import schrodinger.kernel.Random
 import schrodinger.unsafe.rng.SplitMix
 
+import scala.concurrent.duration.*
+
 class RVIOSpec extends Specification with CatsEffect:
 
   given RV: RVIO.Algebra[SplitMix] = RVIO.algebra[SplitMix].unsafeRunSync()
-  val randomSum = List.fill(10000)(()).parFoldMapA(_ => RV.int)
+  val randomSum = (RV.sleep(0.millis) *> RV.int).parReplicateA(100).map(_.sum)
 
   "RVIO" should {
     "run deterministically" in {
