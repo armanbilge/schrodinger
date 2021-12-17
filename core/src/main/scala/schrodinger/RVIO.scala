@@ -31,6 +31,7 @@ import cats.effect.kernel.Outcome
 import cats.effect.kernel.Par.ParallelF
 import cats.effect.kernel.Poll
 import cats.effect.kernel.Ref
+import cats.effect.kernel.Spawn
 import cats.effect.kernel.Sync
 import cats.effect.std.Console
 import cats.kernel.Monoid
@@ -171,7 +172,7 @@ object RVIO:
   given [S, A](
       using s: Semigroup[IO[A]],
       not: NotGiven[Monoid[RVIO[S, A]]]): Semigroup[RVIO[S, A]] = s
-  given [S, A]: SemigroupK[RVIO[S, _]] = IO.semigroupKForIO
-  given [S, A]: Align[RVIO[S, _]] = IO.alignForIO
-  given [S, A]: Parallel[RVIO[S, _]] = spawn.parallelForGenSpawn
-  given [S, A]: Console[RVIO[S, _]] = IO.consoleForIO
+  given [S]: SemigroupK[RVIO[S, _]] = IO.semigroupKForIO
+  given [S]: Align[RVIO[S, _]] = IO.alignForIO
+  given [S](using Spawn[RVIO[S, _]]): Parallel[RVIO[S, _]] = spawn.parallelForGenSpawn
+  given [S]: Console[RVIO[S, _]] = IO.consoleForIO
