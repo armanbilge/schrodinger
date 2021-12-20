@@ -22,7 +22,7 @@ replaceCommandAlias(
   "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
 )
 
-val Scala3 = "3.1.1-RC1"
+val Scala3 = "3.1.1-RC2"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.7.0"
