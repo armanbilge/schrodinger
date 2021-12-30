@@ -63,10 +63,11 @@ object Dist:
     def tailRecM[A, B](a: A)(f: A => Dist[P, Either[A, B]]): Dist[P, B] =
       var fa = f(a)
       var db = Map.empty[B, P]
-      (0 until n).foreach { _ =>
+      var i = 0
+      while i < n do
         val as = fa.support.collect { case (Left(a), p) => a -> p }
         val bs = fa.support.collect { case (Right(b), p) => b -> p }
         fa = Dist(as).flatMap(f)
         db = db |+| bs
-      }
+        if db.nonEmpty then i += 1 // don't start counter until we've hit some b
       Dist(db)
