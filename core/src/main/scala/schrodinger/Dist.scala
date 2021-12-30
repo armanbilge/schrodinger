@@ -78,20 +78,20 @@ object Dist:
         else i = n
       Dist(db)
 
-    given [P](
-        using
-        density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
-      params =>
-        val f = density(params)
-        Dist(Map(false -> f(false), true -> f(true)))
+  given [P](
+      using
+      density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
+    params =>
+      val f = density(params)
+      Dist(Map(false -> f(false), true -> f(true)))
 
-    given [P](using density: UniformRange[Density[Id, P]]): UniformRange[Dist[P, *]] =
-      params =>
-        val f = density(params)
-        Dist(params.support.map(i => i -> f(i)).toMap)
+  given [P](using density: UniformRange[Density[Id, P]]): UniformRange[Dist[P, *]] =
+    params =>
+      val f = density(params)
+      Dist(params.support.map(i => i -> f(i)).toMap)
 
-    given [P](
-        using density: CategoricalVector[P][Density[Id, P]]): CategoricalVector[P][Dist[P, *]] =
-      params =>
-        val f = density(params)
-        Dist(params.support.indices.map(i => i -> f(i)).toMap)
+  given [P](
+      using density: CategoricalVector[P][Density[Id, P]]): CategoricalVector[P][Dist[P, *]] =
+    params =>
+      val f = density(params)
+      Dist(params.support.indices.map(i => i -> f(i)).toMap)
