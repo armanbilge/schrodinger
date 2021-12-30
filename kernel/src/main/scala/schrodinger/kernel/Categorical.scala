@@ -17,6 +17,7 @@
 package schrodinger.kernel
 
 type Categorical[S, X] = [F[_]] =>> Distribution[F, Categorical.Params[S], X]
+type CategoricalVector[P] = [F[_]] =>> Categorical[Vector[P], Int][F]
 type CategoricalMap[A, R] = [F[_]] =>> Categorical[Map[A, R], A][F]
 
 object Categorical:

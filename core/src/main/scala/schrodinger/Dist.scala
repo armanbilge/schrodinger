@@ -22,11 +22,16 @@ import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
 import cats.CommutativeMonad
 import cats.Eq
+import cats.Id
 import cats.Monad
 import cats.instances.*
 import cats.kernel.Semigroup
 import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.CategoricalVector
+import schrodinger.kernel.Density
+import schrodinger.kernel.UniformRange
 
 final case class Dist[P, A](support: Map[A, P]):
 
@@ -71,3 +76,21 @@ object Dist:
         db = db |+| bs
         if db.nonEmpty then i += 1 // don't start counter until we've hit some b
       Dist(db)
+
+    given [P](
+        using
+        density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
+      params =>
+        val f = density(params)
+        Dist(Map(false -> f(false), true -> f(true)))
+
+    given [P](using density: UniformRange[Density[Id, P]]): UniformRange[Dist[P, *]] =
+      params =>
+        val f = density(params)
+        Dist(params.support.map(i => i -> f(i)).toMap)
+
+    given [P](
+        using density: CategoricalVector[P][Density[Id, P]]): CategoricalVector[P][Dist[P, *]] =
+      params =>
+        val f = density(params)
+        Dist(params.support.indices.map(i => i -> f(i)).toMap)

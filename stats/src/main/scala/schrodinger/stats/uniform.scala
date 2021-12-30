@@ -21,6 +21,7 @@ import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.kernel.Density
 import schrodinger.kernel.Uniform
+import schrodinger.kernel.UniformRange
 import schrodinger.math.LogDouble
 import schrodinger.math.Interval.*
 import schrodinger.math.Interval.given
@@ -49,7 +50,7 @@ trait UniformInstances:
     _ => density
 
   given schrodingerStatsUniformForIntRange[F[_]: Applicative]
-      : Uniform[Range, Int][Density[F, LogDouble]] with
+      : UniformRange[Density[F, LogDouble]] with
     override def apply(params: Uniform.Params[Range]) =
       val range = params.support
       val zero = LogDouble.Zero.pure[F]
