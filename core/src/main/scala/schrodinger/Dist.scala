@@ -21,6 +21,7 @@ import algebra.ring.CommutativeSemifield
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Semifield
 import cats.CommutativeMonad
+import cats.Eq
 import cats.Monad
 import cats.instances.*
 import cats.kernel.Semigroup
@@ -45,8 +46,10 @@ object Dist:
 
   def monad[P: Semifield](n: Int): Monad[Dist[P, *]] = DistMonad(n)
 
-  def commutativeMonad[P: CommutativeSemifield](n: Int): Monad[Dist[P, *]] =
+  def commutativeMonad[P: CommutativeSemifield](n: Int): CommutativeMonad[Dist[P, *]] =
     new DistMonad(n) with CommutativeMonad[Dist[P, *]]
+
+  given [P: Eq, A: Eq]: Eq[Dist[P, A]] = Eq.by(_.support)
 
   private class DistMonad[P](n: Int)(using P: Semifield[P]) extends Monad[Dist[P, *]]:
     private given Semigroup[P] = P.additive
