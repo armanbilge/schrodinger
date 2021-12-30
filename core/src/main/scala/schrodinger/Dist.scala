@@ -65,8 +65,8 @@ object Dist:
       var db = Map.empty[B, P]
       (0 until n).foreach { _ =>
         val as = fa.support.collect { case (Left(a), p) => a -> p }
-        fa = Dist(as).flatMap(f)
         val bs = fa.support.collect { case (Right(b), p) => b -> p }
+        fa = Dist(as).flatMap(f)
         db = db |+| bs
       }
       Dist(db)
