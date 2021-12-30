@@ -41,5 +41,5 @@ class DistSpec extends Specification, Discipline:
 
   checkAll(
     "Dist",
-    CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Boolean, Boolean, Boolean]
+    CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte]
   )
