@@ -20,6 +20,7 @@ package random
 import cats.Functor
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
+import schrodinger.kernel.CategoricalVector
 import schrodinger.kernel.Uniform
 import schrodinger.math.Interval.*
 import schrodinger.math.LogDouble
@@ -62,7 +63,7 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
-  given [F[_]: Functor: Categorical[Vector[R], Int], R, A]: Categorical[Map[A, R], A][F] with
+  given [F[_]: Functor: CategoricalVector[R], R, A]: Categorical[Map[A, R], A][F] with
     override def apply(params: Categorical.Params[Map[A, R]]): F[A] =
       import params.*
 
