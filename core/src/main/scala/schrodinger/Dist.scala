@@ -17,9 +17,9 @@
 package schrodinger
 
 import algebra.ring.AdditiveMonoid
-import algebra.ring.CommutativeSemifield
+import algebra.ring.CommutativeRig
 import algebra.ring.MultiplicativeMonoid
-import algebra.ring.Semifield
+import algebra.ring.Rig
 import cats.CommutativeMonad
 import cats.Eq
 import cats.Monad
@@ -33,7 +33,7 @@ final case class Dist[P, A](support: Map[A, P]):
   def map[B](f: A => B)(using P: AdditiveMonoid[P]): Dist[P, B] =
     Dist(support.groupMapReduce(kv => f(kv._1))(_._2)(P.plus(_, _)))
 
-  def flatMap[B](f: A => Dist[P, B])(using P: Semifield[P]): Dist[P, B] =
+  def flatMap[B](f: A => Dist[P, B])(using P: Rig[P]): Dist[P, B] =
     Dist {
       MapMonoid[B, P](using P.additive).combineAll {
         support.view.map((a, p) => f(a).support.view.mapValues(P.times(p, _)).toMap)
@@ -44,17 +44,17 @@ object Dist:
   def pure[P, A](a: A)(using P: MultiplicativeMonoid[P]): Dist[P, A] =
     Dist(Map(a -> P.one))
 
-  def monad[P: Semifield](n: Int): Monad[Dist[P, *]] = DistMonad(n)
+  def monad[P: Rig](n: Int): Monad[Dist[P, *]] = DistMonad(n)
 
-  def commutativeMonad[P: CommutativeSemifield](n: Int): CommutativeMonad[Dist[P, *]] =
+  def commutativeMonad[P: CommutativeRig](n: Int): CommutativeMonad[Dist[P, *]] =
     new DistMonad(n) with CommutativeMonad[Dist[P, *]]
 
   given [P: Eq, A: Eq]: Eq[Dist[P, A]] = Eq.by(_.support)
 
-  private class DistMonad[P](n: Int)(using P: Semifield[P]) extends Monad[Dist[P, *]]:
+  private class DistMonad[P](n: Int)(using P: Rig[P]) extends Monad[Dist[P, *]]:
     private given Semigroup[P] = P.additive
 
-    def pure[A](a: A): Dist[P, A] = Dist.pure(a)
+    def pure[A](a: A): Dist[P, A] = Dist.pure(a)(using P)
 
     override def map[A, B](da: Dist[P, A])(f: A => B): Dist[P, B] = da.map(f)
 

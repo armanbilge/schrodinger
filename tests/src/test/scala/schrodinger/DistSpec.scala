@@ -27,19 +27,19 @@ import org.typelevel.discipline.specs2.mutable.Discipline
 
 class DistSpec extends Specification, Discipline:
 
-  given [A: Arbitrary]: Arbitrary[Dist[BigDecimal, A]] =
+  given [A: Arbitrary]: Arbitrary[Dist[Int, A]] =
     Arbitrary(
       Gen
         .nonEmptyListOf(for
           a <- Arbitrary.arbitrary[A]
-          p <- Gen.exponential(1.0).map(BigDecimal(_))
+          p <- Gen.geometric(100)
         yield a -> p)
         .map(_.toMap)
         .map(Dist(_)))
 
-  given CommutativeMonad[Dist[BigDecimal, *]] = Dist.commutativeMonad[BigDecimal](1024)
+  given CommutativeMonad[Dist[Int, *]] = Dist.commutativeMonad[Int](1024)
 
   checkAll(
     "Dist",
-    CommutativeMonadTests[Dist[BigDecimal, _]].applicative[Boolean, Boolean, Boolean]
+    CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Boolean, Boolean, Boolean]
   )
