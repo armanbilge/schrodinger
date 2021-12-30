@@ -72,9 +72,10 @@ object Dist:
       while i < n do
         val as = fa.support.collect { case (Left(a), p) => a -> p }
         val bs = fa.support.collect { case (Right(b), p) => b -> p }
-        fa = Dist(as).flatMap(f)
         db = db |+| bs
         if db.nonEmpty then i += 1 // don't start counter until we've hit some b
+        if as.nonEmpty then fa = Dist(as).flatMap(f)
+        else i = n
       Dist(db)
 
     given [P](
