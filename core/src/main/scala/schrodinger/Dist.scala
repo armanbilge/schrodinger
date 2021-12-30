@@ -79,8 +79,7 @@ object Dist:
       Dist(db)
 
   given [P](
-      using
-      density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
+      using density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
     params =>
       val f = density(params)
       Dist(Map(false -> f(false), true -> f(true)))
