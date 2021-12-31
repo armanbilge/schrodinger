@@ -33,6 +33,7 @@ import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.kernel.UniformRange
+import schrodinger.math.syntax.*
 
 final case class Dist[P, A](support: Map[A, P]):
 
@@ -45,6 +46,11 @@ final case class Dist[P, A](support: Map[A, P]):
         support.view.map((a, p) => f(a).support.view.mapValues(P.times(p, _)).toMap)
       }
     }
+
+  def expect(f: A => P)(using P: Rig[P]): P =
+    P.sum(support.map(f(_) * _))
+
+  def mean(using ev: A <:< P, P: Rig[P]): P = expect(ev)
 
 object Dist:
   def pure[P, A](a: A)(using P: MultiplicativeMonoid[P]): Dist[P, A] =
