@@ -47,6 +47,11 @@ object LogDouble:
       i += 1
     LogDouble.*(LogDouble(sum))(max)
 
+  def sum(xs: Iterable[LogDouble]): LogDouble =
+    val max = xs.fold(LogDouble.Zero)(LogDouble.max(_)(_))
+    val sum = xs.fold(0.0)(_ + LogDouble./(_)(max).real)
+    LogDouble.*(LogDouble(sum))(max)
+
   extension (x: LogDouble)
     inline def real: Double = math.exp(x)
     inline def log: Double = x
@@ -72,6 +77,7 @@ object LogDouble:
     override def zero: LogDouble = LogDouble.Zero
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)
+    override def positiveSumN(x: LogDouble, n: Int): LogDouble = LogDouble.*(x)(LogDouble(n))
     override def times(x: LogDouble, y: LogDouble) = LogDouble.*(x)(y)
     override def div(x: LogDouble, y: LogDouble) = LogDouble./(x)(y)
     override def reciprocal(x: LogDouble) = x.reciprocal
