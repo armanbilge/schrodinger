@@ -78,6 +78,10 @@ object LogDouble:
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)
     override def positiveSumN(x: LogDouble, n: Int): LogDouble = LogDouble.*(x)(LogDouble(n))
+    override def sum(as: TraversableOnce[LogDouble]): LogDouble =
+      as.asInstanceOf[Matchable] match
+        case iterable: Iterable[LogDouble] @unchecked => LogDouble.sum(iterable)
+        case _ => super.sum(as)
     override def times(x: LogDouble, y: LogDouble) = LogDouble.*(x)(y)
     override def div(x: LogDouble, y: LogDouble) = LogDouble./(x)(y)
     override def reciprocal(x: LogDouble) = x.reciprocal
