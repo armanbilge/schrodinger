@@ -17,6 +17,7 @@
 package schrodinger
 package random
 
+import cats.Foldable
 import cats.Functor
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
@@ -24,15 +25,17 @@ import schrodinger.kernel.CategoricalVector
 import schrodinger.kernel.Uniform
 import schrodinger.math.Interval.*
 import schrodinger.math.LogDouble
+
 import scala.reflect.ClassTag
 
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
-  given schrodingerRandomCategoricalForSeqDouble[F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]
-      : Categorical[Seq[Double], Int][F] =
+  given schrodingerRandomCategoricalForFoldableDouble[
+      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double],
+      G[_]: Foldable]: Categorical[G[Double], Int][F] =
     case Categorical.Params(support) =>
-      val cumulative = support.toArray
+      val cumulative = support.toIterable.toArray
       var i = 1
       while i < cumulative.length do
         cumulative(i) += cumulative(i - 1)
@@ -43,19 +46,20 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
-  given schrodingerRandomCategoricalForSeqLogDouble[
-      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double]]: Categorical[Seq[LogDouble], Int][F] =
+  given schrodingerRandomCategoricalForFoldableLogDouble[
+      F[_]: Functor: Uniform[0.0 <=@< 1.0, Double],
+      G[_]: Foldable]: Categorical[G[LogDouble], Int][F] =
     case Categorical.Params(support) =>
-      val cumulative = new Array[Double](support.size)
+      val cumulative = new Array[Double](support.size.toInt)
       var max = LogDouble.Zero
       var i = 0
       while i < cumulative.length do
-        max = max.max(support(i))
+        max = max.max(support.get(i).get)
         i += 1
-      cumulative(0) = (support(0) / max).real
+      cumulative(0) = (support.get(0).get / max).real
       i = 1
       while i < cumulative.length do
-        cumulative(i) = (support(i) / max).real + cumulative(i - 1)
+        cumulative(i) = (support.get(i).get / max).real + cumulative(i - 1)
         i += 1
       Uniform(0.0 <=@< 1.0).map { U =>
         val i =
@@ -71,10 +75,9 @@ trait CategoricalInstances:
       as.sizeHint(support)
       val ps = Vector.newBuilder[R]
       ps.sizeHint(support)
-      support.foreach {
-        case a -> p =>
-          as += a
-          ps += p
+      support.foreach { (a, p) =>
+        as += a
+        ps += p
       }
 
       val a = as.result

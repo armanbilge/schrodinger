@@ -18,22 +18,22 @@ package schrodinger
 package random
 
 import cats.Applicative
-import cats.syntax.all.given
+import cats.Traverse
+import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Multinomial
 import schrodinger.math.LogDouble
+
 import scala.collection.immutable.ArraySeq
 
 object multinomial extends MultinomialInstances
 
 trait MultinomialInstances:
-  given schrodingerRandomMultinomialForSeqDouble[
-      F[_]: Applicative: Categorical[Seq[Double], Int]]
-      : Multinomial[Seq[Double], Int, Seq[Int]][F] with
-    override def apply(params: Multinomial.Params[Seq[Double], Int]): F[Seq[Int]] =
-      import params.*
+  given [F[_]: Applicative: Categorical[G[P], Int], G[_]: Traverse, P]
+      : Multinomial[G[P], Int, G[Int]][F] =
+    case Multinomial.Params(support, trials) =>
       val categorical = Categorical(support)
-      var acc = new Array[Int](support.length).pure
+      var acc = new Array[Int](support.size.toInt).pure
       var i = 0
       while i < trials do
         acc = (acc, categorical).mapN { (counts, i) =>
@@ -41,7 +41,7 @@ trait MultinomialInstances:
           counts
         }
         i += 1
-      acc.map(ArraySeq.unsafeWrapArray)
+      acc.map(counts => support.mapWithIndex((_, i) => counts(i)))
 
   given schrodingerRandomMultinomialForIArrayLogDouble[
       F[_]: Applicative: Categorical[IArray[LogDouble], Int]]

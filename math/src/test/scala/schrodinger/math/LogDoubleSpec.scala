@@ -55,8 +55,12 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
         else z.isNaN
       }
 
-      "have consistent sum" in prop { (xs: List[LogDouble]) =>
+      "have consistent IArray sum" in prop { (xs: List[LogDouble]) =>
         eq.eqv(LogDouble.sum(IArray.from(xs)), CommutativeSemifield[LogDouble].sum(xs))
+      }
+
+      "have consistent Iterable sum" in prop { (xs: List[LogDouble]) =>
+        eq.eqv(LogDouble.sum(xs), CommutativeSemifield[LogDouble].sum(xs))
       }
 
     }

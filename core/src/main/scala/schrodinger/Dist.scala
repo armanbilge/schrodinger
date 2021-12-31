@@ -22,6 +22,7 @@ import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
 import cats.CommutativeMonad
 import cats.Eq
+import cats.Foldable
 import cats.Id
 import cats.Monad
 import cats.instances.*
@@ -29,7 +30,7 @@ import cats.kernel.Semigroup
 import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
 import schrodinger.kernel.Bernoulli
-import schrodinger.kernel.CategoricalVector
+import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.kernel.UniformRange
 
@@ -89,8 +90,9 @@ object Dist:
       val f = density(params)
       Dist(params.support.map(i => i -> f(i)).toMap)
 
-  given [P](
-      using density: CategoricalVector[P][Density[Id, P]]): CategoricalVector[P][Dist[P, *]] =
-    params =>
+  given [G[_]: Foldable, P](
+      using
+      density: Categorical[G[P], Int][Density[Id, P]]): Categorical[G[P], Int][Dist[P, *]] =
+    case params @ Categorical.Params(support) =>
       val f = density(params)
-      Dist(params.support.indices.map(i => i -> f(i)).toMap)
+      Dist((0 until support.size.toInt).map(i => i -> f(i)).toMap)

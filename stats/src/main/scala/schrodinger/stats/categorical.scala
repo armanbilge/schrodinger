@@ -18,7 +18,8 @@ package schrodinger
 package stats
 
 import cats.Applicative
-import cats.syntax.all.given
+import cats.Foldable
+import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.math.LogDouble
@@ -26,6 +27,12 @@ import schrodinger.math.LogDouble
 object categorical extends CategoricalInstances
 
 trait CategoricalInstances:
+  given [F[_]: Applicative, G[_]: Foldable]
+      : Categorical[G[LogDouble], Int][Density[F, LogDouble]] =
+    case Categorical.Params(support) =>
+      val sum = LogDouble.sum(support.toIterable)
+      i => (support.get(i).getOrElse(LogDouble.Zero) / sum).pure[F]
+
   given schrodingerStatsCategoricalForIArrayLogDouble[F[_]: Applicative]
       : Categorical[IArray[LogDouble], Int][Density[F, LogDouble]] = params =>
     import params.*
