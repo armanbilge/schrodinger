@@ -48,14 +48,14 @@ class GammaSpec extends Specification, ScalaCheck:
           if shape < 1 then
             new AhrensDieterMarsagliaTsangGammaSampler(
               new source64.SplitMix64(seed),
-              math.abs(shape),
+              Math.abs(shape),
               1.0 / rate)
           else
             val splitMix = new source64.SplitMix64(seed)
             val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
-            new MarsagliaTsangGammaSampler(splitMix, gaussian, math.abs(shape), 1.0 / rate)
+            new MarsagliaTsangGammaSampler(splitMix, gaussian, Math.abs(shape), 1.0 / rate)
 
-        Gamma[PureRV[SplitMix64, _], Double, Double, Double](math.abs(shape), rate)
+        Gamma[PureRV[SplitMix64, _], Double, Double, Double](Math.abs(shape), rate)
           .replicateA(N)
           .simulate(SplitMix64(seed))
           .value ===

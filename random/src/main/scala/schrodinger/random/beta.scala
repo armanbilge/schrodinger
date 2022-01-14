@@ -28,39 +28,39 @@ trait BetaInstances:
 
   given schrodingerRandomBetaForDouble[F[_]: Monad: Uniform[0.0 <=@< 1.0, Double]]
       : Beta[Double][F] with
-    private val Ln4 = math.log(4)
-    private val Ln5p1 = 1 + math.log(5)
+    private val Ln4 = Math.log(4)
+    private val Ln5p1 = 1 + Math.log(5)
 
     def apply(params: Beta.Params[Double, Double]): F[Double] =
       val U = Uniform(0.0 <=@< 1.0)
 
-      val a = math.min(params.alpha, params.beta)
-      val b = math.max(params.alpha, params.beta)
+      val a = Math.min(params.alpha, params.beta)
+      val b = Math.max(params.alpha, params.beta)
       val aIsAlphaShape = a == params.alpha
 
       val alpha = a + b
-      val logAlpha = math.log(alpha)
+      val logAlpha = Math.log(alpha)
 
       def computeX(aIsAlphaShape: Boolean, b: Double)(w: Double): Double =
-        val tmp = math.min(w, Double.MaxValue)
+        val tmp = Math.min(w, Double.MaxValue)
         if aIsAlphaShape then tmp / (b + tmp) else b / (b + tmp)
 
       def bb(aIsAlphaShape: Boolean, a: Double, b: Double): F[Double] =
-        val beta = math.sqrt((alpha - 2) / (2 * a * b - alpha))
+        val beta = Math.sqrt((alpha - 2) / (2 * a * b - alpha))
         val gamma = a + 1 / beta
 
         val W = (U, U).mapN { (u1, u2) =>
-          val v = beta * (math.log(u1) - math.log1p(-u1))
-          val w = a * math.exp(v)
+          val v = beta * (Math.log(u1) - Math.log1p(-u1))
+          val w = a * Math.exp(v)
           val z = u1 * u1 * u2
           val r = gamma * v - Ln4
           val s = a + r - w
 
           if s + Ln5p1 >= 5 * z then Some(w)
           else
-            val t = math.log(z)
+            val t = Math.log(z)
             if s >= t then Some(w)
-            else if r + alpha * (logAlpha - math.log(b + w)) < t then None
+            else if r + alpha * (logAlpha - Math.log(b + w)) < t then None
             else Some(w)
         }
 
@@ -77,17 +77,17 @@ trait BetaInstances:
           val z = u1 * y
 
           inline def step5 =
-            val v = beta * (math.log(u1) - math.log1p(-u1))
-            val w = a * math.exp(v)
-            if alpha * (logAlpha - math.log(b + w) + v) - Ln4 >= math.log(z) then Some(w)
+            val v = beta * (Math.log(u1) - Math.log1p(-u1))
+            val w = a * Math.exp(v)
+            if alpha * (logAlpha - Math.log(b + w) + v) - Ln4 >= Math.log(z) then Some(w)
             else None
 
           if u1 < 0.5 then
             if 0.25 * u2 + z - y >= k1 then None
             else step5
           else if z <= 0.25 then
-            val v = beta * (math.log(u1) - math.log1p(-u1))
-            val w = a * math.exp(v)
+            val v = beta * (Math.log(u1) - Math.log1p(-u1))
+            val w = a * Math.exp(v)
             Some(w)
           else if z >= k2 then None
           else step5

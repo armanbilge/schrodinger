@@ -43,10 +43,10 @@ trait GaussianInstances:
     val sampleAndCache = for
       x <- Uniform(0.0 <=@< 1.0)
       y <- Uniform(0.0 <@<= 1.0)
-      alpha = 2 * math.Pi * x
-      r = math.sqrt(-2 * math.log(y))
-      g1 = r * math.cos(alpha)
-      g2 = r * math.sin(alpha)
+      alpha = 2 * Math.PI * x
+      r = Math.sqrt(-2 * Math.log(y))
+      g1 = r * Math.cos(alpha)
+      g2 = r * Math.sin(alpha)
       _ <- cache.set(g2)
     yield g1
 

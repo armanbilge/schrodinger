@@ -38,7 +38,7 @@ trait ExponentialInstances:
     val standard: F[Double] =
       import AhrensDieterConstants.*
       val umin =
-        Vector.iterate(Uniform(0.0 <=@< 1.0), 16)(_.map2(Uniform(0.0 <=@< 1.0))(math.min))
+        Vector.iterate(Uniform(0.0 <=@< 1.0), 16)(_.map2(Uniform(0.0 <=@< 1.0))(Math.min))
       Uniform(0.0 <@<= 1.0).flatMap { _u =>
         var a = 0.0
         var u = _u
@@ -62,7 +62,7 @@ trait ExponentialInstances:
   private object AhrensDieterConstants:
     val ExponentialSaQi =
       val qi = new Array[Double](16)
-      val log2 = math.log(2)
+      val log2 = Math.log(2)
       var p = log2
       qi(0) = p
       var i = 1
