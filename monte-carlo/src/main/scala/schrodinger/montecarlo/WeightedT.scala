@@ -92,6 +92,8 @@ object WeightedT extends WeightedTInstances:
     new (WeightedT[F, A, _] ~> WeightedT[G, A, _]):
       def apply[B](k: WeightedT[F, A, B]): WeightedT[G, A, B] = WeightedT.mapK(k)(f)
 
+  def fromWeighted[F[_]: Applicative, W, A](wa: Weighted[W, A]): WeightedT[F, W, A] = wa.pure
+
   extension [F[_], W, A](wfa: WeightedT[F, W, A])
 
     def value: F[Weighted[W, A]] = wfa
