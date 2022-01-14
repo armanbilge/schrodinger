@@ -38,20 +38,20 @@ trait GammaInstances:
 
       lazy val ahrensDieter: F[Double] =
         val oneOverAlpha = 1 / shape
-        val bGSOptim = 1 + shape / math.E
+        val bGSOptim = 1 + shape / Math.E
 
         val go: F[Option[Double]] = U.flatMap { u =>
           val p = bGSOptim * u
           if p <= 1 then
-            val x = math.pow(p, oneOverAlpha)
+            val x = Math.pow(p, oneOverAlpha)
             U.flatMap { u2 =>
-              if u2 > math.exp(-x) then none
+              if u2 > Math.exp(-x) then none
               else (scale * x).some.pure
             }
           else
-            val x = -math.log((bGSOptim - p) * oneOverAlpha)
+            val x = -Math.log((bGSOptim - p) * oneOverAlpha)
             U.flatMap { u2 =>
-              if u2 <= math.pow(x, shape - 1) then (scale * x).some.pure
+              if u2 <= Math.pow(x, shape - 1) then (scale * x).some.pure
               else none
             }
         }
@@ -60,7 +60,7 @@ trait GammaInstances:
 
       lazy val marsagliaTsang: F[Double] =
         val dOptim = shape - 1 / 3.0
-        val cOptim = (1 / 3.0) / math.sqrt(dOptim)
+        val cOptim = (1 / 3.0) / Math.sqrt(dOptim)
 
         val go: F[Option[Double]] = G.flatMap { x =>
           val oPcTx = 1 + cOptim * x
@@ -71,7 +71,7 @@ trait GammaInstances:
             val x2 = x * x
             U.flatMap { u =>
               if u < 1 - 0.0331 * x2 * x2 then Some(scale * dOptim * v).pure
-              else if math.log(u) < 0.5 * x2 + dOptim * (1 - v + math.log(v)) then
+              else if Math.log(u) < 0.5 * x2 + dOptim * (1 - v + Math.log(v)) then
                 Some(scale * dOptim * v).pure
               else none
             }
