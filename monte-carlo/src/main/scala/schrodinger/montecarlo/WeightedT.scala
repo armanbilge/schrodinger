@@ -131,6 +131,24 @@ object WeightedT extends WeightedTInstances:
         W1: Eq[W]): WeightedT[F, W, B] =
       WeightedT.flatMap(wfa)(a => WeightedT(f(a)))
 
+    def semiflatMap[B](f: A => F[B])(using F: Monad[F]): WeightedT[F, W, B] =
+      F.flatMap(wfa) {
+        case weightless @ Weightless(_) => weightless.pure
+        case Heavy(wa, da, a) => F.map(f(a))(Heavy(wa, da, _))
+      }
+
+    def semiflatTap[B](f: A => F[B])(using F: Monad[F]): WeightedT[F, W, A] =
+      F.flatMap(wfa) {
+        case weightless @ Weightless(_) => weightless.pure
+        case heavy @ Heavy(_, _, a) => F.as(f(a), heavy)
+      }
+
+    def subflatMap[B](f: A => Weighted[W, B])(
+        using F: Functor[F],
+        W0: Rig[W],
+        W1: Eq[W]
+    ): WeightedT[F, W, B] = F.map(wfa)(_.flatMap(f))
+
     def importance(
         f: A => W)(using F: Applicative[F], W0: Semifield[W], W1: Eq[W]): WeightedT[F, W, A] =
       WeightedT(F.map(value)(_.importance(f)))
