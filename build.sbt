@@ -1,6 +1,7 @@
 ThisBuild / tlBaseVersion := "0.3"
 
 ThisBuild / organization := "com.armanbilge"
+ThisBuild / organizationName := "Arman Bilge"
 ThisBuild / developers += tlGitHubDev("armanbilge", "Arman Bilge")
 ThisBuild / startYear := Some(2021)
 
