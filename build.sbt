@@ -23,9 +23,7 @@ val VaultVersion = "3.1.0"
 val DisciplineVersion = "1.1.5"
 val DisciplineSpecs2Version = "2.0-44-19f6d7f"
 
-val commonSettings = Seq(
-  scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
-)
+ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
 val commonJvmSettings = Seq(
   Test / run / fork := true
@@ -49,7 +47,6 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-kernel"
   )
-  .settings(commonSettings)
   .jvmSettings(commonJvmSettings)
 
 lazy val math = crossProject(JVMPlatform, JSPlatform)
@@ -64,7 +61,6 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "algebra-laws" % CatsVersion % Test
     )
   )
-  .settings(commonSettings)
   .jvmSettings(commonJvmSettings)
 
 lazy val kernelTestkit = project
@@ -84,7 +80,6 @@ lazy val kernelTestkit = project
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val laws = crossProject(JVMPlatform, JSPlatform)
@@ -97,7 +92,6 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "cats-laws" % CatsVersion
     )
   )
-  .settings(commonSettings)
   .jvmSettings(commonJvmSettings)
 
 lazy val random = project
@@ -112,7 +106,6 @@ lazy val random = project
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val core = project
@@ -126,7 +119,6 @@ lazy val core = project
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val testkit = project
@@ -138,7 +130,6 @@ lazy val testkit = project
       "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val tests = project
@@ -156,7 +147,6 @@ lazy val tests = project
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val stats = project
@@ -170,7 +160,6 @@ lazy val stats = project
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
 
 lazy val monteCarlo = project
@@ -188,5 +177,4 @@ lazy val monteCarlo = project
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
-  .settings(commonSettings)
   .settings(commonJvmSettings)
