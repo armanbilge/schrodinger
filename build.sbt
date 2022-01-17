@@ -1,26 +1,11 @@
-ThisBuild / baseVersion := "0.3"
+ThisBuild / tlBaseVersion := "0.3"
 
 ThisBuild / organization := "com.armanbilge"
-ThisBuild / publishGithubUser := "armanbilge"
-ThisBuild / publishFullName := "Arman Bilge"
+ThisBuild / developers += tlGitHubDev("armanbilge", "Arman Bilge")
 ThisBuild / startYear := Some(2021)
 
-enablePlugins(SonatypeCiReleasePlugin)
-ThisBuild / spiewakCiReleaseSnapshots := true
-ThisBuild / spiewakMainBranches := Seq("main")
-ThisBuild / publishSnapshotsAsHashReleases := true
-ThisBuild / homepage := Some(url("https://github.com/armanbilge/schrodinger"))
-ThisBuild / scmInfo := Some(
-  ScmInfo(
-    url("https://github.com/armanbilge/schrodinger"),
-    "git@github.com:armanbilge/schrodinger.git"))
-sonatypeCredentialHost := "s01.oss.sonatype.org"
-
-addCommandAlias("prePR", "; root/clean; +root/scalafmtAll; scalafmtSbt; +root/headerCreate")
-replaceCommandAlias(
-  "ci",
-  "; project /; headerCheckAll; scalafmtCheckAll; scalafmtSbtCheck; clean; testIfRelevant; mimaReportBinaryIssuesIfRelevant"
-)
+ThisBuild / tlUntaggedAreSnapshots := false
+ThisBuild / tlSonatypeUseLegacyHost := false
 
 val Scala3 = "3.1.1-RC2"
 ThisBuild / crossScalaVersions := Seq(Scala3)
@@ -38,32 +23,24 @@ val DisciplineVersion = "1.1.5"
 val DisciplineSpecs2Version = "2.0-44-19f6d7f"
 
 val commonSettings = Seq(
-  scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future"),
-  sonatypeCredentialHost := "s01.oss.sonatype.org"
+  scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 )
 
 val commonJvmSettings = Seq(
   Test / run / fork := true
 )
 
-lazy val root =
-  project
-    .in(file("."))
-    .aggregate(
-      kernel.jvm,
-      kernel.js,
-      math.jvm,
-      math.js,
-      kernelTestkit,
-      laws.jvm,
-      laws.js,
-      random,
-      core,
-      testkit,
-      tests,
-      stats,
-      monteCarlo)
-    .enablePlugins(NoPublishPlugin)
+lazy val root = tlCrossRootProject.aggregate(
+  kernel,
+  math,
+  kernelTestkit,
+  laws,
+  random,
+  core,
+  testkit,
+  tests,
+  stats,
+  monteCarlo)
 
 lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
