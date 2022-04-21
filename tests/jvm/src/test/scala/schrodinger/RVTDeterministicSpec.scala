@@ -48,7 +48,6 @@ import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.kernel.PseudoRandom
-import schrodinger.kernel.laws.PseudoRandomTests
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.rng.Rng

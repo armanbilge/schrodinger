@@ -28,6 +28,7 @@ import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
+import schrodinger.laws.MonusTests
 
 class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 
@@ -43,6 +44,7 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
   {
     given eq: Eq[LogDouble] = approxEq(1e-8)
     checkAll("LogDouble", RingLaws[LogDouble].commutativeSemifield)
+    checkAll("LogDouble", MonusTests[LogDouble].monus)
 
     "LogDouble" should {
       "correctly add identical values" in prop { (x: LogDouble) =>

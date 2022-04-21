@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package schrodinger.kernel.laws
+package schrodinger.math
 
-import cats.kernel.laws.*
-import schrodinger.kernel.PseudoRandom
+import algebra.ring.AdditiveCommutativeMonoid
+import cats.kernel.PartialOrder
 
-trait PseudoRandomLaws[F[_], G[_], S](using PseudoRandom.Aux[F, G, S]):
+/**
+ * Amer, K. Equationally complete classes of commutative monoids with monus. Algebra Universalis
+ * 18, 129–131 (1984). [[https://doi.org/10.1007/BF01182254]]
+ */
+trait Monus[A]:
 
-  def reproducible[A](fa: F[A], seed: S) =
-    fa.simulate(seed) <-> fa.simulate(seed)
+  def monus(x: A, y: A): A
 
-object PseudoRandomLaws:
-  def apply[F[_], G[_], S](using PseudoRandom.Aux[F, G, S]): PseudoRandomLaws[F, G, S] =
-    new PseudoRandomLaws[F, G, S] {}
+  def additiveCommutativeMonoid: AdditiveCommutativeMonoid[A]
+  def naturalOrder: PartialOrder[A]
+
+  extension (x: A) final def ∸(y: A): A = monus(x, y)
+
+object Monus:
+  inline def apply[A](using A: Monus[A]): A.type = A
