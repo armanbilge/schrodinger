@@ -16,10 +16,25 @@
 
 package schrodinger.kernel.laws
 
-import org.typelevel.discipline.Laws
+import cats.kernel.Eq
+import cats.kernel.laws.discipline.*
 import org.scalacheck.Arbitrary
+import org.scalacheck.Prop.forAll
+import org.typelevel.discipline.Laws
+import schrodinger.math.Monus
 
-trait MonusTests[A] extends Laws:
+trait MonusTests[A](laws: MonusLaws[A]) extends Laws:
 
-  def monus(using Arbitrary[A]): RuleSet = ???
+  def monus(using Arbitrary[A], Arbitrary[A => A], Eq[A], Eq[Option[A]]): RuleSet =
+    val props = Seq(
+      "axiom 1" -> forAll(laws.monusAxiom1),
+      "axiom 2" -> forAll(laws.monusAxiom2),
+      "axiom 3" -> forAll(laws.monusAxiom3),
+      "axiom 4" -> forAll(laws.monusAxiom4),
+      "natural order consistency" -> forAll(laws.monusNaturalOrderConsistency)
+    ) ++ PartialOrderTests[A](using laws.A.naturalOrder).partialOrder.all.properties
 
+    DefaultRuleSet("monus", None, props*)
+
+object MonusTests:
+  def apply[A: Monus]: MonusTests[A] = new MonusTests(MonusLaws[A]) {}
