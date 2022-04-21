@@ -28,7 +28,7 @@ import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
-import schrodinger.kernel.laws.MonusTests
+import schrodinger.laws.MonusTests
 
 class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
 

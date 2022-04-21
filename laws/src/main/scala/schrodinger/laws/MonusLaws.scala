@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.kernel.laws
+package schrodinger.laws
 
 import algebra.ring.AdditiveCommutativeMonoid
 import cats.kernel.laws.*
