@@ -133,22 +133,27 @@ lazy val testkit = project
   )
   .settings(commonJvmSettings)
 
-lazy val tests = project
+lazy val tests = crossProject(JVMPlatform, JSPlatform)
   .in(file("tests"))
   .enablePlugins(NoPublishPlugin)
-  .dependsOn(testkit % Test, laws.jvm % Test)
+  .dependsOn(laws % Test)
   .settings(
     name := "schrodinger-tests",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.specs2" %%% "specs2-cats-effect" % Specs2CatsVersion % Test,
+      "org.specs2" %%% "specs2-cats-effect" % Specs2CatsVersion % Test
+    )
+  )
+  .jvmConfigure(_.dependsOn(testkit % Test))
+  .jvmSettings(
+    libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
       "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
     )
   )
-  .settings(commonJvmSettings)
+  .jvmSettings(commonJvmSettings)
 
 lazy val stats = project
   .in(file("stats"))
