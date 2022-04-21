@@ -85,11 +85,12 @@ lazy val kernelTestkit = project
 lazy val laws = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .in(file("laws"))
-  .dependsOn(kernel)
+  .dependsOn(kernel, math)
   .settings(
     name := "schrodinger-laws",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-laws" % CatsVersion
+      "org.typelevel" %%% "cats-laws" % CatsVersion,
+      "org.typelevel" %%% "algebra-laws" % CatsVersion
     )
   )
   .jvmSettings(commonJvmSettings)
