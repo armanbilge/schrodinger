@@ -23,12 +23,14 @@ import cats.kernel.PartialOrder
  * Amer, K. Equationally complete classes of commutative monoids with monus. Algebra Universalis
  * 18, 129–131 (1984). [[https://doi.org/10.1007/BF01182254]]
  */
-trait AdditiveCommutativeMonoidWithMonus[A] extends AdditiveCommutativeMonoid[A]:
+trait Monus[A]:
+  this: AdditiveCommutativeMonoid[A] =>
+
   def monus(x: A, y: A): A
 
   def naturalOrder: PartialOrder[A]
 
   extension (x: A) final def ∸(y: A): A = monus(x, y)
 
-object AdditiveCommutativeMonoidWithMonus:
-  inline def apply[A](using A: AdditiveCommutativeMonoidWithMonus[A]): A.type = A
+object Monus:
+  inline def apply[A](using A: Monus[A]): A.type = A

@@ -74,7 +74,7 @@ object LogDouble:
     inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
   given CommutativeSemifield[LogDouble]
-    with AdditiveCommutativeMonoidWithMonus[LogDouble]
+    with Monus[LogDouble]
     with Order[LogDouble]
     with Hash[LogDouble]
     with
