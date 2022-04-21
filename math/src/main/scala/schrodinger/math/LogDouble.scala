@@ -73,10 +73,16 @@ object LogDouble:
     inline def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
     inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
 
-  given CommutativeSemifield[LogDouble] with Order[LogDouble] with Hash[LogDouble] with
+  given CommutativeSemifield[LogDouble]
+    with AdditiveCommutativeMonoidWithMonus[LogDouble]
+    with Order[LogDouble]
+    with Hash[LogDouble]
+    with
     override def zero: LogDouble = LogDouble.Zero
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)
+    override def monus(x: LogDouble, y: LogDouble) =
+      if gt(x, y) then LogDouble.-(x)(y) else zero
     override def positiveSumN(x: LogDouble, n: Int): LogDouble = LogDouble.*(x)(LogDouble(n))
     override def sum(as: TraversableOnce[LogDouble]): LogDouble =
       as.asInstanceOf[Matchable] match
@@ -87,3 +93,4 @@ object LogDouble:
     override def reciprocal(x: LogDouble) = x.reciprocal
     override def compare(x: LogDouble, y: LogDouble) = LogDouble.compare(x)(y)
     override def hash(x: LogDouble): Int = x.hashCode
+    override def naturalOrder = this
