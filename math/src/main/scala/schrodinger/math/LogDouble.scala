@@ -93,4 +93,5 @@ object LogDouble:
     override def reciprocal(x: LogDouble) = x.reciprocal
     override def compare(x: LogDouble, y: LogDouble) = LogDouble.compare(x)(y)
     override def hash(x: LogDouble): Int = x.hashCode
+    override def additiveCommutativeMonoid = this
     override def naturalOrder = this

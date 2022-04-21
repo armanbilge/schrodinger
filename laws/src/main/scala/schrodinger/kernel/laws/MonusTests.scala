@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package schrodinger.math
+package schrodinger.kernel.laws
 
-import algebra.ring.AdditiveCommutativeMonoid
-import cats.kernel.PartialOrder
+import org.typelevel.discipline.Laws
+import org.scalacheck.Arbitrary
 
-/**
- * Amer, K. Equationally complete classes of commutative monoids with monus. Algebra Universalis
- * 18, 129–131 (1984). [[https://doi.org/10.1007/BF01182254]]
- */
-trait Monus[A]:
+trait MonusTests[A] extends Laws:
 
-  def monus(x: A, y: A): A
+  def monus(using Arbitrary[A]): RuleSet = ???
 
-  def additiveCommutativeMonoid: AdditiveCommutativeMonoid[A]
-  def naturalOrder: PartialOrder[A]
-
-  extension (x: A) final def ∸(y: A): A = monus(x, y)
-
-object Monus:
-  inline def apply[A](using A: Monus[A]): A.type = A
