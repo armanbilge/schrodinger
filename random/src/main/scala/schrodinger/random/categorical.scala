@@ -67,6 +67,23 @@ trait CategoricalInstances:
         if i >= 0 then i else -(i + 1)
       }
 
+  given [F[_]: Functor: CategoricalVector[R], G[_]: Foldable, R, A]
+      : Categorical[G[(A, R)], A][F] with
+    override def apply(params: Categorical.Params[G[(A, R)]]): F[A] =
+      import params.*
+
+      val as = Vector.newBuilder[A]
+      as.sizeHint(support.size.toInt)
+      val ps = Vector.newBuilder[R]
+      ps.sizeHint(support.size.toInt)
+      support.toIterable.foreach { (a, p) =>
+        as += a
+        ps += p
+      }
+
+      val a = as.result
+      Categorical(ps.result).map(a)
+
   given [F[_]: Functor: CategoricalVector[R], R, A]: Categorical[Map[A, R], A][F] with
     override def apply(params: Categorical.Params[Map[A, R]]): F[A] =
       import params.*

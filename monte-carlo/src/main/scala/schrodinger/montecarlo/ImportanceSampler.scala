@@ -30,7 +30,7 @@ type ImportanceSampler[P, Q, X] = [F[_]] =>> Distribution[F, ImportanceSampler.P
 object ImportanceSampler:
   final case class Params[P, Q](target: P, proposal: Q, samples: Int)
 
-  given [F[_]: Monad: Categorical[Map[Weighted[R, X], R], Weighted[R, X]], P, Q, X, R: Eq](
+  given [F[_]: Monad: Categorical[Seq[(Weighted[R, X], R)], Weighted[R, X]], P, Q, X, R: Eq](
       using Q: Distribution[WeightedT[F, R, _], Q, X],
       P: Distribution[UnnormalizedDensity[F, R], P, X])(
       using R: Semifield[R]): ImportanceSampler[P, Q, X][[A] =>> F[WeightedT[F, R, A]]] =
@@ -46,7 +46,7 @@ object ImportanceSampler:
         import Weighted.*
         val marginal = R.sum(samples.view.map(_.weight)) / R.sumN(R.one, n)
         WeightedT(
-          Categorical(samples.view.map(s => s -> s.weight).toMap).map {
+          Categorical(samples.fproduct(_.weight)).map {
             case Heavy(_, d, x) => Weighted(d / marginal, x)
             case weightless @ Weightless(_) => weightless
           }
