@@ -17,16 +17,16 @@
 package schrodinger
 package stats
 
-import schrodinger.kernel.Density
-import schrodinger.kernel.Bernoulli
+import algebra.ring.MultiplicativeGroup
+import algebra.ring.Rig
+import algebra.ring.Semifield
 import cats.Applicative
 import cats.syntax.all.given
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Density
 import schrodinger.math.LogDouble
-import algebra.ring.Rig
-import schrodinger.math.syntax.*
-import algebra.ring.Semifield
 import schrodinger.math.Monus
-import algebra.ring.MultiplicativeGroup
+import schrodinger.math.syntax.*
 
 object bernoulli
 
