@@ -22,6 +22,11 @@ import schrodinger.kernel.Bernoulli
 import cats.Applicative
 import cats.syntax.all.given
 import schrodinger.math.LogDouble
+import algebra.ring.Rig
+import schrodinger.math.syntax.*
+import algebra.ring.Semifield
+import schrodinger.math.Monus
+import algebra.ring.MultiplicativeGroup
 
 object bernoulli
 
@@ -38,3 +43,16 @@ trait BernoulliInstances:
     val success = LogDouble(successProbability).pure[F]
     val failure = LogDouble(1 - successProbability).pure[F]
     x => if x then success else failure
+
+  given schrodingerStatsFairBernoulliForSemifieldBoolean[F[_]: Applicative, A](
+      using A: Semifield[A]): Bernoulli[0.5, Boolean][Density[F, A]] =
+    val half = A.reciprocal(A.fromInt(2)).pure
+    val fair: Density[F, A][Boolean] = _ => half
+    _ => fair
+
+  given schrodingerStatsBernoulliForRigWithMonusBoolean[F[_]: Applicative, A: Monus](
+      using A: Rig[A]): Bernoulli[A, Boolean][Density[F, A]] =
+    case Bernoulli.Params(successProbability) =>
+      val success = successProbability.pure
+      val failure = (A.one ∸ successProbability).pure
+      x => if x then success else failure

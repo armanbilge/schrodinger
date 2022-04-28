@@ -27,11 +27,11 @@ extension [A](x: A)
   def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
   def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
 
-extension (rig: Rig.type)
-  def fromInt[A: Rig](n: Int): A = fakeRing.fromInt(n)
-  def fromBigInt[A: Rig](n: BigInt): A = fakeRing.fromBigInt(n)
+extension [A](A: Rig[A])
+  def fromInt(n: Int): A = fakeRing.fromInt(n)
+  def fromBigInt(n: BigInt): A = fakeRing.fromBigInt(n)
 
-  private def fakeRing[A](using A: Rig[A]): Ring[A] = new:
+  private def fakeRing: Ring[A] = new:
     override def zero = A.zero
     override def one = A.one
     override def plus(x: A, y: A) = A.plus(x, y)
