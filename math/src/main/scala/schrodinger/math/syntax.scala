@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-package schrodinger.math
+package schrodinger.math.syntax
 
 import algebra.ring.AdditiveSemigroup
 import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeSemigroup
 
-object syntax:
-  extension [A](x: A)
-    def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
-    def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
-    def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+extension [A](x: A)
+  def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
+  def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
+  def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
