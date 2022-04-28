@@ -21,7 +21,7 @@ val Specs2CatsVersion = "1.0.0-ALPHA-06"
 val ScalaCheckVersion = "1.16.0"
 val VaultVersion = "3.1.0"
 val DisciplineVersion = "1.1.5"
-val DisciplineSpecs2Version = "2.0-44-19f6d7f"
+val DisciplineSpecs2Version = "2.0.0"
 
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
