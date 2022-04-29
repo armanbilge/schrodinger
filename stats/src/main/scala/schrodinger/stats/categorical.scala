@@ -17,12 +17,14 @@
 package schrodinger
 package stats
 
+import algebra.ring.Semifield
 import cats.Applicative
 import cats.Foldable
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.math.LogDouble
+import schrodinger.math.syntax.*
 
 object categorical extends CategoricalInstances
 
@@ -32,6 +34,12 @@ trait CategoricalInstances:
     case Categorical.Params(support) =>
       val sum = LogDouble.sum(support.toIterable)
       i => (support.get(i).getOrElse(LogDouble.Zero) / sum).pure[F]
+
+  given [F[_]: Applicative, G[_]: Foldable, A](
+      using A: Semifield[A]): Categorical[G[A], Int][Density[F, A]] =
+    case Categorical.Params(support) =>
+      val sum = A.sum(support.toIterable)
+      i => (support.get(i).getOrElse(A.zero) / sum).pure
 
   given schrodingerStatsCategoricalForIArrayLogDouble[F[_]: Applicative]
       : Categorical[IArray[LogDouble], Int][Density[F, LogDouble]] = params =>

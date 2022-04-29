@@ -14,14 +14,26 @@
  * limitations under the License.
  */
 
-package schrodinger.math
+package schrodinger.math.syntax
 
 import algebra.ring.AdditiveSemigroup
 import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeSemigroup
+import algebra.ring.Rig
+import algebra.ring.Ring
 
-object syntax:
-  extension [A](x: A)
-    def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
-    def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
-    def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+extension [A](x: A)
+  def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
+  def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
+  def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+
+extension [A](A: Rig[A])
+  def fromInt(n: Int): A = fakeRing.fromInt(n)
+  def fromBigInt(n: BigInt): A = fakeRing.fromBigInt(n)
+
+  private def fakeRing: Ring[A] = new:
+    override def zero = A.zero
+    override def one = A.one
+    override def plus(x: A, y: A) = A.plus(x, y)
+    override def times(x: A, y: A) = A.times(x, y)
+    override def negate(x: A) = throw new UnsupportedOperationException
