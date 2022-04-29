@@ -22,6 +22,7 @@ import cats.CommutativeMonad
 import cats.InvariantMonoidal
 import cats.kernel.CommutativeMonoid
 import cats.kernel.laws.discipline.CommutativeMonoidTests
+import cats.kernel.laws.discipline.OrderTests
 import cats.laws.discipline.AlignTests
 import cats.laws.discipline.CommutativeMonadTests
 import cats.laws.discipline.InvariantMonoidalTests
@@ -38,3 +39,4 @@ class WeightedSpec extends Specification, Discipline, ScalaCheck:
     "Weighted",
     InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int])
   checkAll("Weighted", AlignTests[Weighted[Int, _]].align[Int, Int, Int, Int])
+  checkAll("Weighted", OrderTests[Weighted[Int, Int]].order)
