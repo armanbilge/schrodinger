@@ -39,6 +39,7 @@ import cats.Show
 import cats.data.Ior
 import cats.kernel.CommutativeMonoid
 import cats.kernel.CommutativeSemigroup
+import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
@@ -48,6 +49,7 @@ import scala.annotation.tailrec
 
 sealed abstract class Weighted[W, +A] extends Product, Serializable:
 
+  def valueOption: Option[A]
   def weight: W
   def density: W
 
@@ -99,10 +101,12 @@ object Weighted extends WeightedInstances, WeightedFunctions:
 
   final case class Heavy[W, +A](weight: W, density: W, value: A) extends Weighted[W, A]:
     override def isWeightless = false
+    override def valueOption: Some[A] = Some(value)
 
   final case class Weightless[W](weight: W) extends Weighted[W, Nothing]:
     override def density: W = weight
     override def isWeightless = true
+    override def valueOption: None.type = None
 
   object Weightless:
     def apply[W](using W: Semiring[W]): Weightless[W] =
@@ -119,8 +123,8 @@ sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
   given [W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
     new WeightedMonad[W]
 
-  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
-    override def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
+  given [W: Order, A: Order]: Order[Weighted[W, A]] =
+    Order.by(w => (w.weight, w.density, w.valueOption))
 
   given [W: Show, A: Show]: Show[Weighted[W, A]] with
     override def show(t: Weighted[W, A]): String = t.show
@@ -132,6 +136,9 @@ sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
     new WeightedCommutativeMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances1 extends WeightedInstances2:
+  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
+    override def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
+
   given [W, A](using Rig[W], Eq[W], Monoid[A]): Monoid[Weighted[W, A]] =
     new WeightedMonoid[W, A]
 
