@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger
+package schrodinger.kernel.testkit
 
 import algebra.instances.all.*
 import cats.CommutativeMonad
