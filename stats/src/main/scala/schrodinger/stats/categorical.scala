@@ -46,3 +46,9 @@ trait CategoricalInstances:
     import params.*
     val sum = LogDouble.sum(support)
     i => (support(i) / sum).pure[F]
+
+  given [F[_]: Applicative, W, A](
+      using W: Semifield[W]): Categorical[Map[A, W], A][Density[F, W]] = params =>
+    import params.*
+    val sum = W.sum(support.values)
+    a => (support.get(a).fold(W.zero)(_ / sum)).pure
