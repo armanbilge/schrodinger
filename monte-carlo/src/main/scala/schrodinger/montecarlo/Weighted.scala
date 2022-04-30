@@ -50,7 +50,7 @@ import schrodinger.montecarlo.Weighted.Weightless
 import scala.annotation.tailrec
 import cats.Foldable
 import schrodinger.kernel.CategoricalVector
-import cats.Traverse
+import schrodinger.kernel.Density
 
 sealed abstract class Weighted[W, +A] extends Product, Serializable:
 
@@ -128,6 +128,12 @@ sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
       using CategoricalVector[W][F]): Categorical[G[Weighted[W, A]], Weighted[W, A]][F] =
     case Categorical.Params(support) =>
       Categorical(support.toIterable.view.map(_.weight).toVector).map(support.get(_).get)
+
+  given [F[_]: Applicative, G[_]: Foldable, W, A](
+      using W: Semifield[W]): Categorical[G[Weighted[W, A]], Weighted[W, A]][Density[F, W]] =
+    case Categorical.Params(support) =>
+      val normalization = W.sum(support.toIterable.view.map(_.weight))
+      wa => (wa.weight / normalization).pure // TODO check for wa not in support ...
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
   given [W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
