@@ -125,9 +125,10 @@ sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
     new WeightedAlign[W]
 
   given [F[_]: Functor, G[_]: Foldable, W, A](
-      using CategoricalVector[W][F]): Categorical[G[Weighted[W, A]], Weighted[W, A]][F] =
+      using CategoricalVector[W][F]): Categorical[G[Weighted[W, A]], Weighted.Heavy[W, A]][F] =
     case Categorical.Params(support) =>
-      Categorical(support.toIterable.view.map(_.weight).toVector).map(support.get(_).get)
+      Categorical(support.toIterable.view.map(_.weight).toVector)
+        .map(support.get(_).collect { case h @ Heavy(_, _, _) => h }.get)
 
   given [F[_]: Applicative, G[_]: Foldable, W, A](
       using W: Semifield[W]): Categorical[G[Weighted[W, A]], Weighted[W, A]][Density[F, W]] =
