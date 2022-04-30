@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-package schrodinger
+package schrodinger.kernel
+package testkit
 
 import algebra.ring.AdditiveMonoid
 import algebra.ring.CommutativeRig
@@ -29,10 +30,6 @@ import cats.instances.*
 import cats.kernel.Semigroup
 import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
-import schrodinger.kernel.Bernoulli
-import schrodinger.kernel.Categorical
-import schrodinger.kernel.Density
-import schrodinger.kernel.UniformRange
 import schrodinger.math.syntax.*
 
 final case class Dist[P, A](support: Map[A, P]):
