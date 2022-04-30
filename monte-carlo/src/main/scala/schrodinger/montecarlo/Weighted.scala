@@ -39,6 +39,7 @@ import cats.Show
 import cats.data.Ior
 import cats.kernel.CommutativeMonoid
 import cats.kernel.CommutativeSemigroup
+import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
@@ -136,13 +137,16 @@ sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
     new WeightedCommutativeMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances1 extends WeightedInstances2:
-  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
-    override def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
+  given [W: Hash, A: Hash]: Hash[Weighted[W, A]] =
+    Hash.by(w => (w.weight, w.density, w.valueOption))
 
   given [W, A](using Rig[W], Eq[W], Monoid[A]): Monoid[Weighted[W, A]] =
     new WeightedMonoid[W, A]
 
 sealed private[montecarlo] class WeightedInstances2 extends WeightedInstances3:
+  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
+    override def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
+
   given [W, A](
       using CommutativeRig[W],
       Eq[W],
