@@ -28,6 +28,7 @@ import cats.Align
 import cats.Applicative
 import cats.CommutativeMonad
 import cats.Eq
+import cats.Foldable
 import cats.Functor
 import cats.Id
 import cats.Invariant
@@ -42,15 +43,14 @@ import cats.kernel.CommutativeSemigroup
 import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*
-import schrodinger.math.syntax.*
 import schrodinger.kernel.Categorical
+import schrodinger.kernel.CategoricalVector
+import schrodinger.kernel.Density
+import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.annotation.tailrec
-import cats.Foldable
-import schrodinger.kernel.CategoricalVector
-import schrodinger.kernel.Density
 
 sealed abstract class Weighted[W, +A] extends Product, Serializable:
 
