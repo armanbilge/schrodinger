@@ -28,7 +28,6 @@ import cats.Align
 import cats.Applicative
 import cats.CommutativeMonad
 import cats.Eq
-import cats.Foldable
 import cats.Functor
 import cats.Id
 import cats.Invariant
@@ -43,9 +42,6 @@ import cats.kernel.CommutativeSemigroup
 import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*
-import schrodinger.kernel.Categorical
-import schrodinger.kernel.CategoricalVector
-import schrodinger.kernel.Density
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
@@ -123,18 +119,6 @@ sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
 
   given [W](using Rig[W], Eq[W]): Align[Weighted[W, _]] =
     new WeightedAlign[W]
-
-  given [F[_]: Functor, G[_]: Foldable, W, A](
-      using CategoricalVector[W][F]): Categorical[G[Weighted[W, A]], Weighted.Heavy[W, A]][F] =
-    case Categorical.Params(support) =>
-      Categorical(support.toIterable.view.map(_.weight).toVector)
-        .map(support.get(_).collect { case h @ Heavy(_, _, _) => h }.get)
-
-  given [F[_]: Applicative, G[_]: Foldable, W, A](
-      using W: Semifield[W]): Categorical[G[Weighted[W, A]], Weighted[W, A]][Density[F, W]] =
-    case Categorical.Params(support) =>
-      val normalization = W.sum(support.toIterable.view.map(_.weight))
-      wa => (wa.weight / normalization).pure // TODO check for wa not in support ...
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
   given [W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
