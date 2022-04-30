@@ -43,10 +43,14 @@ import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
+import schrodinger.kernel.Categorical
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.annotation.tailrec
+import cats.Foldable
+import schrodinger.kernel.CategoricalVector
+import cats.Traverse
 
 sealed abstract class Weighted[W, +A] extends Product, Serializable:
 
@@ -119,6 +123,11 @@ sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
 
   given [W](using Rig[W], Eq[W]): Align[Weighted[W, _]] =
     new WeightedAlign[W]
+
+  given [F[_]: Functor, G[_]: Foldable, W, A](
+      using CategoricalVector[W][F]): Categorical[G[Weighted[W, A]], Weighted[W, A]][F] =
+    case Categorical.Params(support) =>
+      Categorical(support.toIterable.view.map(_.weight).toVector).map(support.get(_).get)
 
 sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
   given [W](using Rig[W], Eq[W]): Monad[Weighted[W, _]] =
