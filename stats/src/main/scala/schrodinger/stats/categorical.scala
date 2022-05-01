@@ -20,13 +20,13 @@ package stats
 import algebra.ring.Semifield
 import cats.Applicative
 import cats.Foldable
+import cats.kernel.CommutativeMonoid
+import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.math.LogDouble
 import schrodinger.math.syntax.*
-import cats.kernel.Hash
-import cats.kernel.CommutativeMonoid
 
 object categorical extends CategoricalInstances
 
