@@ -25,6 +25,8 @@ import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
 import schrodinger.math.LogDouble
 import schrodinger.math.syntax.*
+import cats.kernel.Hash
+import cats.kernel.CommutativeMonoid
 
 object categorical extends CategoricalInstances
 
@@ -46,6 +48,14 @@ trait CategoricalInstances:
     import params.*
     val sum = LogDouble.sum(support)
     i => (support(i) / sum).pure[F]
+
+  given [F[_], G[_]: Foldable, W, A: Hash](
+      using W: Semifield[W],
+      cat: Categorical[Map[A, W], A][Density[F, W]]
+  ): Categorical[G[(A, W)], A][Density[F, W]] = params =>
+    import params.*
+    given CommutativeMonoid[W] = W.additive
+    Categorical(support.foldMap(Map(_)))
 
   given [F[_]: Applicative, W, A](
       using W: Semifield[W]): Categorical[Map[A, W], A][Density[F, W]] = params =>
