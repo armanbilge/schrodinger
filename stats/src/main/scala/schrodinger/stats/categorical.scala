@@ -20,6 +20,8 @@ package stats
 import algebra.ring.Semifield
 import cats.Applicative
 import cats.Foldable
+import cats.kernel.CommutativeMonoid
+import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.Density
@@ -46,6 +48,14 @@ trait CategoricalInstances:
     import params.*
     val sum = LogDouble.sum(support)
     i => (support(i) / sum).pure[F]
+
+  given [F[_], G[_]: Foldable, W, A: Hash](
+      using W: Semifield[W],
+      cat: Categorical[Map[A, W], A][Density[F, W]]
+  ): Categorical[G[(A, W)], A][Density[F, W]] = params =>
+    import params.*
+    given CommutativeMonoid[W] = W.additive
+    Categorical(support.foldMap(Map(_)))
 
   given [F[_]: Applicative, W, A](
       using W: Semifield[W]): Categorical[Map[A, W], A][Density[F, W]] = params =>
