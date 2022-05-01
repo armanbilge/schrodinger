@@ -101,15 +101,13 @@ object Dist:
       val f = density(params)
       Dist((0 until support.size.toInt).map(i => i -> f(i)).toMap)
 
-  given [A: Hash, P](
-      using
-      density: Categorical[Map[A, P], A][Density[Id, P]]): Categorical[Map[A, P], A][Dist[P, *]] =
+  given [A: Hash, P](using density: Categorical[Map[A, P], A][Density[Id, P]])
+      : Categorical[Map[A, P], A][Dist[P, *]] =
     case params @ Categorical.Params(support) =>
       val f = density(params)
       Dist(support.map((a, _) => a -> f(a)))
 
   given [G[_]: Foldable, A: Hash, P](
-      using
-      Categorical[Map[A, P], A][Dist[P, *]]): Categorical[G[(A, P)], A][Dist[P, *]] =
+      using Categorical[Map[A, P], A][Dist[P, *]]): Categorical[G[(A, P)], A][Dist[P, *]] =
     case Categorical.Params(support) =>
       Categorical(support.toIterable.toMap)
