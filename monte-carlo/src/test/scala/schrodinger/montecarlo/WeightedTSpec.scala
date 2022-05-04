@@ -33,11 +33,14 @@ import cats.kernel.instances.finiteDuration.*
 import cats.kernel.instances.int.catsKernelStdOrderForInt
 import cats.kernel.instances.list.*
 import cats.kernel.instances.option.*
+import cats.kernel.laws.discipline.HashTests
 import cats.kernel.laws.discipline.MonoidTests
 import cats.kernel.laws.discipline.OrderTests
 import cats.laws.discipline.AlternativeTests
 import cats.laws.discipline.ContravariantMonoidalTests
 import cats.laws.discipline.DeferTests
+import cats.laws.discipline.InvariantMonoidalTests
+import cats.laws.discipline.InvariantSemigroupalTests
 import cats.laws.discipline.ParallelTests
 import cats.laws.discipline.arbitrary.*
 import org.scalacheck.Prop
@@ -49,48 +52,13 @@ import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.concurrent.duration.DurationInt
 
-class WeightedTSpec extends Specification, Discipline, ScalaCheck, TestInstances:
-
-  sequential
-
-  given [A](using Order[Option[A]], Ticker): Order[WeightedT[IO, Int, A]] =
-    Order.by { w =>
-      unsafeRun(w.value).fold(
-        None,
-        _ => None,
-        {
-          case Some(Heavy(_, _, a)) => Some(a)
-          case _ => None
-        })
-    }
-
-  given [A](using Order[Option[A]]): Order[Weighted[Int, A]] =
-    Order.by {
-      case Heavy(_, _, a) => Some(a)
-      case _ => None
-    }
-
-  given [F[_], A](using Order[F[Weighted[Int, A]]]): Order[WeightedT[F, Int, A]] =
-    Order.by(WeightedT.value)
-
-  given (using Ticker): Conversion[WeightedT[IO, Int, Boolean], Prop] = sbool =>
-    ioBooleanToProp(WeightedT.value(sbool).map {
-      case Heavy(_, _, a) => a
-      case Weightless(_) => false
-    })
-
-  {
-    given Ticker = Ticker()
-    checkAll("WeightedT", AsyncTests[WeightedT[IO, Int, _]].async[Int, Int, Int](10.millis))
-  }
+class WeightedTSpec extends Specification, Discipline, ScalaCheck:
 
   checkAll("WeightedT", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
   checkAll("WeightedT", OrderTests[WeightedT[Option, Int, Int]].order)
-  checkAll("WeightedT", ParallelTests[WeightedT[Either[String, _], Int, _]].parallel[Int, Int])
+  checkAll("WeightedT", HashTests[WeightedT[Option, Int, Int]].hash)
   checkAll("WeightedT", MonoidTests[WeightedT[List, Int, Int]].monoid)
-
-  checkAll("WeightedT", AlternativeTests[WeightedT[List, Int, _]].alternative[Int, Int, Int])
   checkAll(
     "WeightedT",
-    ContravariantMonoidalTests[WeightedT[Const[Int, _], Int, _]]
-      .contravariantMonoidal[Int, Int, Int])
+    InvariantSemigroupalTests[WeightedT[Eval, Int, _]].invariantSemigroupal[Int, Int, Int]
+  )
