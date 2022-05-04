@@ -18,5 +18,5 @@ package schrodinger.montecarlo
 
 import schrodinger.math.LogDouble
 
-type LogWeighted[+A] = Weighted[LogDouble, A]
+type LogWeighted[A] = Weighted[LogDouble, A]
 type LogWeightedT[F[_], A] = WeightedT[F, LogDouble, A]

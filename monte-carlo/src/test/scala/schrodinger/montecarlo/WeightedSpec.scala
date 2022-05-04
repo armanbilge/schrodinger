@@ -33,10 +33,7 @@ import org.typelevel.discipline.specs2.mutable.Discipline
 
 class WeightedSpec extends Specification, Discipline, ScalaCheck:
 
-  checkAll("Weighted", CommutativeMonadTests[Weighted[Int, _]].commutativeMonad[Int, Int, Int])
-  checkAll("Weighted", CommutativeMonoidTests[Weighted[Int, Int]].commutativeMonoid)
   checkAll(
     "Weighted",
     InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int])
-  checkAll("Weighted", AlignTests[Weighted[Int, _]].align[Int, Int, Int, Int])
   checkAll("Weighted", OrderTests[Weighted[Int, Int]].order)
