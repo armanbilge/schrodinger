@@ -189,7 +189,7 @@ sealed private[montecarlo] class WeightedTInvariant[F[_], W](using F: Invariant[
     extends Invariant[WeightedT[F, W, _]]:
 
   def imap[A, B](fa: WeightedT[F, W, A])(f: A => B)(g: B => A) =
-    fa.imap(f)(g)
+    WeightedT.imap(fa)(f)(g)
 
 sealed private[montecarlo] class WeightedTInvariantSemigroupal[F[_], W](
     using F: Applicative[F],
@@ -198,4 +198,4 @@ sealed private[montecarlo] class WeightedTInvariantSemigroupal[F[_], W](
     extends WeightedTInvariant[F, W],
       InvariantSemigroupal[WeightedT[F, W, _]]:
   def product[A, B](fa: WeightedT[F, W, A], fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
-    fa.product(fb)
+    WeightedT.product(fa)(fb)
