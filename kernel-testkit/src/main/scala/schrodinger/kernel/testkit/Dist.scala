@@ -21,6 +21,7 @@ import algebra.ring.AdditiveMonoid
 import algebra.ring.CommutativeRig
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
+import algebra.ring.Semifield
 import cats.CommutativeMonad
 import cats.Eq
 import cats.Foldable
@@ -31,6 +32,7 @@ import cats.kernel.Hash
 import cats.kernel.Semigroup
 import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
+import schrodinger.math.Monus
 import schrodinger.math.syntax.*
 
 /**
@@ -116,3 +118,47 @@ object Dist:
       using Categorical[Map[A, P], A][Dist[P, *]]): Categorical[G[(A, P)], A][Dist[P, *]] =
     case Categorical.Params(support) =>
       Categorical(support.toIterable.toMap)
+
+  import scala.collection.mutable
+
+  private trait RowReducible[A]:
+    def swap(i: Int, j: Int): Unit
+    def scale(i: Int, a: A): Unit
+    def add(i: Int, a: A, j: Int): Unit
+    def monus(i: Int, a: A, j: Int): Unit
+
+  private class Matrix[A: Semifield: Monus](data: mutable.ArraySeq[mutable.ArraySeq[A]])
+      extends RowReducible[A]:
+    def apply(i: Int, j: Int): A = data(i)(j)
+
+    def swap(i: Int, j: Int): Unit =
+      val (x, y) = (data(i), data(j))
+      data(j) = x
+      data(i) = y
+
+    def scale(i: Int, a: A): Unit =
+      data(i).mapInPlace(_ * a)
+
+    def add(i: Int, a: A, j: Int): Unit =
+      data(j).indices.foreach(k => data(j)(k) += a * data(i)(k))
+
+    def monus(i: Int, a: A, j: Int): Unit =
+      data(j).indices.foreach(k => data(j)(k) ∸= a * data(i)(k))
+
+  private class Augmented[A](left: RowReducible[A], right: RowReducible[A])
+      extends RowReducible[A]:
+    def swap(i: Int, j: Int): Unit =
+      left.swap(i, j)
+      right.swap(i, j)
+
+    def scale(i: Int, a: A): Unit =
+      left.scale(i, a)
+      right.scale(i, a)
+
+    def add(i: Int, a: A, j: Int): Unit =
+      left.add(i, a, j)
+      right.add(i, a, j)
+
+    def monus(i: Int, a: A, j: Int): Unit =
+      left.monus(i, a, j)
+      right.monus(i, a, j)
