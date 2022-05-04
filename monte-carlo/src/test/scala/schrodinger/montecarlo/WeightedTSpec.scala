@@ -56,7 +56,7 @@ class WeightedTSpec extends Specification, Discipline, ScalaCheck:
 
   checkAll("WeightedT", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
   checkAll("WeightedT", OrderTests[WeightedT[Option, Int, Int]].order)
-  checkAll("WeightedT", HashTests[WeightedT[Option, Int, Int]].hash)
+  // checkAll("WeightedT", HashTests[WeightedT[Option, Int, Int]].hash)
   checkAll("WeightedT", MonoidTests[WeightedT[List, Int, Int]].monoid)
   checkAll(
     "WeightedT",
