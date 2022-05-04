@@ -33,6 +33,11 @@ import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
+/**
+ * @note
+ *   The implementation relies on universal equals and hashCode of `A` for performance. Results
+ *   will be incorrect otherwise.
+ */
 final case class Dist[P, A](support: Map[A, P]):
 
   def map[B](f: A => B)(using P: AdditiveMonoid[P]): Dist[P, B] =
