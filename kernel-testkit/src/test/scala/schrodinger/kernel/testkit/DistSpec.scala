@@ -18,6 +18,7 @@ package schrodinger.kernel.testkit
 
 import algebra.instances.all.*
 import cats.CommutativeMonad
+import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.CommutativeMonadTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
@@ -37,9 +38,12 @@ class DistSpec extends Specification, Discipline:
         .map(_.toMap)
         .map(Dist(_)))
 
-  given CommutativeMonad[Dist[Int, *]] = Dist.commutativeMonad[Int](1024)
+  given [A](using cogen: Cogen[Map[A, Int]]): Cogen[Dist[Int, A]] =
+    cogen.contramap(_.support)
 
   checkAll(
     "Dist",
     CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte]
   )
+
+  checkAll("Dist", EqTests[Dist[Int, Byte]].eqv)

@@ -33,6 +33,9 @@ import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
+import scala.util.NotGiven
+import algebra.ring.Semiring
+
 /**
  * @note
  *   The implementation relies on universal equals and hashCode of `A` for performance. Results
@@ -59,16 +62,15 @@ object Dist:
   def pure[P, A](a: A)(using P: MultiplicativeMonoid[P]): Dist[P, A] =
     Dist(Map(a -> P.one))
 
-  def monad[P: Rig](n: Int): Monad[Dist[P, *]] = DistMonad(n)
+  given [P: Rig: Eq](using NotGiven[CommutativeRig[P]]): Monad[Dist[P, *]] = DistMonad[P]
 
-  def commutativeMonad[P: CommutativeRig](n: Int): CommutativeMonad[Dist[P, *]] =
-    new DistMonad(n) with CommutativeMonad[Dist[P, *]]
+  given [P: CommutativeRig: Eq]: CommutativeMonad[Dist[P, *]] =
+    new DistMonad[P] with CommutativeMonad[Dist[P, *]]
 
-  given [P: Eq, A: Eq]: Eq[Dist[P, A]] = Eq.by(_.support)
+  given [P: Eq, A: Eq](using P: Semiring[P]): Eq[Dist[P, A]] =
+    Eq.by(_.support.filterNot { case (_, p) => P.isZero(p) })
 
-  private class DistMonad[P](n: Int)(using P: Rig[P]) extends Monad[Dist[P, *]]:
-    private given Semigroup[P] = P.additive
-
+  private class DistMonad[P: Eq](using P: Rig[P]) extends Monad[Dist[P, *]]:
     def pure[A](a: A): Dist[P, A] = Dist.pure(a)(using P)
 
     override def map[A, B](da: Dist[P, A])(f: A => B): Dist[P, B] = da.map(f)
@@ -76,17 +78,16 @@ object Dist:
     def flatMap[A, B](da: Dist[P, A])(f: A => Dist[P, B]): Dist[P, B] = da.flatMap(f)
 
     def tailRecM[A, B](a: A)(f: A => Dist[P, Either[A, B]]): Dist[P, B] =
-      var fa = f(a)
-      var db = Map.empty[B, P]
-      var i = 0
-      while i < n do
-        val as = fa.support.collect { case (Left(a), p) => a -> p }
-        val bs = fa.support.collect { case (Right(b), p) => b -> p }
-        db = db |+| bs
-        if db.nonEmpty then i += 1 // don't start counter until we've hit some b
-        if as.nonEmpty then fa = Dist(as).flatMap(f)
-        else i = n
-      Dist(db)
+      given Semigroup[P] = P.additive
+
+      def go(da: Dist[P, Either[A, B]], db: Map[B, P]): Dist[P, B] =
+        val as = da.support.collect { case (Left(a), p) => a -> p }
+        val bs = da.support.collect { case (Right(b), p) => b -> p }
+        val dbp = db |+| bs
+        if P.isZero(P.sum(da.support.view.filterKeys(_.isLeft).values)) then Dist(dbp)
+        else go(Dist(as).flatMap(f), dbp)
+
+      go(f(a), Map.empty)
 
   given [P](
       using density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
