@@ -34,6 +34,7 @@ import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 import scala.util.NotGiven
+import algebra.ring.Semiring
 
 /**
  * @note
@@ -66,7 +67,8 @@ object Dist:
   given [P: CommutativeRig: Eq]: CommutativeMonad[Dist[P, *]] =
     new DistMonad[P] with CommutativeMonad[Dist[P, *]]
 
-  given [P: Eq, A: Eq]: Eq[Dist[P, A]] = Eq.by(_.support)
+  given [P: Eq, A: Eq](using P: Semiring[P]): Eq[Dist[P, A]] =
+    Eq.by(_.support.filterNot { case (_, p) => P.isZero(p) })
 
   private class DistMonad[P: Eq](using P: Rig[P]) extends Monad[Dist[P, *]]:
     def pure[A](a: A): Dist[P, A] = Dist.pure(a)(using P)
@@ -82,10 +84,9 @@ object Dist:
         val as = da.support.collect { case (Left(a), p) => a -> p }
         val bs = da.support.collect { case (Right(b), p) => b -> p }
         val dbp = db |+| bs
-        if P.isZero(P.sum(da.support.view.filterKeys(_.isLeft).values)) then
-          Dist(dbp)
+        if P.isZero(P.sum(da.support.view.filterKeys(_.isLeft).values)) then Dist(dbp)
         else go(Dist(as).flatMap(f), dbp)
-      
+
       go(f(a), Map.empty)
 
   given [P](
