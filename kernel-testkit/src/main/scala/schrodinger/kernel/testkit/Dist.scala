@@ -26,7 +26,6 @@ import cats.Eq
 import cats.Foldable
 import cats.Id
 import cats.Monad
-import cats.instances.*
 import cats.kernel.Hash
 import cats.kernel.Semigroup
 import cats.kernel.instances.MapMonoid
