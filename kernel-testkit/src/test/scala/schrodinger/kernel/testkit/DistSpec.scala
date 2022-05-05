@@ -37,8 +37,6 @@ class DistSpec extends Specification, Discipline:
         .map(_.toMap)
         .map(Dist(_)))
 
-  given CommutativeMonad[Dist[Int, *]] = Dist.commutativeMonad[Int](1024)
-
   checkAll(
     "Dist",
     CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte]
