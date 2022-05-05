@@ -28,12 +28,12 @@ import cats.Id
 import cats.Monad
 import cats.kernel.Hash
 import cats.kernel.Semigroup
-import cats.kernel.instances.MapMonoid
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 import scala.util.NotGiven
 import algebra.ring.Semiring
+import cats.kernel.Monoid
 
 /**
  * @note
@@ -46,11 +46,14 @@ final case class Dist[P, A](support: Map[A, P]):
     Dist(support.groupMapReduce(kv => f(kv._1))(_._2)(P.plus(_, _)))
 
   def flatMap[B](f: A => Dist[P, B])(using P: Rig[P]): Dist[P, B] =
-    Dist {
-      MapMonoid[B, P](using P.additive).combineAll {
-        support.view.map((a, p) => f(a).support.view.mapValues(P.times(p, _)).toMap)
-      }
-    }
+    given Monoid[P] = P.additive
+    Dist(
+      support
+        .view
+        .map((a, p) => f(a).support.view.mapValues(P.times(p, _)).toMap)
+        .toList
+        .combineAll
+    )
 
   def expect(f: A => P)(using P: Rig[P]): P =
     P.sum(support.map(f(_) * _))
