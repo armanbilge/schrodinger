@@ -21,19 +21,19 @@ import algebra.ring.AdditiveMonoid
 import algebra.ring.CommutativeRig
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
+import algebra.ring.Semiring
 import cats.CommutativeMonad
 import cats.Eq
 import cats.Foldable
 import cats.Id
 import cats.Monad
 import cats.kernel.Hash
+import cats.kernel.Monoid
 import cats.kernel.Semigroup
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 import scala.util.NotGiven
-import algebra.ring.Semiring
-import cats.kernel.Monoid
 
 /**
  * @note
