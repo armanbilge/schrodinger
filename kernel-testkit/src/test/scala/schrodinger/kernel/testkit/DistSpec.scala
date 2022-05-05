@@ -24,6 +24,7 @@ import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
+import cats.kernel.laws.discipline.EqTests
 
 class DistSpec extends Specification, Discipline:
 
@@ -37,7 +38,12 @@ class DistSpec extends Specification, Discipline:
         .map(_.toMap)
         .map(Dist(_)))
 
+  given [A](using cogen: Cogen[Map[A, Int]]): Cogen[Dist[Int, A]] =
+    cogen.contramap(_.support)
+
   checkAll(
     "Dist",
     CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte]
   )
+
+  checkAll("Dist", EqTests[Dist[Int, Byte]].eqv)
