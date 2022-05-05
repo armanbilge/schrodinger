@@ -18,13 +18,13 @@ package schrodinger.kernel.testkit
 
 import algebra.instances.all.*
 import cats.CommutativeMonad
+import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.CommutativeMonadTests
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
-import cats.kernel.laws.discipline.EqTests
 
 class DistSpec extends Specification, Discipline:
 
