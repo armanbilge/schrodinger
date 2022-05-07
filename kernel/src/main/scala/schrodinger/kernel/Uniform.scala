@@ -16,10 +16,15 @@
 
 package schrodinger.kernel
 
-type Uniform[S, X] = [F[_]] =>> Distribution[F, Uniform.Params[S], X]
-type UniformRange[F[_]] = Uniform[Range, Int][F]
+import cats.Reducible
+import cats.data.NonEmptyList
 
-object Uniform:
-  final case class Params[+S](support: S)
+trait DiscreteUniform[F[_]] extends FairBernoulli[F]:
+  def discreteUniform[G[_]: Reducible, A](support: G[A]): F[A]
 
-  inline def apply[F[_], S, X](support: S)(using u: Uniform[S, X][F]): F[X] = u(Params(support))
+object DiscreteUniform:
+  inline def apply[F[_], G[_]: Reducible, A](support: G[A])(using u: DiscreteUniform[F]): F[A] =
+    u.discreteUniform(support)
+
+  trait Default[F[_]] extends DiscreteUniform[F]:
+    def fairBernoulli = discreteUniform(NonEmptyList.of(false, true))
