@@ -45,7 +45,11 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
   .in(file("kernel"))
   .settings(
-    name := "schrodinger-kernel"
+    name := "schrodinger-kernel",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "algebra" % CatsVersion
+    )
   )
   .jvmSettings(commonJvmSettings)
 
@@ -55,7 +59,6 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-math",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "algebra" % CatsVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "algebra-laws" % CatsVersion % Test
@@ -69,7 +72,6 @@ lazy val kernelTestkit = project
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion,
       "org.typelevel" %%% "cats-effect-kernel-testkit" % CatsEffectVersion,
       "org.typelevel" %%% "vault" % VaultVersion,
