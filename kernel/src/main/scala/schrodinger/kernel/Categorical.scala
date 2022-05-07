@@ -38,5 +38,5 @@ object Categorical:
     override def fairBernoulli = discreteUniform(NonEmptyList.of(false, true))
 
     def discreteUniform[G[_]: Reducible, A](support: G[A]) =
-      val p = P.reciprocal(P.fromBigInt(support.size))
+      val p = P.fromBigInt(support.size).reciprocal
       categorical(support.reduceMapK(a => NonEmptyList.one(a -> p)))

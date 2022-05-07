@@ -33,4 +33,4 @@ object Bernoulli:
   inline def fair[F[_]](using b: FairBernoulli[F]): F[Boolean] = b.fairBernoulli
 
   trait Default[F[_], P](using P: Semifield[P]) extends Bernoulli[F, P]:
-    def fairBernoulli = bernoulli(P.one / P.fromInt(2))
+    def fairBernoulli = bernoulli(P.fromInt(2).reciprocal)
