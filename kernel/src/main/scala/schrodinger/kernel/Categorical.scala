@@ -16,12 +16,27 @@
 
 package schrodinger.kernel
 
-type Categorical[S, X] = [F[_]] =>> Distribution[F, Categorical.Params[S], X]
-type CategoricalVector[P] = [F[_]] =>> Categorical[Vector[P], Int][F]
-type CategoricalMap[A, R] = [F[_]] =>> Categorical[Map[A, R], A][F]
+import algebra.ring.Semifield
+import cats.Reducible
+import cats.data.NonEmptyList
+import cats.syntax.all.*
+import schrodinger.math.syntax.*
+
+trait Categorical[F[_], P] extends DiscreteUniform[F], Bernoulli[F, P]:
+  def categorical[G[_]: Reducible, A](support: G[(A, P)]): F[A]
 
 object Categorical:
-  final case class Params[+S](support: S)
+  inline def apply[F[_], G[_]: Reducible, A, P](support: G[(A, P)])(
+      using c: Categorical[F, P]
+  ): F[A] = c.categorical(support)
 
-  inline def apply[F[_], S, X](support: S)(using c: Categorical[S, X][F]): F[X] = c(
-    Params(support))
+  trait Default[F[_], P](using P: Semifield[P])
+      extends Categorical[F, P],
+        DiscreteUniform.Default[F],
+        Bernoulli.Default[F, P]:
+
+    override def fairBernoulli = discreteUniform(NonEmptyList.of(false, true))
+
+    def discreteUniform[G[_]: Reducible, A](support: G[A]) =
+      val p = P.reciprocal(P.fromBigInt(support.size))
+      categorical(support.reduceMapK(a => NonEmptyList.one(a -> p)))
