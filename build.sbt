@@ -59,6 +59,7 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-math",
     libraryDependencies ++= Seq(
+      "org.typelevel" %%% "algebra" % CatsVersion,
       "org.specs2" %%% "specs2-core" % Specs2Version % Test,
       "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
       "org.typelevel" %%% "algebra-laws" % CatsVersion % Test
