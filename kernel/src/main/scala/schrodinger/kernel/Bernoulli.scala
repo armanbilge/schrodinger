@@ -16,11 +16,21 @@
 
 package schrodinger.kernel
 
-type Bernoulli[P, X] = [F[_]] =>> Distribution[F, Bernoulli.Params[P], X]
+import algebra.ring.Semifield
+import schrodinger.math.syntax.*
+
+trait FairBernoulli[F[_]]:
+  def fairBernoulli: F[Boolean]
+
+trait Bernoulli[F[_], P] extends FairBernoulli[F]:
+  def bernoulli(successProbability: P): F[Boolean]
 
 object Bernoulli:
-  final case class Params[+P](successProbability: P)
 
-  inline def fair[F[_], X](using b: Bernoulli[0.5, X][F]): F[X] = b(Params(0.5))
-  inline def apply[F[_], P, X](successProbability: P)(using b: Bernoulli[P, X][F]): F[X] =
-    b(Params(successProbability))
+  inline def apply[F[_], P](successProbability: P)(using b: Bernoulli[F, P]): F[Boolean] =
+    b.bernoulli(successProbability)
+
+  inline def fair[F[_]](using b: FairBernoulli[F]): F[Boolean] = b.fairBernoulli
+
+  trait Default[F[_], P](using P: Semifield[P]) extends Bernoulli[F, P]:
+    val fairBernoulli = bernoulli(P.one / P.fromInt(2))

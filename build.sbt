@@ -30,8 +30,8 @@ val commonJvmSettings = Seq(
 )
 
 lazy val root = tlCrossRootProject.aggregate(
-  kernel,
   math,
+  kernel,
   kernelTestkit,
   laws,
   random,
@@ -40,18 +40,6 @@ lazy val root = tlCrossRootProject.aggregate(
   tests,
   stats,
   monteCarlo)
-
-lazy val kernel = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("kernel"))
-  .settings(
-    name := "schrodinger-kernel",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.typelevel" %%% "algebra" % CatsVersion
-    )
-  )
-  .jvmSettings(commonJvmSettings)
 
 lazy val math = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -67,9 +55,21 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
+lazy val kernel = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("kernel"))
+  .dependsOn(math)
+  .settings(
+    name := "schrodinger-kernel",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion
+    )
+  )
+  .jvmSettings(commonJvmSettings)
+
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
-  .dependsOn(kernel.jvm, math.jvm)
+  .dependsOn(kernel.jvm)
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
