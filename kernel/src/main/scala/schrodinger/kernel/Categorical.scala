@@ -19,11 +19,19 @@ package schrodinger.kernel
 import algebra.ring.Semifield
 import cats.Reducible
 import cats.data.NonEmptyList
+import cats.kernel.Hash
+import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 trait Categorical[F[_], P] extends DiscreteUniform[F], Bernoulli[F, P]:
   def categorical[G[_]: Reducible, A](support: G[(A, P)]): F[A]
+
+  def orderedCategorical[G[_]: Reducible, A: Order](support: G[(A, P)]): F[A] =
+    categorical(support)
+
+  def hashedCategorical[G[_]: Reducible, A: Hash](support: G[(A, P)]): F[A] =
+    categorical(support)
 
 object Categorical:
   inline def apply[F[_], G[_]: Reducible, A, P](support: G[(A, P)])(
