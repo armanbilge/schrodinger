@@ -22,7 +22,7 @@ import schrodinger.math.syntax.*
 trait FairBernoulli[F[_], B]:
   def fairBernoulli: F[B]
 
-trait Bernoulli[F[_], P, B] extends FairBernoulli[F, B]:
+trait Bernoulli[F[_], P, B]:
   def bernoulli(successProbability: P): F[B]
 
 object Bernoulli:
@@ -31,6 +31,3 @@ object Bernoulli:
     b.bernoulli(successProbability)
 
   inline def fair[F[_], B](using b: FairBernoulli[F, B]): F[B] = b.fairBernoulli
-
-  trait Default[F[_], P](using P: Semifield[P]) extends Bernoulli[F, P, Boolean]:
-    def fairBernoulli = bernoulli(P.fromInt(2).reciprocal)
