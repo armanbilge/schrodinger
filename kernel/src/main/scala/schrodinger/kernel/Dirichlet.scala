@@ -16,10 +16,9 @@
 
 package schrodinger.kernel
 
-type Dirichlet[C, X] = [F[_]] =>> Distribution[F, Dirichlet.Params[C], X]
+trait Dirichlet[F[_], V]:
+  def dirichlet(concentration: V): F[V]
 
 object Dirichlet:
-  final case class Params[+C](concentration: C)
-
-  inline def apply[F[_], C, X](concentration: C)(using d: Dirichlet[C, X][F]): F[X] =
-    d(Params(concentration))
+  inline def apply[F[_], V](concentration: V)(using d: Dirichlet[F, V]): F[V] =
+    d.dirichlet(concentration)
