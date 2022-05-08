@@ -16,14 +16,17 @@
 
 package schrodinger.kernel
 
-type GenGaussian[M, S, X] = [F[_]] =>> Distribution[F, Gaussian.Params[M, S], X]
-type Gaussian[R] = [F[_]] =>> GenGaussian[R, R, R][F]
+import algebra.ring.Rig
+
+trait Gaussian[F[_], A]:
+  def gaussian: F[A]
+  def gaussian(mean: A, standardDeviation: A): F[A]
 
 object Gaussian:
-  final case class Params[+M, +S](mean: M, standardDeviation: S)
+  inline def apply[F[_], A](mean: A, standardDeviation: A)(using g: Gaussian[F, A]): F[A] =
+    g.gaussian(mean, standardDeviation)
 
-  inline def standard[F[_], X](using g: GenGaussian[0, 1, X][F]): F[X] =
-    g(Params(0, 1))
+  inline def standard[F[_], A](using g: Gaussian[F, A]): F[A] = g.gaussian
 
-  inline def apply[F[_], R](mean: R, standardDeviation: R)(using g: Gaussian[R][F]): F[R] =
-    g(Params(mean, standardDeviation))
+  trait Default[F[_], A](using A: Rig[A]) extends Gaussian[F, A]:
+    def gaussian = gaussian(A.zero, A.one)
