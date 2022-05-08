@@ -17,10 +17,17 @@
 package schrodinger.kernel
 
 import algebra.ring.Semifield
+import cats.Functor
+import cats.kernel.Order
+import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 trait FairBernoulli[F[_], B]:
   def fairBernoulli: F[B]
+
+object FairBernoulli:
+  given [F[_]: Functor: Random]: FairBernoulli[F, Boolean] with
+    def fairBernoulli = Random.int.map(_ >= 0)
 
 trait Bernoulli[F[_], P, B]:
   def bernoulli(successProbability: P): F[B]
@@ -31,3 +38,6 @@ object Bernoulli:
     b.bernoulli(successProbability)
 
   inline def fair[F[_], B](using b: FairBernoulli[F, B]): F[B] = b.fairBernoulli
+
+  given [F[_]: Functor, P: Order](using Uniform[F, P]): Bernoulli[F, P, Boolean] with
+    def bernoulli(successProbability: P) = Uniform.standard.map(_ < successProbability)
