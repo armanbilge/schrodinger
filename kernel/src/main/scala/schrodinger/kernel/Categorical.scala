@@ -18,33 +18,25 @@ package schrodinger.kernel
 
 import algebra.ring.Semifield
 import cats.Reducible
-import cats.data.NonEmptyList
-import cats.kernel.Hash
-import cats.kernel.Order
+import cats.data.NonEmptyVector
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 trait Categorical[F[_], P] extends DiscreteUniform[F], Bernoulli[F, P]:
-  def categorical[G[_]: Reducible, A](support: G[(A, P)]): F[A]
-
-  def orderedCategorical[G[_]: Reducible, A: Order](support: G[(A, P)]): F[A] =
-    categorical(support)
-
-  def hashedCategorical[G[_]: Reducible, A: Hash](support: G[(A, P)]): F[A] =
-    categorical(support)
+  def categorical[G[_]: Reducible, A](probabilites: G[P]): F[Long]
 
 object Categorical:
-  inline def apply[F[_], G[_]: Reducible, A, P](support: G[(A, P)])(
+  inline def apply[F[_], G[_]: Reducible, A, P](probabilites: G[P])(
       using c: Categorical[F, P]
-  ): F[A] = c.categorical(support)
+  ): F[Long] = c.categorical(probabilites)
 
   trait Default[F[_], P](using P: Semifield[P])
       extends Categorical[F, P],
         DiscreteUniform.Default[F],
         Bernoulli.Default[F, P]:
 
-    override def fairBernoulli = discreteUniform(NonEmptyList.of(false, true))
+    override def fairBernoulli = super.fairBernoulli
 
-    def discreteUniform[G[_]: Reducible, A](support: G[A]) =
-      val p = P.fromBigInt(support.size).reciprocal
-      categorical(support.reduceMapK(a => NonEmptyList.one(a -> p)))
+    def discreteUniform(n: Long) =
+      val p = P.fromBigInt(n).reciprocal
+      categorical(NonEmptyVector.fromVectorUnsafe(Vector.fill(n.toInt)(p)))
