@@ -27,7 +27,7 @@ import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
 trait Categorical[F[_], P] extends DiscreteUniform[F], Bernoulli[F, P]:
-  def categorical[G[_]: Reducible, A](probabilites: G[P]): F[Long]
+  def categorical[G[_]: Reducible](probabilites: G[P]): F[Long]
 
 object Categorical:
   inline def apply[F[_], G[_]: Reducible, A, P](probabilites: G[P])(
