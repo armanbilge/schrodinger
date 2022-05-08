@@ -16,11 +16,8 @@
 
 package schrodinger.kernel
 
-type GenBeta[A, B, X] = [F[_]] =>> Distribution[F, Beta.Params[A, B], X]
-type Beta[R] = [F[_]] =>> GenBeta[R, R, R][F]
+trait Beta[F[_], A]:
+  def beta(alpha: A, beta: A): F[A]
 
 object Beta:
-  final case class Params[+A, +B](alpha: A, beta: B)
-
-  inline def apply[F[_], A, B, X](alpha: A, beta: B)(using b: GenBeta[A, B, X][F]): F[X] =
-    b(Params(alpha, beta))
+  inline def apply[F[_], A](alpha: A, beta: A)(b: Beta[F, A]): F[A] = b.beta(alpha, beta)
