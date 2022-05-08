@@ -16,11 +16,16 @@
 
 package schrodinger.kernel
 
-type GenGamma[S, R, X] = [F[_]] =>> Distribution[F, Gamma.Params[S, R], X]
-type Gamma[R] = [F[_]] =>> GenGamma[R, R, R][F]
+import algebra.ring.MultiplicativeMonoid
+
+trait Gamma[F[_], A] extends Exponential[F, A]:
+  def gamma(shape: A, rate: A): F[A]
 
 object Gamma:
-  final case class Params[+S, +R](shape: S, rate: R)
+  inline def apply[F[_], A](shape: A, rate: A)(using g: Gamma[F, A]): F[A] =
+    g.gamma(shape, rate)
 
-  inline def apply[F[_], S, R, X](shape: S, rate: R)(using g: GenGamma[S, R, X][F]): F[X] =
-    g(Params(shape, rate))
+  trait Default[F[_], A](using A: MultiplicativeMonoid[A])
+      extends Gamma[F, A],
+        Exponential.Default[F, A]:
+    def exponential(rate: A) = gamma(A.one, rate)
