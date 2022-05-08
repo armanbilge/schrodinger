@@ -16,7 +16,8 @@
 
 package schrodinger.kernel
 
-import algebra.ring.MultiplicativeMonoid
+import cats.Monad
+import cats.syntax.all.*
 
 trait Exponential[F[_], A]:
   def exponential: F[A]
@@ -29,5 +30,38 @@ object Exponential:
   inline def standard[F[_], A](using e: Exponential[F, A]): F[A] =
     e.exponential
 
-  trait Default[F[_], A](using A: MultiplicativeMonoid[A]) extends Exponential[F, A]:
-    def exponential = exponential(A.one)
+  given [F[_]: Monad](using U: Uniform[F, Double]): Exponential[F, Double] with
+    def exponential(rate: Double) = exponential.map(_ / rate)
+
+    def exponential = U.uniform10.flatMap { _u =>
+      var a = 0.0
+      var u = _u
+
+      while u < 0.5 do
+        a += ExponentialSaQi(0)
+        u *= 2
+
+      u += u - 1
+
+      if u <= ExponentialSaQi(0) then (a + u).pure
+      else
+        var i = 1
+        while u > ExponentialSaQi(i) do i += 1
+
+        umin(i).map(a + _ * ExponentialSaQi(0))
+    }
+
+    private val umin =
+      Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(Math.min))
+
+    private val ExponentialSaQi =
+      val qi = new Array[Double](16)
+      val log2 = Math.log(2)
+      var p = log2
+      qi(0) = p
+      var i = 1
+      while i < qi.length do
+        p *= log2 / (i + 1)
+        qi(i) = qi(i - 1) + p
+        i += 1
+      qi
