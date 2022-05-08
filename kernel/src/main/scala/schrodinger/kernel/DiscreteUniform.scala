@@ -22,24 +22,18 @@ import cats.Reducible
 import cats.kernel.Hash
 import cats.syntax.all.*
 
-trait DiscreteUniform[F[_]] extends FairBernoulli[F]:
-  def discreteUniform(n: Long): F[Long]
+trait DiscreteUniform[F[_], I]:
+  def discreteUniform(n: I): F[I]
 
 object DiscreteUniform:
-  inline def apply[F[_]](n: Long)(using u: DiscreteUniform[F]): F[Long] =
+  inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
-  def apply[F[_]: DiscreteUniform, G[_]: Reducible, A: Hash](support: G[A])(
-      using F: Invariant[F]): F[A] =
+  def apply[F[_], G[_]: Reducible, A: Hash](
+      support: G[A])(using F: Invariant[F], u: DiscreteUniform[F, Long]): F[A] =
     F match
       case given Functor[f] =>
         apply(support.size).map(support.get(_).get)
       case _ =>
         val inv = support.toIterable.view.zipWithIndex.toMap
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
-
-  trait Default[F[_]: Invariant] extends DiscreteUniform[F]:
-    def fairBernoulli = discreteUniform(2).imap {
-      case 0 => false
-      case 1 => true
-    } { if _ then 1 else 0 }

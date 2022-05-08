@@ -16,10 +16,10 @@
 
 package schrodinger.kernel
 
-trait Multinomial[F[_], V, P] extends Categorical[F[_], V, P]:
-  def multinomial(probabilites: V, trials: Long): F[Vector[Long]]
+trait Multinomial[F[_], V, I, J]:
+  def multinomial(probabilites: V, trials: I): F[J]
 
 object Multinomial:
-  inline def apply[F[_], V, P](probabilites: V, trials: Long)(
-      using m: Multinomial[F, V, P]
-  ): F[Vector[Long]] = m.multinomial(probabilites, trials)
+  inline def apply[F[_], V, I, J](probabilites: V, trials: I)(
+      using m: Multinomial[F, V, I, J]
+  ): F[J] = m.multinomial(probabilites, trials)

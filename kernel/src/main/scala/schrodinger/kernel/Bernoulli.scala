@@ -19,18 +19,18 @@ package schrodinger.kernel
 import algebra.ring.Semifield
 import schrodinger.math.syntax.*
 
-trait FairBernoulli[F[_]]:
-  def fairBernoulli: F[Boolean]
+trait FairBernoulli[F[_], B]:
+  def fairBernoulli: F[B]
 
-trait Bernoulli[F[_], P] extends FairBernoulli[F]:
-  def bernoulli(successProbability: P): F[Boolean]
+trait Bernoulli[F[_], P, B] extends FairBernoulli[F, B]:
+  def bernoulli(successProbability: P): F[B]
 
 object Bernoulli:
 
-  inline def apply[F[_], P](successProbability: P)(using b: Bernoulli[F, P]): F[Boolean] =
+  inline def apply[F[_], P, B](successProbability: P)(using b: Bernoulli[F, P, B]): F[B] =
     b.bernoulli(successProbability)
 
-  inline def fair[F[_]](using b: FairBernoulli[F]): F[Boolean] = b.fairBernoulli
+  inline def fair[F[_], B](using b: FairBernoulli[F, B]): F[B] = b.fairBernoulli
 
-  trait Default[F[_], P](using P: Semifield[P]) extends Bernoulli[F, P]:
+  trait Default[F[_], P](using P: Semifield[P]) extends Bernoulli[F, P, Boolean]:
     def fairBernoulli = bernoulli(P.fromInt(2).reciprocal)

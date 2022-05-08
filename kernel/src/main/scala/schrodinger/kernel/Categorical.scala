@@ -26,18 +26,18 @@ import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
-trait Categorical[F[_], V, P] extends DiscreteUniform[F], Bernoulli[F, P]:
-  def categorical(probabilites: V): F[Long]
+trait Categorical[F[_], V, I]:
+  def categorical(probabilites: V): F[I]
 
 object Categorical:
-  inline def apply[F[_], V, P](probabilites: V)(
-      using c: Categorical[F, V, P]
-  ): F[Long] = c.categorical(probabilites)
+  inline def apply[F[_], V, I](probabilites: V)(
+      using c: Categorical[F, V, I]
+  ): F[I] = c.categorical(probabilites)
 
   def apply[F[_], P, G[_]: Functor: Reducible, A: Hash](support: G[(A, P)])(
       using F: Invariant[F],
       P: Semiring[P],
-      c: Categorical[F, G[P], P]
+      c: Categorical[F, G[P], Long]
   ): F[A] =
     val probabilities = support.map(_._2)
     F match
