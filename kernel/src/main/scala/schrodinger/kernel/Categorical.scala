@@ -26,16 +26,19 @@ import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
-trait Categorical[F[_], P] extends DiscreteUniform[F], Bernoulli[F, P]:
-  def categorical[G[_]: Reducible](probabilites: G[P]): F[Long]
+trait Categorical[F[_], V, P] extends DiscreteUniform[F], Bernoulli[F, P]:
+  def categorical(probabilites: V): F[Long]
 
 object Categorical:
-  inline def apply[F[_], G[_]: Reducible, A, P](probabilites: G[P])(
-      using c: Categorical[F, P]
+  inline def apply[F[_], V, P](probabilites: V)(
+      using c: Categorical[F, V, P]
   ): F[Long] = c.categorical(probabilites)
 
-  def apply[F[_], P, G[_]: Functor: Reducible, A: Hash](
-      support: G[(A, P)])(using F: Invariant[F], P: Semiring[P], c: Categorical[F, P]): F[A] =
+  def apply[F[_], P, G[_]: Functor: Reducible, A: Hash](support: G[(A, P)])(
+      using F: Invariant[F],
+      P: Semiring[P],
+      c: Categorical[F, G[P], P]
+  ): F[A] =
     val probabilities = support.map(_._2)
     F match
       case given Functor[f] =>
@@ -43,14 +46,3 @@ object Categorical:
       case _ =>
         val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
-
-  trait Default[F[_], P](using P: Semifield[P])
-      extends Categorical[F, P],
-        DiscreteUniform.Default[F],
-        Bernoulli.Default[F, P]:
-
-    override def fairBernoulli = super.fairBernoulli
-
-    def discreteUniform(n: Long) =
-      val p = P.fromBigInt(n).reciprocal
-      categorical(NonEmptyVector.fromVectorUnsafe(Vector.fill(n.toInt)(p)))
