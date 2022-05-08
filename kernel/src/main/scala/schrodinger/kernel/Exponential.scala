@@ -16,13 +16,18 @@
 
 package schrodinger.kernel
 
-type GenExponential[R, X] = [F[_]] =>> Distribution[F, Exponential.Params[R], X]
-type Exponential[R] = [F[_]] =>> GenExponential[R, R][F]
+import algebra.ring.MultiplicativeMonoid
+
+trait Exponential[F[_], A]:
+  def exponential: F[A]
+  def exponential(rate: A): F[A]
 
 object Exponential:
-  final case class Params[+R](rate: R)
+  inline def apply[F[_], A](rate: A)(using e: Exponential[F, A]): F[A] =
+    e.exponential(rate)
 
-  inline def standard[F[_], X](using e: GenExponential[1, X][F]): F[X] = e(Params(1))
+  inline def standard[F[_], A](using e: Exponential[F, A]): F[A] =
+    e.exponential
 
-  inline def apply[F[_], R](rate: R)(using e: Exponential[R][F]): F[R] =
-    e(Params(rate))
+  trait Default[F[_], A](using A: MultiplicativeMonoid[A]) extends Exponential[F, A]:
+    def exponential = exponential(A.one)
