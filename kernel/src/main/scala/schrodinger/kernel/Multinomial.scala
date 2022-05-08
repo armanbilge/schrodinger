@@ -16,11 +16,20 @@
 
 package schrodinger.kernel
 
-type Multinomial[S, N, X] = [F[_]] =>> Distribution[F, Multinomial.Params[S, N], X]
+import algebra.ring.Semiring
+import cats.Functor
+import cats.Invariant
+import cats.Reducible
+import cats.kernel.Hash
+import cats.syntax.all.*
+
+trait Multinomial[F[_], P] extends Categorical[F[_], P]:
+  def multinomial[G[_]: Reducible](probabilites: G[P], trials: Long): F[Vector[Long]]
 
 object Multinomial:
-  final case class Params[+S, +N](support: S, trials: N)
+  inline def apply[F[_], P, G[_]: Reducible](probabilites: G[P], trials: Long)(
+      using m: Multinomial[F, P]): F[Vector[Long]] =
+    m.multinomial(probabilites, trials)
 
-  inline def apply[F[_], S, N, X](support: S, trials: N)(
-      using m: Multinomial[S, N, X][F]): F[X] =
-    m(Params(support, trials))
+  trait Default[F[_], P] extends Multinomial[F, P], Categorical.Default[F, P]:
+    def categorical[G[_]: Reducible](probabilites: G[P], trials: Long): F[Vector[Long]]
