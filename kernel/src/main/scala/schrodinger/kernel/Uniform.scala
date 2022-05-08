@@ -16,15 +16,18 @@
 
 package schrodinger.kernel
 
-import cats.Reducible
-import cats.data.NonEmptyList
+import cats.Invariant
+import cats.syntax.all.*
 
 trait DiscreteUniform[F[_]] extends FairBernoulli[F]:
-  def discreteUniform[G[_]: Reducible, A](support: G[A]): F[A]
+  def discreteUniform(n: Long): F[Long]
 
 object DiscreteUniform:
-  inline def apply[F[_], G[_]: Reducible, A](support: G[A])(using u: DiscreteUniform[F]): F[A] =
-    u.discreteUniform(support)
+  inline def apply[F[_]](n: Long)(using u: DiscreteUniform[F]): F[Long] =
+    u.discreteUniform(n)
 
-  trait Default[F[_]] extends DiscreteUniform[F]:
-    def fairBernoulli = discreteUniform(NonEmptyList.of(false, true))
+  trait Default[F[_]: Invariant] extends DiscreteUniform[F]:
+    def fairBernoulli = discreteUniform(2).imap {
+      case 0 => false
+      case 1 => true
+    } { if _ then 1 else 0 }
