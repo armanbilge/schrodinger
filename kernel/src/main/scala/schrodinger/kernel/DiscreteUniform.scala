@@ -18,6 +18,7 @@ package schrodinger.kernel
 
 import cats.Functor
 import cats.Invariant
+import cats.Monad
 import cats.Reducible
 import cats.kernel.Hash
 import cats.syntax.all.*
@@ -37,3 +38,17 @@ object DiscreteUniform:
       case _ =>
         val inv = support.toIterable.view.zipWithIndex.toMap
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
+
+  given [F[_]: Monad: Random]: DiscreteUniform[F, Long] with
+    def discreteUniform(n: Long) =
+      if (n & -n) == n then Random.long.map(_ & (n - 1))
+      else
+        Random
+          .long
+          .map { x =>
+            val b = x >>> 1
+            val v = b % n
+            (b, v)
+          }
+          .iterateWhile(bv => bv._1 - bv._2 + (n - 1) < 0)
+          .map(_._2)
