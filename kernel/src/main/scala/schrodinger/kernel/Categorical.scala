@@ -17,8 +17,12 @@
 package schrodinger.kernel
 
 import algebra.ring.Semifield
+import algebra.ring.Semiring
+import cats.Functor
+import cats.Invariant
 import cats.Reducible
 import cats.data.NonEmptyVector
+import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
@@ -29,6 +33,16 @@ object Categorical:
   inline def apply[F[_], G[_]: Reducible, A, P](probabilites: G[P])(
       using c: Categorical[F, P]
   ): F[Long] = c.categorical(probabilites)
+
+  def apply[F[_], P, G[_]: Functor: Reducible, A: Hash](
+      support: G[(A, P)])(using F: Invariant[F], P: Semiring[P], c: Categorical[F, P]): F[A] =
+    val probabilities = support.map(_._2)
+    F match
+      case given Functor[f] =>
+        apply(probabilities).map(support.get(_).get._1)
+      case _ =>
+        val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
+        apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
 
   trait Default[F[_], P](using P: Semifield[P])
       extends Categorical[F, P],
