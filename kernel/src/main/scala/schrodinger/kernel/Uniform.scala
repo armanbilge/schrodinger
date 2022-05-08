@@ -16,12 +16,11 @@
 
 package schrodinger.kernel
 
+import cats.Functor
 import cats.Invariant
 import cats.Reducible
 import cats.kernel.Hash
 import cats.syntax.all.*
-
-import scala.annotation.threadUnsafe
 
 trait DiscreteUniform[F[_]] extends FairBernoulli[F]:
   def discreteUniform(n: Long): F[Long]
@@ -30,9 +29,14 @@ object DiscreteUniform:
   inline def apply[F[_]](n: Long)(using u: DiscreteUniform[F]): F[Long] =
     u.discreteUniform(n)
 
-  def apply[F[_]: Invariant: DiscreteUniform, G[_]: Reducible, A: Hash](support: G[A]): F[A] =
-    @threadUnsafe lazy val inv = support.toIterable.view.zipWithIndex.toMap
-    apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
+  def apply[F[_]: DiscreteUniform, G[_]: Reducible, A: Hash](support: G[A])(
+      using F: Invariant[F]): F[A] =
+    F match
+      case given Functor[f] =>
+        apply(support.size).map(support.get(_).get)
+      case _ =>
+        val inv = support.toIterable.view.zipWithIndex.toMap
+        apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
 
   trait Default[F[_]: Invariant] extends DiscreteUniform[F]:
     def fairBernoulli = discreteUniform(2).imap {
