@@ -16,13 +16,15 @@
 
 package schrodinger.kernel
 
-import algebra.ring.Semifield
+import algebra.ring.AdditiveMonoid
 import algebra.ring.Semiring
 import cats.Functor
 import cats.Invariant
 import cats.Reducible
+import cats.data.Chain
 import cats.data.NonEmptyVector
 import cats.kernel.Hash
+import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
@@ -46,3 +48,14 @@ object Categorical:
       case _ =>
         val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
+
+  given [F[_]: Functor, G[_]: Reducible, P: Order](
+      using P: AdditiveMonoid[P],
+      u: Uniform[F, P]): Categorical[F, G[P], Long] with
+    def categorical(probabilities: G[P]) =
+      val cumSum =
+        probabilities.reduceLeftTo(Chain.one(_))((c, p) => c :+ (c.lastOption.get + p)).toVector
+      val sum = cumSum.last
+      Uniform(P.zero, sum).map(
+        cumSum.search(_)(using Order[P].toOrdering).insertionPoint
+      )
