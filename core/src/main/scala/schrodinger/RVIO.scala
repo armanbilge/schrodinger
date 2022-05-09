@@ -38,7 +38,7 @@ import cats.kernel.Monoid
 import cats.kernel.Semigroup
 import cats.~>
 import schrodinger.kernel.PseudoRandom
-import schrodinger.random.GaussianCache
+import schrodinger.kernel.GaussianCache
 import schrodinger.unsafe.rng.SplittableRng
 
 import scala.concurrent.ExecutionContext
@@ -159,7 +159,10 @@ object RVIO:
         rng <- IO(s.rng.copy())
       yield rng
 
-    def get: RVIO[S, Double] = state.get.map(_.cachedGaussian)
+    def getAndClear: RVIO[S, Option[Double]] =
+      state.get.flatMap { s =>
+        IO.pure(Some(s.cachedGaussian).filterNot(_.isNaN)) <* IO(s.cachedGaussian = Double.NaN)
+      }
 
     def set(x: Double): RVIO[S, Unit] = state.get.flatMap(s => IO(s.cachedGaussian = x))
 

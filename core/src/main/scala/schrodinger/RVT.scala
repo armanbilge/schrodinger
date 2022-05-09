@@ -45,7 +45,7 @@ import cats.effect.kernel.Cont as CECont
 import cats.syntax.all.*
 import cats.~>
 import schrodinger.kernel.PseudoRandom
-import schrodinger.random.GaussianCache
+import schrodinger.kernel.GaussianCache
 import schrodinger.unsafe.rng.Rng
 import schrodinger.unsafe.rng.SplittableRng
 
@@ -234,7 +234,8 @@ sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Simulator, S0: Rng]
 sealed private[schrodinger] trait RVTGaussianDoubleCache[F[_], S]
     extends GaussianCache[RVT[F, S, _], Double]:
   val key = RVTCache[F, S, Double](Double.NaN)
-  def get: RVT[F, S, Double] = key.get
+  def getAndClear: RVT[F, S, Option[Double]] =
+    key.get.map(x => Option.when(!x.isNaN)(x)) <* key.set(Double.NaN)
   def set(a: Double): RVT[F, S, Unit] = key.set(a)
 
 sealed private[schrodinger] trait RVTRngDispatcher[F[_], S0](using S: SplittableRng[S0])
