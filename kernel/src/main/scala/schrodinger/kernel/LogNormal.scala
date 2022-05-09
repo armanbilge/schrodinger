@@ -16,7 +16,8 @@
 
 package schrodinger.kernel
 
-import algebra.ring.Rig
+import cats.Functor
+import cats.syntax.all.*
 
 trait LogNormal[F[_], A]:
   def logNormal: F[A]
@@ -29,5 +30,6 @@ object LogNormal:
   inline def standard[F[_], A](using ln: LogNormal[F, A]): F[A] =
     ln.logNormal
 
-  trait Default[F[_], A](using A: Rig[A]) extends LogNormal[F, A]:
-    def logNormal = logNormal(A.zero, A.one)
+  given [F[_]: Functor](using Gaussian[F, Double]): LogNormal[F, Double] with
+    def logNormal = Gaussian.standard.map(Math.exp)
+    def logNormal(mu: Double, sigma: Double) = Gaussian(mu, sigma).map(Math.exp)
