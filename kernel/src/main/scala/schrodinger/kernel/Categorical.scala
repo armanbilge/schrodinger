@@ -20,6 +20,7 @@ import algebra.ring.AdditiveMonoid
 import algebra.ring.Semiring
 import cats.Functor
 import cats.Invariant
+import cats.NonEmptyTraverse
 import cats.Reducible
 import cats.data.Chain
 import cats.data.NonEmptyVector
@@ -36,7 +37,7 @@ object Categorical:
       using c: Categorical[F, V, I]
   ): F[I] = c.categorical(probabilites)
 
-  def apply[F[_], P, G[_]: Functor: Reducible, A: Hash](support: G[(A, P)])(
+  def apply[F[_], P, G[_]: NonEmptyTraverse, A: Hash](support: G[(A, P)])(
       using F: Invariant[F],
       P: Semiring[P],
       c: Categorical[F, G[P], Long]
