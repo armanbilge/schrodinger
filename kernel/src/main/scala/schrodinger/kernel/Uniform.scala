@@ -17,6 +17,8 @@
 package schrodinger.kernel
 
 import algebra.ring.Rig
+import cats.Functor
+import cats.syntax.all.*
 
 trait Uniform[F[_], A]:
   def uniform01: F[A]
@@ -29,6 +31,16 @@ object Uniform:
 
   inline def standard[F[_], A](using u: Uniform[F, A]): F[A] = u.uniform01
 
-  trait Default[F[_], A](using A: Rig[A]) extends Uniform[F, A]:
-    def uniform01 = uniform(A.zero, A.one)
-    def uniform10 = uniform(A.one, A.zero)
+  given [F[_]: Functor: Random]: Uniform[F, Double] with
+
+    def uniform01 = Random.long.map(x => (x >>> 11) * 1.1102230246251565e-16)
+
+    def uniform10 = Random.long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
+
+    def uniform(include: Double, exclude: Double) =
+      if exclude >= include then
+        val delta = exclude - include
+        uniform01.map(_ * delta + include)
+      else
+        val delta = include - exclude
+        uniform10.map(_ * delta + exclude)
