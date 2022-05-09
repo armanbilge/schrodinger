@@ -17,10 +17,17 @@
 package schrodinger.kernel
 
 import algebra.ring.Rig
+import cats.Monad
+import cats.data.OptionT
+import cats.syntax.all.*
 
 trait Gaussian[F[_], A]:
   def gaussian: F[A]
   def gaussian(mean: A, standardDeviation: A): F[A]
+
+trait GaussianCache[F[_], A]:
+  def getAndClear: F[Option[A]]
+  def set(a: A): F[Unit]
 
 object Gaussian:
   inline def apply[F[_], A](mean: A, standardDeviation: A)(using g: Gaussian[F, A]): F[A] =
@@ -28,5 +35,22 @@ object Gaussian:
 
   inline def standard[F[_], A](using g: Gaussian[F, A]): F[A] = g.gaussian
 
-  trait Default[F[_], A](using A: Rig[A]) extends Gaussian[F, A]:
-    def gaussian = gaussian(A.zero, A.one)
+  given [F[_]: Monad](
+      using U: Uniform[F, Double],
+      cache: GaussianCache[F, Double]
+  ): Gaussian[F, Double] with
+    def gaussian(mean: Double, standardDeviation: Double) =
+      gaussian.map(_ * standardDeviation + mean)
+
+    def gaussian =
+      val sampleAndCache = for
+        x <- U.uniform01
+        y <- U.uniform10
+        alpha = 2 * Math.PI * x
+        r = Math.sqrt(-2 * Math.log(y))
+        g1 = r * Math.cos(alpha)
+        g2 = r * Math.sin(alpha)
+        _ <- cache.set(g2)
+      yield g1
+
+      OptionT(cache.getAndClear).getOrElseF(sampleAndCache)
