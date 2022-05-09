@@ -24,5 +24,6 @@ import schrodinger.kernel.testkit.SplitMix64
 
 given GaussianCache[PureRV[SplitMix64, _], Double] with
   val key = Key.newKey[SyncIO, Double].unsafeRunSync()
-  def get: PureRV[SplitMix64, Double] = PureRV.getExtra(key).map(_.getOrElse(Double.NaN))
-  def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key)(a)
+  def getAndClear: PureRV[SplitMix64, Option[Double]] =
+    PureRV.getExtra(key) <* PureRV.setExtra(key, None)
+  def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key, Some(a))

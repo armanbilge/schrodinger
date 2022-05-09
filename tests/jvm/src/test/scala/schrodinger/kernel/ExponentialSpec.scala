@@ -24,7 +24,6 @@ import org.specs2.mutable.Specification
 import schrodinger.kernel.Exponential
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.random.all.given
 
 class ExponentialSpec extends Specification, ScalaCheck:
   val N = 100

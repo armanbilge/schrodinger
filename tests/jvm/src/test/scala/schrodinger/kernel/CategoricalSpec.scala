@@ -24,9 +24,10 @@ import schrodinger.kernel.Categorical
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.math.LogDouble
-import schrodinger.random.all.given
+import algebra.instances.all.*
 
 import scala.language.implicitConversions
+import cats.data.NonEmptyVector
 
 class CategoricalSpec extends Specification, ScalaCheck:
 
@@ -34,8 +35,8 @@ class CategoricalSpec extends Specification, ScalaCheck:
 
   "Categorical" should {
     "generate valid samples" in prop { (rng: SplitMix64) =>
-      val sample = Categorical[PureRV[SplitMix64, _], Vector[LogDouble], Int](
-        Vector(LogDouble.Zero, LogDouble.One, LogDouble.Two))
+      val sample = Categorical[PureRV[SplitMix64, _], NonEmptyVector[Double], Long](
+        NonEmptyVector.of(0.0, 1.0, 2.0))
       sample.replicateA(N).simulate(rng).value.toSet must contain(beAnyOf(1, 2))
     }
   }
