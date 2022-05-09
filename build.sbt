@@ -67,9 +67,23 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
+lazy val stats = project
+  .in(file("stats"))
+  .dependsOn(kernel.jvm, math.jvm)
+  .settings(
+    name := "schrodinger-stats",
+    libraryDependencies ++= Seq(
+      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
+    )
+  )
+  .settings(commonJvmSettings)
+
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
-  .dependsOn(kernel.jvm)
+  .dependsOn(kernel.jvm, stats)
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
@@ -157,20 +171,6 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
     )
   )
   .jvmSettings(commonJvmSettings)
-
-lazy val stats = project
-  .in(file("stats"))
-  .dependsOn(kernel.jvm, math.jvm)
-  .settings(
-    name := "schrodinger-stats",
-    libraryDependencies ++= Seq(
-      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
-      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
-    )
-  )
-  .settings(commonJvmSettings)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
