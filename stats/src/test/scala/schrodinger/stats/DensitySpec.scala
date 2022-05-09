@@ -16,19 +16,19 @@
 
 package schrodinger.stats
 
+import algebra.instances.long.*
+import cats.Eval
+import cats.Functor
+import cats.kernel.Eq
+import cats.laws.discipline.InvariantMonoidalTests
+import cats.laws.discipline.MiniInt
+import cats.laws.discipline.arbitrary.*
+import cats.laws.discipline.eq.*
+import cats.syntax.all.*
+import org.scalacheck.Arbitrary
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.discipline.specs2.mutable.Discipline
-import cats.laws.discipline.InvariantMonoidalTests
-import algebra.instances.long.*
-import cats.Eval
-import org.scalacheck.Arbitrary
-import cats.Functor
-import cats.syntax.all.*
-import cats.laws.discipline.arbitrary.*
-import cats.kernel.Eq
-import cats.laws.discipline.eq.*
-import cats.laws.discipline.MiniInt
 
 class DensitySpec extends Specification, Discipline, ScalaCheck:
 
