@@ -18,18 +18,14 @@ package schrodinger
 package stats
 
 import cats.Applicative
-import cats.syntax.all.given
+import cats.syntax.all.*
 import org.apache.commons.math3.distribution.NormalDistribution
-import schrodinger.kernel.Density
 import schrodinger.kernel.Gaussian
 import schrodinger.math.LogDouble
 
-object gaussian extends GaussianInstances
-
-trait GaussianInstances:
-
-  given schrodingerStatsGaussianForDouble[F[_]: Applicative]
-      : Gaussian[Double][Density[F, LogDouble]] = params =>
-    import params.*
-    val distribution = new NormalDistribution(null, mean, standardDeviation)
-    x => LogDouble.exp(distribution.logDensity(x)).pure[F]
+private trait GaussianInstances:
+  given [F[_]: Applicative]: Gaussian[Density[F, LogDouble, _], Double] with
+    def gaussian = gaussian(0, 1)
+    def gaussian(mean: Double, standardDeviation: Double) =
+      val distribution = new NormalDistribution(null, mean, standardDeviation)
+      Density(x => LogDouble.exp(distribution.logDensity(x)).pure)

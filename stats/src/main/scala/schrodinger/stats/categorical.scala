@@ -17,48 +17,15 @@
 package schrodinger
 package stats
 
-import algebra.ring.Semifield
+import algebra.ring.Rig
 import cats.Applicative
-import cats.Foldable
-import cats.kernel.CommutativeMonoid
-import cats.kernel.Hash
+import cats.Reducible
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
-import schrodinger.kernel.Density
-import schrodinger.math.LogDouble
-import schrodinger.math.syntax.*
 
-object categorical extends CategoricalInstances
-
-trait CategoricalInstances:
-  given [F[_]: Applicative, G[_]: Foldable]
-      : Categorical[G[LogDouble], Int][Density[F, LogDouble]] =
-    case Categorical.Params(support) =>
-      val sum = LogDouble.sum(support.toIterable)
-      i => (support.get(i).getOrElse(LogDouble.Zero) / sum).pure[F]
-
-  given [F[_]: Applicative, G[_]: Foldable, A](
-      using A: Semifield[A]): Categorical[G[A], Int][Density[F, A]] =
-    case Categorical.Params(support) =>
-      val sum = A.sum(support.toIterable)
-      i => (support.get(i).getOrElse(A.zero) / sum).pure
-
-  given schrodingerStatsCategoricalForIArrayLogDouble[F[_]: Applicative]
-      : Categorical[IArray[LogDouble], Int][Density[F, LogDouble]] = params =>
-    import params.*
-    val sum = LogDouble.sum(support)
-    i => (support(i) / sum).pure[F]
-
-  given [F[_], G[_]: Foldable, W, A: Hash](
-      using W: Semifield[W],
-      cat: Categorical[Map[A, W], A][Density[F, W]]
-  ): Categorical[G[(A, W)], A][Density[F, W]] = params =>
-    import params.*
-    given CommutativeMonoid[W] = W.additive
-    Categorical(support.foldMap(Map(_)))
-
-  given [F[_]: Applicative, W, A](
-      using W: Semifield[W]): Categorical[Map[A, W], A][Density[F, W]] = params =>
-    import params.*
-    val sum = W.sum(support.values)
-    a => (support.get(a).fold(W.zero)(_ / sum)).pure
+private trait CategoricalInstances:
+  given [F[_]: Applicative, G[_]: Reducible, A](
+      using A: Rig[A]
+  ): Categorical[Density[F, A, _], G[A], Long] with
+    def categorical(support: G[A]) =
+      Density(support.get(_).getOrElse(A.zero).pure)

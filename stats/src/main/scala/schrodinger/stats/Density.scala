@@ -30,7 +30,7 @@ import schrodinger.math.syntax.*
 
 opaque type Density[F[_], P, A] <: (A => F[P]) = A => F[P]
 
-object Density extends DensityLowPriority0:
+object Density extends DensityLowPriority0, DensityDistributionInstances:
 
   inline def apply[F[_], P, A](f: A => F[P]): Density[F, P, A] = f
 
@@ -60,3 +60,14 @@ sealed private class DensityInvariantMonoidal[F[_]: Applicative, P](
     extends DensityInvariantSemigroupal[F, P],
       InvariantMonoidal[Density[F, P, _]]:
   def unit = Density(_ => P.one.pure)
+
+sealed private trait DensityDistributionInstances
+    extends BernoulliInstances,
+      BetaInstances,
+      CategoricalInstances,
+      DiscreteUniformInstances,
+      ExponentialInstances,
+      GammaInstances,
+      GaussianInstances,
+      LogNormalInstances,
+      UniformInstances

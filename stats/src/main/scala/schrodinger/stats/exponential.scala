@@ -18,17 +18,13 @@ package schrodinger
 package stats
 
 import cats.Applicative
-import cats.syntax.all.given
-import schrodinger.kernel.Density
+import cats.syntax.all.*
 import schrodinger.kernel.Exponential
 import schrodinger.math.LogDouble
 
-object exponential extends ExponentialInstances
-
-trait ExponentialInstances:
-
-  given schrodingerStatsExponentialForDouble[F[_]: Applicative]
-      : Exponential[Double][Density[F, LogDouble]] = params =>
-    import params.*
-    val logRate = LogDouble(rate)
-    x => (logRate * LogDouble.exp(-rate * x)).pure[F]
+private trait ExponentialInstances:
+  given [F[_]: Applicative]: Exponential[Density[F, LogDouble, _], Double] with
+    def exponential = exponential(1)
+    def exponential(rate: Double) =
+      val logRate = LogDouble(rate)
+      Density(x => (logRate * LogDouble.exp(-rate * x)).pure)
