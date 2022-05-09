@@ -34,7 +34,6 @@ lazy val root = tlCrossRootProject.aggregate(
   kernel,
   kernelTestkit,
   laws,
-  random,
   core,
   testkit,
   tests,
@@ -112,23 +111,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
-lazy val random = project
-  .in(file("random"))
-  .dependsOn(kernel.jvm, math.jvm, kernelTestkit % Test)
-  .settings(
-    name := "schrodinger-random",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
-      "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
-    )
-  )
-  .settings(commonJvmSettings)
-
 lazy val core = project
   .in(file("core"))
-  .dependsOn(random)
+  .dependsOn(kernel.jvm)
   .settings(
     name := "schrodinger",
     libraryDependencies ++= Seq(

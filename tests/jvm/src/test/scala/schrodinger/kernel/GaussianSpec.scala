@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
+import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64
-import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampler
+import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import schrodinger.kernel.Exponential
+import org.typelevel.vault.Key
+import schrodinger.kernel.Gaussian
+import schrodinger.random.all.given
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.random.all.given
+import schrodinger.random.GaussianCache
 
-class ExponentialSpec extends Specification, ScalaCheck:
+class GaussianSpec extends Specification, ScalaCheck:
   val N = 100
 
-  "Exponential" should {
+  "Gaussian" should {
     "match Apache implementation" in prop { (seed: Long) =>
-      val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
-      Exponential
+      val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
+      Gaussian
         .standard[PureRV[SplitMix64, _], Double]
         .replicateA(N)
         .simulate(SplitMix64(seed))

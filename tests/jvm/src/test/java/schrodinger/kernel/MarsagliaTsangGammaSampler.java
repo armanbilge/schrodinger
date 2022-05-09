@@ -31,7 +31,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random;
+package schrodinger.kernel;
 
 import org.apache.commons.rng.UniformRandomProvider;
 import org.apache.commons.rng.sampling.distribution.ContinuousSampler;

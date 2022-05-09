@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64

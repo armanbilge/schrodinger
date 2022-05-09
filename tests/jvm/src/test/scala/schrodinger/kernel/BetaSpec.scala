@@ -14,29 +14,38 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
 import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64
-import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
+import org.apache.commons.rng.sampling.distribution.ChengBetaSampler
+import org.scalacheck.Arbitrary
+import org.scalacheck.Gen
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
 import org.typelevel.vault.Key
-import schrodinger.kernel.Gaussian
+import schrodinger.kernel.Beta
 import schrodinger.random.all.given
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.random.GaussianCache
 
-class GaussianSpec extends Specification, ScalaCheck:
+class BetaSpec extends Specification, ScalaCheck:
   val N = 100
 
-  "Gaussian" should {
-    "match Apache implementation" in prop { (seed: Long) =>
-      val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
-      Gaussian
-        .standard[PureRV[SplitMix64, _], Double]
+  given Arbitrary[Beta.Params[Double, Double]] =
+    Arbitrary(
+      for
+        alpha <- Gen.posNum[Double]
+        beta <- Gen.posNum[Double]
+      yield Beta.Params(alpha, beta)
+    )
+
+  "Beta" should {
+    "match Apache implementation" in prop { (seed: Long, params: Beta.Params[Double, Double]) =>
+      val apache =
+        new ChengBetaSampler(new source64.SplitMix64(seed), params.alpha, params.beta)
+      Beta[PureRV[SplitMix64, _], Double, Double, Double](params.alpha, params.beta)
         .replicateA(N)
         .simulate(SplitMix64(seed))
         .value ===
