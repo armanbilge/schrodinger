@@ -16,7 +16,6 @@
 
 package schrodinger.kernel
 
-import algebra.ring.Rig
 import cats.Functor
 import cats.syntax.all.*
 
