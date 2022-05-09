@@ -165,8 +165,9 @@ lazy val stats = project
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.typelevel" %%% "cats-laws" % CatsVersion % Test
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
     )
   )
   .settings(commonJvmSettings)
