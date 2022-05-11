@@ -19,14 +19,14 @@ package schrodinger.montecarlo
 import fs2.Stream
 import schrodinger.kernel.Distribution
 
-type MarkovChain[P, A] = [F[_]] =>> Distribution[F, MarkovChain.Params[P, A], A]
+trait MarkovChain[F[_], G[_], A]:
+  def markovChain(initial: A)(transition: A => G[A]): F[A]
 
 object MarkovChain:
-  final case class Params[P, A](initial: A, transition: A => P)
+  inline def apply[F[_], G[_], A](initial: A)(transition: A => G[A])(
+      using mc: MarkovChain[F, G, A]
+  ): F[A] = mc.markovChain(initial)(transition)
 
-  inline def apply[F[_], P, A](initial: A)(transition: A => P)(
-      using mc: MarkovChain[P, A][F]): F[A] =
-    mc(Params(initial, transition))
-
-  given [F[_], P, A](using P: Distribution[F, P, A]): MarkovChain[P, A][Stream[F, _]] =
-    case Params(initial, transition) => Stream.iterateEval(initial)(a => P(transition(a)))
+  given [F[_], A]: MarkovChain[Stream[F, _], F, A] with
+    def markovChain(initial: A)(transition: A => F[A]) =
+      Stream.iterateEval(initial)(transition)
