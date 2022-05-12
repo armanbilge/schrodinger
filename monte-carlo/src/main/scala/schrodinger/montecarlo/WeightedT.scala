@@ -70,7 +70,7 @@ import schrodinger.montecarlo.Weighted.Weightless
 import schrodinger.stats.Density
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
-object WeightedT extends WeightedTInstances:
+object WeightedT extends WeightedTInstances, WeightedTDistributionInstances:
   def apply[F[_], W, A](fwa: F[Weighted[W, A]]): WeightedT[F, W, A] = fwa
 
   def pure[F[_]: Applicative, W: MultiplicativeMonoid, A](a: A): WeightedT[F, W, A] =
@@ -148,6 +148,41 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       Eq[W]): InvariantSemigroupal[WeightedT[F, W, _]] =
     WeightedTInvariantSemigroupal[F, W]
 
+sealed private class WeightedTInstances0 extends WeightedTInstances1:
+  given [F[_], W, A](
+      using F: PartialOrder[F[Weighted[W, A]]]): PartialOrder[WeightedT[F, W, A]] =
+    F.asInstanceOf[PartialOrder[WeightedT[F, W, A]]]
+
+  given [F[_], W, A](using F: Semigroup[F[Weighted[W, A]]]): Semigroup[WeightedT[F, W, A]] =
+    F.asInstanceOf[Semigroup[WeightedT[F, W, A]]]
+
+  given [F[_], W](using Invariant[F]): Invariant[WeightedT[F, W, _]] =
+    WeightedTInvariant[F, W]
+
+sealed private class WeightedTInstances1 extends WeightedTInstances2:
+  given [F[_], W, A](using F: Hash[F[Weighted[W, A]]]): Hash[WeightedT[F, W, A]] =
+    F.asInstanceOf[Hash[WeightedT[F, W, A]]]
+
+sealed private class WeightedTInstances2:
+  given [F[_], W, A](using F: Eq[F[Weighted[W, A]]]): Eq[WeightedT[F, W, A]] =
+    F.asInstanceOf[Eq[WeightedT[F, W, A]]]
+
+sealed private class WeightedTInvariant[F[_], W](using F: Invariant[F])
+    extends Invariant[WeightedT[F, W, _]]:
+
+  def imap[A, B](fa: WeightedT[F, W, A])(f: A => B)(g: B => A) =
+    WeightedT.imap(fa)(f)(g)
+
+sealed private class WeightedTInvariantSemigroupal[F[_], W](
+    using F: Applicative[F],
+    val W0: Semiring[W],
+    val W1: Eq[W])
+    extends WeightedTInvariant[F, W],
+      InvariantSemigroupal[WeightedT[F, W, _]]:
+  def product[A, B](fa: WeightedT[F, W, A], fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
+    WeightedT.product(fa)(fb)
+
+sealed private trait WeightedTDistributionInstances:
   given [F[_]: FlatMap, W: MultiplicativeMonoid, B](
       using r: FairBernoulli[F, B],
       d: FairBernoulli[Density[F, W, _], B]): FairBernoulli[WeightedT[F, W, _], B] with
@@ -296,37 +331,3 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
         d <- d.dirichlet(concentration)(x)
       yield Weighted(d, x)
     }
-
-sealed private class WeightedTInstances0 extends WeightedTInstances1:
-  given [F[_], W, A](
-      using F: PartialOrder[F[Weighted[W, A]]]): PartialOrder[WeightedT[F, W, A]] =
-    F.asInstanceOf[PartialOrder[WeightedT[F, W, A]]]
-
-  given [F[_], W, A](using F: Semigroup[F[Weighted[W, A]]]): Semigroup[WeightedT[F, W, A]] =
-    F.asInstanceOf[Semigroup[WeightedT[F, W, A]]]
-
-  given [F[_], W](using Invariant[F]): Invariant[WeightedT[F, W, _]] =
-    WeightedTInvariant[F, W]
-
-sealed private class WeightedTInstances1 extends WeightedTInstances2:
-  given [F[_], W, A](using F: Hash[F[Weighted[W, A]]]): Hash[WeightedT[F, W, A]] =
-    F.asInstanceOf[Hash[WeightedT[F, W, A]]]
-
-sealed private class WeightedTInstances2:
-  given [F[_], W, A](using F: Eq[F[Weighted[W, A]]]): Eq[WeightedT[F, W, A]] =
-    F.asInstanceOf[Eq[WeightedT[F, W, A]]]
-
-sealed private class WeightedTInvariant[F[_], W](using F: Invariant[F])
-    extends Invariant[WeightedT[F, W, _]]:
-
-  def imap[A, B](fa: WeightedT[F, W, A])(f: A => B)(g: B => A) =
-    WeightedT.imap(fa)(f)(g)
-
-sealed private class WeightedTInvariantSemigroupal[F[_], W](
-    using F: Applicative[F],
-    val W0: Semiring[W],
-    val W1: Eq[W])
-    extends WeightedTInvariant[F, W],
-      InvariantSemigroupal[WeightedT[F, W, _]]:
-  def product[A, B](fa: WeightedT[F, W, A], fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
-    WeightedT.product(fa)(fb)
