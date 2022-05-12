@@ -42,25 +42,24 @@ class GammaSpec extends Specification, ScalaCheck:
     )
 
   "Gamma" should {
-    "match Apache implementation" in prop {
-      (seed: Long, params: GammaParams) =>
-        val GammaParams(shape, rate) = params
-        val apache =
-          if shape < 1 then
-            new AhrensDieterMarsagliaTsangGammaSampler(
-              new source64.SplitMix64(seed),
-              shape,
-              1.0 / rate
-            )
-          else
-            val splitMix = new source64.SplitMix64(seed)
-            val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
-            new MarsagliaTsangGammaSampler(splitMix, gaussian, shape, 1.0 / rate)
+    "match Apache implementation" in prop { (seed: Long, params: GammaParams) =>
+      val GammaParams(shape, rate) = params
+      val apache =
+        if shape < 1 then
+          new AhrensDieterMarsagliaTsangGammaSampler(
+            new source64.SplitMix64(seed),
+            shape,
+            1.0 / rate
+          )
+        else
+          val splitMix = new source64.SplitMix64(seed)
+          val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
+          new MarsagliaTsangGammaSampler(splitMix, gaussian, shape, 1.0 / rate)
 
-        Gamma[PureRV[SplitMix64, _], Double](shape, rate)
-          .replicateA(N)
-          .simulate(SplitMix64(seed))
-          .value ===
-          List.fill(N)(apache.sample())
+      Gamma[PureRV[SplitMix64, _], Double](shape, rate)
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
     }
   }
