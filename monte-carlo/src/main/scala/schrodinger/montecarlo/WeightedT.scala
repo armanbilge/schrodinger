@@ -134,7 +134,7 @@ object WeightedT extends WeightedTInstances:
 
     def show(using F: Show[F[Weighted[W, A]]]): String = F.show(value)
 
-private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
+sealed private class WeightedTInstances extends WeightedTInstances0:
 
   given [F[_], W](using F: Defer[F]): Defer[WeightedT[F, W, _]] with
     def defer[A](fa: => WeightedT[F, W, A]): WeightedT[F, W, A] =
@@ -155,7 +155,7 @@ private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
       Eq[W]): InvariantSemigroupal[WeightedT[F, W, _]] =
     WeightedTInvariantSemigroupal[F, W]
 
-sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1:
+sealed private class WeightedTInstances0 extends WeightedTInstances1:
   given [F[_], W, A](
       using F: PartialOrder[F[Weighted[W, A]]]): PartialOrder[WeightedT[F, W, A]] =
     F.asInstanceOf[PartialOrder[WeightedT[F, W, A]]]
@@ -166,21 +166,21 @@ sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1
   given [F[_], W](using Invariant[F]): Invariant[WeightedT[F, W, _]] =
     WeightedTInvariant[F, W]
 
-sealed private[montecarlo] class WeightedTInstances1 extends WeightedTInstances2:
+sealed private class WeightedTInstances1 extends WeightedTInstances2:
   given [F[_], W, A](using F: Hash[F[Weighted[W, A]]]): Hash[WeightedT[F, W, A]] =
     F.asInstanceOf[Hash[WeightedT[F, W, A]]]
 
-sealed private[montecarlo] class WeightedTInstances2:
+sealed private class WeightedTInstances2:
   given [F[_], W, A](using F: Eq[F[Weighted[W, A]]]): Eq[WeightedT[F, W, A]] =
     F.asInstanceOf[Eq[WeightedT[F, W, A]]]
 
-sealed private[montecarlo] class WeightedTInvariant[F[_], W](using F: Invariant[F])
+sealed private class WeightedTInvariant[F[_], W](using F: Invariant[F])
     extends Invariant[WeightedT[F, W, _]]:
 
   def imap[A, B](fa: WeightedT[F, W, A])(f: A => B)(g: B => A) =
     WeightedT.imap(fa)(f)(g)
 
-sealed private[montecarlo] class WeightedTInvariantSemigroupal[F[_], W](
+sealed private class WeightedTInvariantSemigroupal[F[_], W](
     using F: Applicative[F],
     val W0: Semiring[W],
     val W1: Eq[W])
