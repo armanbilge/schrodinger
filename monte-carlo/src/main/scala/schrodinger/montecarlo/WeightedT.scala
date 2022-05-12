@@ -79,6 +79,7 @@ import schrodinger.stats.Density
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.DiscreteUniform
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
 object WeightedT extends WeightedTInstances:
@@ -177,6 +178,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
         b <- r.bernoulli(successProbability)
         d <- d.bernoulli(successProbability)(b)
       yield Weighted(d, b)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, I](
+      using r: DiscreteUniform[F, I],
+      d: DiscreteUniform[Density[F, W, _], I]): DiscreteUniform[WeightedT[F, W, _], I] with
+    def discreteUniform(n: I) = WeightedT {
+      for
+        i <- r.discreteUniform(n)
+        d <- d.discreteUniform(n)(i)
+      yield Weighted(d, i)
     }
 
 sealed private class WeightedTInstances0 extends WeightedTInstances1:
