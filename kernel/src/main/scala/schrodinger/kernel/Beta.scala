@@ -16,7 +16,7 @@
 
 package schrodinger.kernel
 
-import cats.Monad
+import cats.FlatMap
 import cats.syntax.all.*
 
 trait Beta[F[_], A]:
@@ -25,7 +25,7 @@ trait Beta[F[_], A]:
 object Beta:
   inline def apply[F[_], A](alpha: A, beta: A)(using b: Beta[F, A]): F[A] = b.beta(alpha, beta)
 
-  given [F[_]: Monad](using Uniform[F, Double]): Beta[F, Double] with
+  given [F[_]: FlatMap](using Uniform[F, Double]): Beta[F, Double] with
     private val Ln4 = Math.log(4)
     private val Ln5p1 = 1 + Math.log(5)
 
