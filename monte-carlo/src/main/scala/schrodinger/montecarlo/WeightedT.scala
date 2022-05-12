@@ -78,6 +78,7 @@ import schrodinger.stats.Density
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+import schrodinger.kernel.Bernoulli
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
 object WeightedT extends WeightedTInstances:
@@ -165,6 +166,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         b <- r.fairBernoulli
         d <- d.fairBernoulli(b)
+      yield Weighted(d, b)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, P, B](
+      using r: Bernoulli[F, P, B],
+      d: Bernoulli[Density[F, W, _], P, B]): Bernoulli[WeightedT[F, W, _], P, B] with
+    def bernoulli(successProbability: P) = WeightedT {
+      for
+        b <- r.bernoulli(successProbability)
+        d <- d.bernoulli(successProbability)(b)
       yield Weighted(d, b)
     }
 
