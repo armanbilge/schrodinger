@@ -77,6 +77,7 @@ import schrodinger.kernel.Exponential
 import schrodinger.kernel.FairBernoulli
 import schrodinger.kernel.Gamma
 import schrodinger.kernel.Gaussian
+import schrodinger.kernel.Uniform
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
@@ -247,6 +248,31 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         x <- r.gamma(shape, rate)
         d <- d.gamma(shape, rate)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Uniform[F, A],
+      d: Uniform[Density[F, W, _], A]): Uniform[WeightedT[F, W, _], A] with
+
+    def uniform01 = WeightedT {
+      for
+        x <- r.uniform01
+        d <- d.uniform01(x)
+      yield Weighted(d, x)
+    }
+
+    def uniform10 = WeightedT {
+      for
+        x <- r.uniform10
+        d <- d.uniform10(x)
+      yield Weighted(d, x)
+    }
+
+    def uniform(include: A, exclude: A) = WeightedT {
+      for
+        x <- r.uniform(include, exclude)
+        d <- d.uniform(include, exclude)(x)
       yield Weighted(d, x)
     }
 
