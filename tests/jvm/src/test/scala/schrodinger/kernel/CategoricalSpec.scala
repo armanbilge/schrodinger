@@ -37,6 +37,8 @@ class CategoricalSpec extends Specification, ScalaCheck:
     "generate valid samples" in prop { (rng: SplitMix64) =>
       val sample = Categorical[PureRV[SplitMix64, _], NonEmptyVector[Double], Long](
         NonEmptyVector.of(0.0, 1.0, 2.0))
-      sample.replicateA(N).simulate(rng).value.toSet must contain(beAnyOf(1, 2))
+      val samples = sample.replicateA(N).simulate(rng).value
+      samples.toSet must be_==(Set(1, 2)) and
+        (samples.count(_ == 2L) must be_>(samples.count(_ == 1L)))
     }
   }
