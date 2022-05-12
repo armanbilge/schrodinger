@@ -138,15 +138,6 @@ object WeightedT extends WeightedTInstances:
 
 private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
 
-  given [F[_]: Monad, W: Monoid, P, S](
-      using r: Distribution[F, P, S],
-      d: Distribution[Density[F, W], P, S]
-  ): Distribution[WeightedT[F, W, _], P, S] with
-    override def apply(params: P) =
-      val sampler = r(params)
-      val density = d(params)
-      WeightedT(sampler.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
-
   given [F[_], W](using F: Defer[F]): Defer[WeightedT[F, W, _]] with
     def defer[A](fa: => WeightedT[F, W, A]): WeightedT[F, W, A] =
       WeightedT(F.defer(fa.value))
