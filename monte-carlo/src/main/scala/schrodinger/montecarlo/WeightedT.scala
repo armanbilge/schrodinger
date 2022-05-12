@@ -54,6 +54,7 @@ import cats.syntax.invariant.*
 import cats.syntax.semigroup.*
 import cats.~>
 import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Beta
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.DiscreteUniform
 import schrodinger.kernel.Exponential
@@ -253,6 +254,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         x <- r.uniform(include, exclude)
         d <- d.uniform(include, exclude)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Beta[F, A],
+      d: Beta[Density[F, W, _], A]): Beta[WeightedT[F, W, _], A] with
+    def beta(alpha: A, beta: A) = WeightedT {
+      for
+        x <- r.beta(alpha, beta)
+        d <- d.beta(alpha, beta)(x)
       yield Weighted(d, x)
     }
 
