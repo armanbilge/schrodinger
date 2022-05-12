@@ -16,6 +16,7 @@
 
 package schrodinger.kernel
 
+import algebra.Priority
 import cats.Functor
 import cats.Invariant
 import cats.Monad
@@ -30,12 +31,13 @@ object DiscreteUniform:
   inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
-  def apply[F[_], G[_]: Reducible, A: Hash](
-      support: G[A])(using F: Invariant[F], u: DiscreteUniform[F, Long]): F[A] =
+  def apply[F[_], G[_]: Reducible, A: Hash](support: G[A])(
+      using F: Priority[Functor[F], InvariantAndHash[F, A]],
+      u: DiscreteUniform[F, Long]): F[A] =
     F match
-      case given Functor[f] =>
+      case Priority.Preferred(given Functor[f]) =>
         apply(support.size).map(support.get(_).get)
-      case _ =>
+      case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
         val inv = support.toIterable.view.zipWithIndex.toMap
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
 
