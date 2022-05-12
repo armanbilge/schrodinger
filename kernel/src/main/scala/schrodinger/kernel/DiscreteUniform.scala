@@ -21,7 +21,6 @@ import cats.Functor
 import cats.Invariant
 import cats.FlatMap
 import cats.Reducible
-import cats.kernel.Hash
 import cats.syntax.all.*
 
 trait DiscreteUniform[F[_], I]:
@@ -31,7 +30,7 @@ object DiscreteUniform:
   inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
-  def apply[F[_], G[_]: Reducible, A: Hash](support: G[A])(
+  def apply[F[_], G[_]: Reducible, A](support: G[A])(
       using F: Priority[Functor[F], InvariantAndHash[F, A]],
       u: DiscreteUniform[F, Long]): F[A] =
     F match
