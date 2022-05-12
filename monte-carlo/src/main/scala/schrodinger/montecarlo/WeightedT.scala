@@ -30,6 +30,7 @@ import cats.ContravariantMonoidal
 import cats.Defer
 import cats.Eq
 import cats.Eval
+import cats.FlatMap
 import cats.Functor
 import cats.Invariant
 import cats.InvariantSemigroupal
@@ -69,9 +70,11 @@ import cats.syntax.functor.*
 import cats.syntax.invariant.*
 import cats.syntax.semigroup.*
 import cats.~>
+import schrodinger.kernel.FairBernoulli
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
+import schrodinger.stats.Density
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
@@ -154,6 +157,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       Semiring[W],
       Eq[W]): InvariantSemigroupal[WeightedT[F, W, _]] =
     WeightedTInvariantSemigroupal[F, W]
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, B](
+      using r: FairBernoulli[F, B],
+      d: FairBernoulli[Density[F, W, _], B]): FairBernoulli[WeightedT[F, W, _], B] with
+    def fairBernoulli = WeightedT {
+      for
+        b <- r.fairBernoulli
+        d <- d.fairBernoulli(b)
+      yield Weighted(d, b)
+    }
 
 sealed private class WeightedTInstances0 extends WeightedTInstances1:
   given [F[_], W, A](
