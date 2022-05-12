@@ -39,7 +39,7 @@ object Categorical:
   ): F[I] = c.categorical(probabilites)
 
   def apply[F[_], P, G[_]: NonEmptyTraverse, A](support: G[(A, P)])(
-      using F: Priority[Functor[F], (Invariant[F], Hash[A])],
+      using F: Priority[Functor[F], InvariantAndHash[F, A]],
       P: Semiring[P],
       c: Categorical[F, G[P], Long]
   ): F[A] =
@@ -47,7 +47,7 @@ object Categorical:
     F match
       case Priority.Preferred(given Functor[f]) =>
         apply(probabilities).map(support.get(_).get._1)
-      case Priority.Fallback((given Invariant[f], _)) =>
+      case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
         val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
 
