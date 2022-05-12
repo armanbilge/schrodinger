@@ -16,14 +16,41 @@
 
 package schrodinger.kernel
 
-type GenGaussian[M, S, X] = [F[_]] =>> Distribution[F, Gaussian.Params[M, S], X]
-type Gaussian[R] = [F[_]] =>> GenGaussian[R, R, R][F]
+import algebra.ring.Rig
+import cats.Monad
+import cats.data.OptionT
+import cats.syntax.all.*
+
+trait Gaussian[F[_], A]:
+  def gaussian: F[A]
+  def gaussian(mean: A, standardDeviation: A): F[A]
+
+trait GaussianCache[F[_], A]:
+  def getAndClear: F[Option[A]]
+  def set(a: A): F[Unit]
 
 object Gaussian:
-  final case class Params[+M, +S](mean: M, standardDeviation: S)
+  inline def apply[F[_], A](mean: A, standardDeviation: A)(using g: Gaussian[F, A]): F[A] =
+    g.gaussian(mean, standardDeviation)
 
-  inline def standard[F[_], X](using g: GenGaussian[0, 1, X][F]): F[X] =
-    g(Params(0, 1))
+  inline def standard[F[_], A](using g: Gaussian[F, A]): F[A] = g.gaussian
 
-  inline def apply[F[_], R](mean: R, standardDeviation: R)(using g: Gaussian[R][F]): F[R] =
-    g(Params(mean, standardDeviation))
+  given [F[_]: Monad](
+      using U: Uniform[F, Double],
+      cache: GaussianCache[F, Double]
+  ): Gaussian[F, Double] with
+    def gaussian(mean: Double, standardDeviation: Double) =
+      gaussian.map(_ * standardDeviation + mean)
+
+    def gaussian =
+      val sampleAndCache = for
+        x <- U.uniform01
+        y <- U.uniform10
+        alpha = 2 * Math.PI * x
+        r = Math.sqrt(-2 * Math.log(y))
+        g1 = r * Math.cos(alpha)
+        g2 = r * Math.sin(alpha)
+        _ <- cache.set(g2)
+      yield g1
+
+      OptionT(cache.getAndClear).getOrElseF(sampleAndCache)

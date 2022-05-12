@@ -14,20 +14,16 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
-import cats.Applicative
+import cats.effect.SyncIO
 import cats.syntax.all.*
-import schrodinger.kernel.Gamma
-import schrodinger.kernel.Dirichlet
+import org.typelevel.vault.Key
+import schrodinger.kernel.testkit.PureRV
+import schrodinger.kernel.testkit.SplitMix64
 
-object dirichlet extends DirichletInstances
-
-trait DirichletInstances:
-  given schrodingerRandomDirichletForVectorDouble[F[_]: Applicative: Gamma[Double]]
-      : Dirichlet[Vector[Double], Vector[Double]][F] =
-    case Dirichlet.Params(concentration) =>
-      concentration.traverse(Gamma(_, 1.0)).map { xs =>
-        val sum = xs.sum
-        xs.map(_ / sum)
-      }
+given GaussianCache[PureRV[SplitMix64, _], Double] with
+  val key = Key.newKey[SyncIO, Double].unsafeRunSync()
+  def getAndClear: PureRV[SplitMix64, Option[Double]] =
+    PureRV.getExtra(key) <* PureRV.setExtra(key, None)
+  def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key, Some(a))

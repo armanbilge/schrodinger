@@ -20,16 +20,11 @@ package stats
 import cats.Applicative
 import cats.syntax.all.*
 import org.apache.commons.math3.distribution.GammaDistribution
-import schrodinger.kernel.Density
 import schrodinger.kernel.Gamma
 import schrodinger.math.LogDouble
 
-object gamma extends GammaInstances
-
-trait GammaInstances:
-
-  given schrodingerStatsGammaForDouble[F[_]: Applicative]
-      : Gamma[Double][Density[F, LogDouble]] =
-    case Gamma.Params(shape, rate) =>
+private trait GammaInstances:
+  given [F[_]: Applicative]: Gamma[Density[F, LogDouble, _], Double] with
+    def gamma(shape: Double, rate: Double) =
       val distribution = new GammaDistribution(null, shape, 1.0 / rate)
-      x => LogDouble.exp(distribution.logDensity(x)).pure[F]
+      Density(x => LogDouble.exp(distribution.logDensity(x)).pure)

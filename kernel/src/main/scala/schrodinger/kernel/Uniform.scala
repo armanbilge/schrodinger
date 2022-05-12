@@ -16,10 +16,30 @@
 
 package schrodinger.kernel
 
-type Uniform[S, X] = [F[_]] =>> Distribution[F, Uniform.Params[S], X]
-type UniformRange[F[_]] = Uniform[Range, Int][F]
+import cats.Functor
+import cats.syntax.all.*
+
+trait Uniform[F[_], A]:
+  def uniform01: F[A]
+  def uniform10: F[A]
+  def uniform(include: A, exclude: A): F[A]
 
 object Uniform:
-  final case class Params[+S](support: S)
+  inline def apply[F[_], A](include: A, exclude: A)(using u: Uniform[F, A]): F[A] =
+    u.uniform(include, exclude)
 
-  inline def apply[F[_], S, X](support: S)(using u: Uniform[S, X][F]): F[X] = u(Params(support))
+  inline def standard[F[_], A](using u: Uniform[F, A]): F[A] = u.uniform01
+
+  given [F[_]: Functor: Random]: Uniform[F, Double] with
+
+    def uniform01 = Random.long.map(x => (x >>> 11) * 1.1102230246251565e-16)
+
+    def uniform10 = Random.long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
+
+    def uniform(include: Double, exclude: Double) =
+      if exclude >= include then
+        val delta = exclude - include
+        uniform01.map(_ * delta + include)
+      else
+        val delta = include - exclude
+        uniform10.map(_ * delta + exclude)

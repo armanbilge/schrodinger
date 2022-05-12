@@ -32,8 +32,8 @@ trait RandomGenerators[F[_]: Random] extends Generators1[F]:
 
   private def genRandomInt[A: Arbitrary]: Gen[F[A]] =
     for f <- Arbitrary.arbitrary[Int => A]
-    yield Random[F].int.map(f)
+    yield Random.int.map(f)
 
   private def genRandomLong[A: Arbitrary]: Gen[F[A]] =
     for f <- Arbitrary.arbitrary[Long => A]
-    yield Random[F].long.map(f)
+    yield Random.long.map(f)

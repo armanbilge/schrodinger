@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.stats
 
-object all
-    extends BernoulliInstances,
-      BetaInstances,
-      CategoricalInstances,
-      DirichletInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      MultinomialInstances,
-      UniformInstances
+import algebra.ring.Semifield
+import cats.Applicative
+import cats.syntax.all.*
+import schrodinger.kernel.DiscreteUniform
+import schrodinger.math.syntax.*
+
+private trait DiscreteUniformInstances:
+  given [F[_]: Applicative, A](using A: Semifield[A]): DiscreteUniform[Density[F, A, _], Long]
+    with
+    def discreteUniform(n: Long) =
+      val zero = A.zero.pure
+      val p = A.fromBigInt(n).reciprocal.pure
+      Density(i => if 0 <= i & i < n then p else zero)

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64
@@ -27,38 +27,39 @@ import org.scalacheck.Gen
 import schrodinger.kernel.Gamma
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.random.all.given
 
 class GammaSpec extends Specification, ScalaCheck:
   val N = 100
 
-  given Arbitrary[Gamma.Params[Double, Double]] =
+  case class GammaParams(shape: Double, rate: Double)
+
+  given Arbitrary[GammaParams] =
     Arbitrary(
       for
         shape <- Gen.posNum[Double]
         rate <- Gen.posNum[Double]
-      yield Gamma.Params(shape, rate)
+      yield GammaParams(shape, rate)
     )
 
   "Gamma" should {
-    "match Apache implementation" in prop {
-      (seed: Long, params: Gamma.Params[Double, Double]) =>
-        val Gamma.Params(shape, rate) = params
-        val apache =
-          if shape < 1 then
-            new AhrensDieterMarsagliaTsangGammaSampler(
-              new source64.SplitMix64(seed),
-              Math.abs(shape),
-              1.0 / rate)
-          else
-            val splitMix = new source64.SplitMix64(seed)
-            val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
-            new MarsagliaTsangGammaSampler(splitMix, gaussian, Math.abs(shape), 1.0 / rate)
+    "match Apache implementation" in prop { (seed: Long, params: GammaParams) =>
+      val GammaParams(shape, rate) = params
+      val apache =
+        if shape < 1 then
+          new AhrensDieterMarsagliaTsangGammaSampler(
+            new source64.SplitMix64(seed),
+            shape,
+            1.0 / rate
+          )
+        else
+          val splitMix = new source64.SplitMix64(seed)
+          val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
+          new MarsagliaTsangGammaSampler(splitMix, gaussian, shape, 1.0 / rate)
 
-        Gamma[PureRV[SplitMix64, _], Double, Double, Double](Math.abs(shape), rate)
-          .replicateA(N)
-          .simulate(SplitMix64(seed))
-          .value ===
-          List.fill(N)(apache.sample())
+      Gamma[PureRV[SplitMix64, _], Double](shape, rate)
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
     }
   }

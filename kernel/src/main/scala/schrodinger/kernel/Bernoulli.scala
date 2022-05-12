@@ -16,11 +16,28 @@
 
 package schrodinger.kernel
 
-type Bernoulli[P, X] = [F[_]] =>> Distribution[F, Bernoulli.Params[P], X]
+import algebra.ring.Semifield
+import cats.Functor
+import cats.kernel.Order
+import cats.syntax.all.*
+import schrodinger.math.syntax.*
+
+trait FairBernoulli[F[_], B]:
+  def fairBernoulli: F[B]
+
+object FairBernoulli:
+  given [F[_]: Functor: Random]: FairBernoulli[F, Boolean] with
+    def fairBernoulli = Random.int.map(_ >= 0)
+
+trait Bernoulli[F[_], P, B]:
+  def bernoulli(successProbability: P): F[B]
 
 object Bernoulli:
-  final case class Params[+P](successProbability: P)
 
-  inline def fair[F[_], X](using b: Bernoulli[0.5, X][F]): F[X] = b(Params(0.5))
-  inline def apply[F[_], P, X](successProbability: P)(using b: Bernoulli[P, X][F]): F[X] =
-    b(Params(successProbability))
+  inline def apply[F[_], P, B](successProbability: P)(using b: Bernoulli[F, P, B]): F[B] =
+    b.bernoulli(successProbability)
+
+  inline def fair[F[_], B](using b: FairBernoulli[F, B]): F[B] = b.fairBernoulli
+
+  given [F[_]: Functor, P: Order](using Uniform[F, P]): Bernoulli[F, P, Boolean] with
+    def bernoulli(successProbability: P) = Uniform.standard.map(_ < successProbability)

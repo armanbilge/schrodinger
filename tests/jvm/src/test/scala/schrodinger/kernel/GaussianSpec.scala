@@ -14,15 +14,30 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
 import cats.effect.SyncIO
 import cats.syntax.all.*
+import org.apache.commons.rng.core.source64
+import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
+import org.specs2.ScalaCheck
+import org.specs2.mutable.Specification
 import org.typelevel.vault.Key
+import schrodinger.kernel.Gaussian
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-given GaussianCache[PureRV[SplitMix64, _], Double] with
-  val key = Key.newKey[SyncIO, Double].unsafeRunSync()
-  def get: PureRV[SplitMix64, Double] = PureRV.getExtra(key).map(_.getOrElse(Double.NaN))
-  def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key)(a)
+class GaussianSpec extends Specification, ScalaCheck:
+  val N = 100
+
+  "Gaussian" should {
+    "match Apache implementation" in prop { (seed: Long) =>
+      val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
+      Gaussian
+        .standard[PureRV[SplitMix64, _], Double]
+        .replicateA(N)
+        .simulate(SplitMix64(seed))
+        .value ===
+        List.fill(N)(apache.sample())
+    }
+  }

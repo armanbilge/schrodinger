@@ -16,11 +16,20 @@
 
 package schrodinger.kernel
 
-type GenLogNormal[M, S, X] = [F[_]] =>> Distribution[F, LogNormal.Params[M, S], X]
-type LogNormal[R] = [F[_]] =>> GenLogNormal[R, R, R][F]
+import cats.Functor
+import cats.syntax.all.*
+
+trait LogNormal[F[_], A]:
+  def logNormal: F[A]
+  def logNormal(mu: A, sigma: A): F[A]
 
 object LogNormal:
-  final case class Params[+M, +S](mu: M, sigma: S)
+  inline def apply[F[_], A](mu: A, sigma: A)(using ln: LogNormal[F, A]): F[A] =
+    ln.logNormal(mu, sigma)
 
-  inline def apply[F[_], R](mu: R, sigma: R)(using ln: LogNormal[R][F]): F[R] =
-    ln(Params(mu, sigma))
+  inline def standard[F[_], A](using ln: LogNormal[F, A]): F[A] =
+    ln.logNormal
+
+  given [F[_]: Functor](using Gaussian[F, Double]): LogNormal[F, Double] with
+    def logNormal = Gaussian.standard.map(Math.exp)
+    def logNormal(mu: Double, sigma: Double) = Gaussian(mu, sigma).map(Math.exp)

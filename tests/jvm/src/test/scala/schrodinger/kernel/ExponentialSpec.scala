@@ -14,38 +14,25 @@
  * limitations under the License.
  */
 
-package schrodinger.random
+package schrodinger.kernel
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
 import org.apache.commons.rng.core.source64
-import org.apache.commons.rng.sampling.distribution.ChengBetaSampler
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
+import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampler
 import org.specs2.ScalaCheck
 import org.specs2.mutable.Specification
-import org.typelevel.vault.Key
-import schrodinger.kernel.Beta
-import schrodinger.random.all.given
+import schrodinger.kernel.Exponential
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class BetaSpec extends Specification, ScalaCheck:
+class ExponentialSpec extends Specification, ScalaCheck:
   val N = 100
 
-  given Arbitrary[Beta.Params[Double, Double]] =
-    Arbitrary(
-      for
-        alpha <- Gen.posNum[Double]
-        beta <- Gen.posNum[Double]
-      yield Beta.Params(alpha, beta)
-    )
-
-  "Beta" should {
-    "match Apache implementation" in prop { (seed: Long, params: Beta.Params[Double, Double]) =>
-      val apache =
-        new ChengBetaSampler(new source64.SplitMix64(seed), params.alpha, params.beta)
-      Beta[PureRV[SplitMix64, _], Double, Double, Double](params.alpha, params.beta)
+  "Exponential" should {
+    "match Apache implementation" in prop { (seed: Long) =>
+      val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
+      Exponential
+        .standard[PureRV[SplitMix64, _], Double]
         .replicateA(N)
         .simulate(SplitMix64(seed))
         .value ===

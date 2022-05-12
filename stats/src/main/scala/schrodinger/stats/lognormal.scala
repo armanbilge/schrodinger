@@ -14,21 +14,18 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
 import cats.Applicative
 import cats.syntax.all.*
 import org.apache.commons.math3.distribution.LogNormalDistribution
-import schrodinger.kernel.Density
 import schrodinger.kernel.LogNormal
 import schrodinger.math.LogDouble
 
-object lognormal extends LogNormalInstances
-
-trait LogNormalInstances:
-
-  given schrodingerStatsLogNormalForDouble[F[_]: Applicative]
-      : LogNormal[Double][Density[F, LogDouble]] =
-    case LogNormal.Params(mu, sigma) =>
+private trait LogNormalInstances:
+  given [F[_]: Applicative]: LogNormal[Density[F, LogDouble, _], Double] with
+    def logNormal = logNormal(0, 1)
+    def logNormal(mu: Double, sigma: Double) =
       val distribution = new LogNormalDistribution(null, mu, sigma)
-      x => LogDouble.exp(distribution.logDensity(x)).pure[F]
+      Density(x => LogDouble.exp(distribution.logDensity(x)).pure)

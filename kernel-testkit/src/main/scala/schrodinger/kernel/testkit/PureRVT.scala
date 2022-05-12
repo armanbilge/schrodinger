@@ -42,8 +42,8 @@ object PureRV:
   def getExtra[S, A](key: LookupKey[A]): PureRV[S, Option[A]] =
     PureRVT.getExtra(key)
 
-  def setExtra[S, A](key: InsertKey[A])(a: A): PureRV[S, Unit] =
-    PureRVT.setExtra(key)(a)
+  def setExtra[S, A](key: InsertKey[A], a: Option[A]): PureRV[S, Unit] =
+    PureRVT.setExtra(key, a)
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 
@@ -54,8 +54,8 @@ object PureRVT:
   def getExtra[F[_]: Applicative, S, A](key: LookupKey[A]): PureRVT[F, S, Option[A]] =
     StateT.inspect(_._2.lookup(key))
 
-  def setExtra[F[_]: Applicative, S, A](key: InsertKey[A])(a: A): PureRVT[F, S, Unit] =
-    StateT.modify { (state, extras) => (state, extras.insert(key, a)) }
+  def setExtra[F[_]: Applicative, S, A](key: InsertKey[A], a: Option[A]): PureRVT[F, S, Unit] =
+    StateT.modify((state, extras) => (state, a.fold(extras.delete(key))(extras.insert(key, _))))
 
   given [F[_]: Sync, S]: Sync[PureRVT[F, S, _]] = Sync.syncForStateT
 

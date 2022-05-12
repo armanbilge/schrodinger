@@ -14,26 +14,33 @@
  * limitations under the License.
  */
 
-package schrodinger.stats
+package schrodinger
+package stats
 
-import cats.syntax.all.*
-import cats.instances.vector.*
+import algebra.instances.all.*
+import algebra.ring.AdditiveMonoid
 import cats.Applicative
-import schrodinger.kernel.Density
+import cats.NonEmptyParallel
+import cats.NonEmptyTraverse
+import cats.syntax.all.*
+import org.apache.commons.math3.special.Gamma.logGamma
+import schrodinger.kernel
 import schrodinger.kernel.Dirichlet
 import schrodinger.math.LogDouble
-import org.apache.commons.math3.special.Gamma.logGamma
 
-object dirichlet extends DirichletInstances
+private trait DirichletInstances:
+  given [F[_]: Applicative, G[_]: NonEmptyTraverse: NonEmptyParallel]
+      : Dirichlet[Density[F, LogDouble, _], G[Double]] with
+    def dirichlet(concentration: G[Double]) =
 
-trait DirichletInstances:
-  given schrodingerStatsExponentialForVectorDouble[F[_]: Applicative]
-      : Dirichlet[Vector[Double], Vector[Double]][Density[F, LogDouble]] =
-    case Dirichlet.Params(concentration) =>
       def Gamma(x: Double) = LogDouble.exp(logGamma(x))
+
       val normalizingConstant =
-        Gamma(concentration.sum) / concentration.map(Gamma).reduce(_ * _)
-      x =>
+        Gamma(AdditiveMonoid[Double].sum(concentration.toIterable))
+          / concentration.reduceMap(Gamma)(_ * _)
+
+      Density { x =>
         val density =
           (concentration, x).parMapN((alpha, x) => LogDouble(x) ** (alpha - 1)).reduce(_ * _)
-        (normalizingConstant * density).pure[F]
+        (normalizingConstant * density).pure
+      }

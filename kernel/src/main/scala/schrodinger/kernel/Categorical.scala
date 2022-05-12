@@ -16,12 +16,48 @@
 
 package schrodinger.kernel
 
-type Categorical[S, X] = [F[_]] =>> Distribution[F, Categorical.Params[S], X]
-type CategoricalVector[P] = [F[_]] =>> Categorical[Vector[P], Int][F]
-type CategoricalMap[A, R] = [F[_]] =>> Categorical[Map[A, R], A][F]
+import algebra.Priority
+import algebra.ring.AdditiveMonoid
+import algebra.ring.Semiring
+import cats.Functor
+import cats.Invariant
+import cats.NonEmptyTraverse
+import cats.Reducible
+import cats.data.Chain
+import cats.data.NonEmptyVector
+import cats.kernel.Hash
+import cats.kernel.Order
+import cats.syntax.all.*
+import schrodinger.math.syntax.*
+
+trait Categorical[F[_], V, I]:
+  def categorical(probabilites: V): F[I]
 
 object Categorical:
-  final case class Params[+S](support: S)
+  inline def apply[F[_], V, I](probabilites: V)(
+      using c: Categorical[F, V, I]
+  ): F[I] = c.categorical(probabilites)
 
-  inline def apply[F[_], S, X](support: S)(using c: Categorical[S, X][F]): F[X] = c(
-    Params(support))
+  def apply[F[_], P, G[_]: NonEmptyTraverse, A](support: G[(A, P)])(
+      using F: Priority[Functor[F], InvariantAndHash[F, A]],
+      P: Semiring[P],
+      c: Categorical[F, G[P], Long]
+  ): F[A] =
+    val probabilities = support.map(_._2)
+    F match
+      case Priority.Preferred(given Functor[f]) =>
+        apply(probabilities).map(support.get(_).get._1)
+      case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
+        val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
+        apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
+
+  given [F[_]: Functor, G[_]: Reducible, P: Order](
+      using P: AdditiveMonoid[P],
+      u: Uniform[F, P]): Categorical[F, G[P], Long] with
+    def categorical(probabilities: G[P]) =
+      val cumSum =
+        probabilities.reduceLeftTo(Chain.one(_))((c, p) => c :+ (c.lastOption.get + p)).toVector
+      val sum = cumSum.last
+      Uniform(P.zero, sum).map(
+        cumSum.search(_)(using Order[P].toOrdering).insertionPoint
+      )

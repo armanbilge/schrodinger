@@ -16,10 +16,25 @@
 
 package schrodinger.kernel
 
-type Dirichlet[C, X] = [F[_]] =>> Distribution[F, Dirichlet.Params[C], X]
+import algebra.ring.Semifield
+import cats.Apply
+import cats.NonEmptyTraverse
+import cats.syntax.all.*
+import schrodinger.math.syntax.*
+
+trait Dirichlet[F[_], V]:
+  def dirichlet(concentration: V): F[V]
 
 object Dirichlet:
-  final case class Params[+C](concentration: C)
+  inline def apply[F[_], V](concentration: V)(using d: Dirichlet[F, V]): F[V] =
+    d.dirichlet(concentration)
 
-  inline def apply[F[_], C, X](concentration: C)(using d: Dirichlet[C, X][F]): F[X] =
-    d(Params(concentration))
+  given [F[_]: Apply, G[_]: NonEmptyTraverse, A](
+      using A: Semifield[A],
+      g: Gamma[F, A]
+  ): Dirichlet[F, G[A]] with
+    def dirichlet(concentration: G[A]) =
+      concentration.nonEmptyTraverse(Gamma(_, A.one)).map { xs =>
+        val sum = A.sum(xs.toIterable)
+        xs.map(_ / sum)
+      }

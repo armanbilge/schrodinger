@@ -27,11 +27,13 @@ import cats.Eq
 import cats.Foldable
 import cats.Id
 import cats.Monad
+import cats.Reducible
 import cats.kernel.Hash
 import cats.kernel.Monoid
 import cats.kernel.Semigroup
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
+import schrodinger.stats.Density
 
 import scala.util.NotGiven
 
@@ -91,31 +93,28 @@ object Dist:
 
       go(f(a), Map.empty)
 
+  given [P](using FairBernoulli[Density[Id, P, _], Boolean]): FairBernoulli[Dist[P, _], Boolean]
+    with
+    def fairBernoulli =
+      val f = Bernoulli.fair
+      Dist(List(false, true).fproduct(f).toMap)
+
+  given [P](using Bernoulli[Density[Id, P, _], P, Boolean]): Bernoulli[Dist[P, _], P, Boolean]
+    with
+    def bernoulli(successProbability: P) =
+      val f = Bernoulli(successProbability)
+      Dist(List(false, true).fproduct(f).toMap)
+
   given [P](
-      using density: Bernoulli[P, Boolean][Density[Id, P]]): Bernoulli[P, Boolean][Dist[P, *]] =
-    params =>
-      val f = density(params)
-      Dist(Map(false -> f(false), true -> f(true)))
+      using DiscreteUniform[Density[Id, P, _], Long]
+  ): DiscreteUniform[Dist[P, _], Long] with
+    def discreteUniform(n: Long) =
+      val f = DiscreteUniform(n)
+      Dist((0L until n).toList.fproduct(f).toMap)
 
-  given [P](using density: UniformRange[Density[Id, P]]): UniformRange[Dist[P, *]] =
-    params =>
-      val f = density(params)
-      Dist(params.support.map(i => i -> f(i)).toMap)
-
-  given [G[_]: Foldable, P](
-      using
-      density: Categorical[G[P], Int][Density[Id, P]]): Categorical[G[P], Int][Dist[P, *]] =
-    case params @ Categorical.Params(support) =>
-      val f = density(params)
-      Dist((0 until support.size.toInt).map(i => i -> f(i)).toMap)
-
-  given [A: Hash, P](using density: Categorical[Map[A, P], A][Density[Id, P]])
-      : Categorical[Map[A, P], A][Dist[P, *]] =
-    case params @ Categorical.Params(support) =>
-      val f = density(params)
-      Dist(support.map((a, _) => a -> f(a)))
-
-  given [G[_]: Foldable, A: Hash, P](
-      using Categorical[Map[A, P], A][Dist[P, *]]): Categorical[G[(A, P)], A][Dist[P, *]] =
-    case Categorical.Params(support) =>
-      Categorical(support.toIterable.toMap)
+  given [G[_]: Reducible, P](
+      using Categorical[Density[Id, P, _], G[P], Long]
+  ): Categorical[Dist[P, _], G[P], Long] with
+    def categorical(support: G[P]) =
+      val f = Categorical(support)
+      Dist((0L until support.size).toList.fproduct(f).toMap)

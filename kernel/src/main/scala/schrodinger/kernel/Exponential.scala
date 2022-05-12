@@ -16,13 +16,52 @@
 
 package schrodinger.kernel
 
-type GenExponential[R, X] = [F[_]] =>> Distribution[F, Exponential.Params[R], X]
-type Exponential[R] = [F[_]] =>> GenExponential[R, R][F]
+import cats.Monad
+import cats.syntax.all.*
+
+trait Exponential[F[_], A]:
+  def exponential: F[A]
+  def exponential(rate: A): F[A]
 
 object Exponential:
-  final case class Params[+R](rate: R)
+  inline def apply[F[_], A](rate: A)(using e: Exponential[F, A]): F[A] =
+    e.exponential(rate)
 
-  inline def standard[F[_], X](using e: GenExponential[1, X][F]): F[X] = e(Params(1))
+  inline def standard[F[_], A](using e: Exponential[F, A]): F[A] =
+    e.exponential
 
-  inline def apply[F[_], R](rate: R)(using e: Exponential[R][F]): F[R] =
-    e(Params(rate))
+  given [F[_]: Monad](using U: Uniform[F, Double]): Exponential[F, Double] with
+    def exponential(rate: Double) = exponential.map(_ / rate)
+
+    def exponential = U.uniform10.flatMap { _u =>
+      var a = 0.0
+      var u = _u
+
+      while u < 0.5 do
+        a += ExponentialSaQi(0)
+        u *= 2
+
+      u += u - 1
+
+      if u <= ExponentialSaQi(0) then (a + u).pure
+      else
+        var i = 1
+        while u > ExponentialSaQi(i) do i += 1
+
+        umin(i).map(a + _ * ExponentialSaQi(0))
+    }
+
+    private val umin =
+      Vector.iterate(Uniform.standard, 16)(_.map2(Uniform.standard)(Math.min))
+
+    private val ExponentialSaQi =
+      val qi = new Array[Double](16)
+      val log2 = Math.log(2)
+      var p = log2
+      qi(0) = p
+      var i = 1
+      while i < qi.length do
+        p *= log2 / (i + 1)
+        qi(i) = qi(i - 1) + p
+        i += 1
+      qi

@@ -30,11 +30,11 @@ import cats.ContravariantMonoidal
 import cats.Defer
 import cats.Eq
 import cats.Eval
+import cats.FlatMap
 import cats.Functor
 import cats.Invariant
 import cats.InvariantSemigroupal
 import cats.Monad
-import cats.MonadError
 import cats.Monoid
 import cats.MonoidK
 import cats.Order
@@ -43,22 +43,6 @@ import cats.PartialOrder
 import cats.Semigroup
 import cats.SemigroupK
 import cats.Show
-import cats.effect.kernel.Async
-import cats.effect.kernel.CancelScope
-import cats.effect.kernel.Clock
-import cats.effect.kernel.Cont
-import cats.effect.kernel.Deferred
-import cats.effect.kernel.Fiber
-import cats.effect.kernel.GenConcurrent
-import cats.effect.kernel.GenSpawn
-import cats.effect.kernel.GenTemporal
-import cats.effect.kernel.MonadCancel
-import cats.effect.kernel.Outcome
-import cats.effect.kernel.Poll
-import cats.effect.kernel.Ref
-import cats.effect.kernel.Sync
-import cats.effect.kernel.Sync.Type
-import cats.effect.kernel.Unique
 import cats.kernel.Hash
 import cats.syntax.InvariantSyntax
 import cats.syntax.applicative.*
@@ -69,17 +53,24 @@ import cats.syntax.functor.*
 import cats.syntax.invariant.*
 import cats.syntax.semigroup.*
 import cats.~>
-import schrodinger.kernel.Density
-import schrodinger.kernel.Distribution
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Beta
+import schrodinger.kernel.Categorical
+import schrodinger.kernel.Dirichlet
+import schrodinger.kernel.DiscreteUniform
+import schrodinger.kernel.Exponential
+import schrodinger.kernel.FairBernoulli
+import schrodinger.kernel.Gamma
+import schrodinger.kernel.Gaussian
+import schrodinger.kernel.LogNormal
+import schrodinger.kernel.Uniform
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
+import schrodinger.stats.Density
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
-object WeightedT extends WeightedTInstances:
+object WeightedT extends WeightedTInstances, WeightedTDistributionInstances:
   def apply[F[_], W, A](fwa: F[Weighted[W, A]]): WeightedT[F, W, A] = fwa
 
   def pure[F[_]: Applicative, W: MultiplicativeMonoid, A](a: A): WeightedT[F, W, A] =
@@ -136,16 +127,7 @@ object WeightedT extends WeightedTInstances:
 
     def show(using F: Show[F[Weighted[W, A]]]): String = F.show(value)
 
-private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
-
-  given [F[_]: Monad, W: Monoid, P, S](
-      using r: Distribution[F, P, S],
-      d: Distribution[Density[F, W], P, S]
-  ): Distribution[WeightedT[F, W, _], P, S] with
-    override def apply(params: P) =
-      val sampler = r(params)
-      val density = d(params)
-      WeightedT(sampler.flatMap(a => density(a).map(Heavy(Monoid[W].empty, _, a))))
+sealed private class WeightedTInstances extends WeightedTInstances0:
 
   given [F[_], W](using F: Defer[F]): Defer[WeightedT[F, W, _]] with
     def defer[A](fa: => WeightedT[F, W, A]): WeightedT[F, W, A] =
@@ -166,7 +148,7 @@ private[montecarlo] class WeightedTInstances extends WeightedTInstances0:
       Eq[W]): InvariantSemigroupal[WeightedT[F, W, _]] =
     WeightedTInvariantSemigroupal[F, W]
 
-sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1:
+sealed private class WeightedTInstances0 extends WeightedTInstances1:
   given [F[_], W, A](
       using F: PartialOrder[F[Weighted[W, A]]]): PartialOrder[WeightedT[F, W, A]] =
     F.asInstanceOf[PartialOrder[WeightedT[F, W, A]]]
@@ -177,21 +159,21 @@ sealed private[montecarlo] class WeightedTInstances0 extends WeightedTInstances1
   given [F[_], W](using Invariant[F]): Invariant[WeightedT[F, W, _]] =
     WeightedTInvariant[F, W]
 
-sealed private[montecarlo] class WeightedTInstances1 extends WeightedTInstances2:
+sealed private class WeightedTInstances1 extends WeightedTInstances2:
   given [F[_], W, A](using F: Hash[F[Weighted[W, A]]]): Hash[WeightedT[F, W, A]] =
     F.asInstanceOf[Hash[WeightedT[F, W, A]]]
 
-sealed private[montecarlo] class WeightedTInstances2:
+sealed private class WeightedTInstances2:
   given [F[_], W, A](using F: Eq[F[Weighted[W, A]]]): Eq[WeightedT[F, W, A]] =
     F.asInstanceOf[Eq[WeightedT[F, W, A]]]
 
-sealed private[montecarlo] class WeightedTInvariant[F[_], W](using F: Invariant[F])
+sealed private class WeightedTInvariant[F[_], W](using F: Invariant[F])
     extends Invariant[WeightedT[F, W, _]]:
 
   def imap[A, B](fa: WeightedT[F, W, A])(f: A => B)(g: B => A) =
     WeightedT.imap(fa)(f)(g)
 
-sealed private[montecarlo] class WeightedTInvariantSemigroupal[F[_], W](
+sealed private class WeightedTInvariantSemigroupal[F[_], W](
     using F: Applicative[F],
     val W0: Semiring[W],
     val W1: Eq[W])
@@ -199,3 +181,153 @@ sealed private[montecarlo] class WeightedTInvariantSemigroupal[F[_], W](
       InvariantSemigroupal[WeightedT[F, W, _]]:
   def product[A, B](fa: WeightedT[F, W, A], fb: WeightedT[F, W, B]): WeightedT[F, W, (A, B)] =
     WeightedT.product(fa)(fb)
+
+sealed private trait WeightedTDistributionInstances:
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, B](
+      using r: FairBernoulli[F, B],
+      d: FairBernoulli[Density[F, W, _], B]): FairBernoulli[WeightedT[F, W, _], B] with
+    def fairBernoulli = WeightedT {
+      for
+        b <- r.fairBernoulli
+        d <- d.fairBernoulli(b)
+      yield Weighted(d, b)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, P, B](
+      using r: Bernoulli[F, P, B],
+      d: Bernoulli[Density[F, W, _], P, B]): Bernoulli[WeightedT[F, W, _], P, B] with
+    def bernoulli(successProbability: P) = WeightedT {
+      for
+        b <- r.bernoulli(successProbability)
+        d <- d.bernoulli(successProbability)(b)
+      yield Weighted(d, b)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, I](
+      using r: DiscreteUniform[F, I],
+      d: DiscreteUniform[Density[F, W, _], I]): DiscreteUniform[WeightedT[F, W, _], I] with
+    def discreteUniform(n: I) = WeightedT {
+      for
+        i <- r.discreteUniform(n)
+        d <- d.discreteUniform(n)(i)
+      yield Weighted(d, i)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, V, I](
+      using r: Categorical[F, V, I],
+      d: Categorical[Density[F, W, _], V, I]): Categorical[WeightedT[F, W, _], V, I] with
+    def categorical(probabilities: V) = WeightedT {
+      for
+        i <- r.categorical(probabilities)
+        d <- d.categorical(probabilities)(i)
+      yield Weighted(d, i)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Gaussian[F, A],
+      d: Gaussian[Density[F, W, _], A]): Gaussian[WeightedT[F, W, _], A] with
+
+    def gaussian = WeightedT {
+      for
+        x <- r.gaussian
+        d <- d.gaussian(x)
+      yield Weighted(d, x)
+    }
+
+    def gaussian(mean: A, standardDeviation: A) = WeightedT {
+      for
+        x <- r.gaussian(mean, standardDeviation)
+        d <- d.gaussian(mean, standardDeviation)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: LogNormal[F, A],
+      d: LogNormal[Density[F, W, _], A]): LogNormal[WeightedT[F, W, _], A] with
+
+    def logNormal = WeightedT {
+      for
+        x <- r.logNormal
+        d <- d.logNormal(x)
+      yield Weighted(d, x)
+    }
+
+    def logNormal(mu: A, sigma: A) = WeightedT {
+      for
+        x <- r.logNormal(mu, sigma)
+        d <- d.logNormal(mu, sigma)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Exponential[F, A],
+      d: Exponential[Density[F, W, _], A]): Exponential[WeightedT[F, W, _], A] with
+
+    def exponential = WeightedT {
+      for
+        x <- r.exponential
+        d <- d.exponential(x)
+      yield Weighted(d, x)
+    }
+
+    def exponential(rate: A) = WeightedT {
+      for
+        x <- r.exponential(rate)
+        d <- d.exponential(rate)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Gamma[F, A],
+      d: Gamma[Density[F, W, _], A]): Gamma[WeightedT[F, W, _], A] with
+    def gamma(shape: A, rate: A) = WeightedT {
+      for
+        x <- r.gamma(shape, rate)
+        d <- d.gamma(shape, rate)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Uniform[F, A],
+      d: Uniform[Density[F, W, _], A]): Uniform[WeightedT[F, W, _], A] with
+
+    def uniform01 = WeightedT {
+      for
+        x <- r.uniform01
+        d <- d.uniform01(x)
+      yield Weighted(d, x)
+    }
+
+    def uniform10 = WeightedT {
+      for
+        x <- r.uniform10
+        d <- d.uniform10(x)
+      yield Weighted(d, x)
+    }
+
+    def uniform(include: A, exclude: A) = WeightedT {
+      for
+        x <- r.uniform(include, exclude)
+        d <- d.uniform(include, exclude)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Beta[F, A],
+      d: Beta[Density[F, W, _], A]): Beta[WeightedT[F, W, _], A] with
+    def beta(alpha: A, beta: A) = WeightedT {
+      for
+        x <- r.beta(alpha, beta)
+        d <- d.beta(alpha, beta)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Dirichlet[F, A],
+      d: Dirichlet[Density[F, W, _], A]): Dirichlet[WeightedT[F, W, _], A] with
+    def dirichlet(concentration: A) = WeightedT {
+      for
+        x <- r.dirichlet(concentration)
+        d <- d.dirichlet(concentration)(x)
+      yield Weighted(d, x)
+    }

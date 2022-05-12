@@ -26,6 +26,7 @@ extension [A](x: A)
   def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
   def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
   def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+  def reciprocal(using A: MultiplicativeGroup[A]): A = A.reciprocal(x)
 
 extension [A](A: Rig[A])
   def fromInt(n: Int): A = fakeRing.fromInt(n)

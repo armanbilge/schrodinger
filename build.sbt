@@ -1,4 +1,4 @@
-ThisBuild / tlBaseVersion := "0.3"
+ThisBuild / tlBaseVersion := "0.4"
 
 ThisBuild / organization := "com.armanbilge"
 ThisBuild / organizationName := "Arman Bilge"
@@ -30,24 +30,15 @@ val commonJvmSettings = Seq(
 )
 
 lazy val root = tlCrossRootProject.aggregate(
-  kernel,
   math,
+  kernel,
   kernelTestkit,
   laws,
-  random,
   core,
   testkit,
   tests,
   stats,
   monteCarlo)
-
-lazy val kernel = crossProject(JVMPlatform, JSPlatform)
-  .crossType(CrossType.Pure)
-  .in(file("kernel"))
-  .settings(
-    name := "schrodinger-kernel"
-  )
-  .jvmSettings(commonJvmSettings)
 
 lazy val math = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -63,13 +54,38 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
+lazy val kernel = crossProject(JVMPlatform, JSPlatform)
+  .crossType(CrossType.Pure)
+  .in(file("kernel"))
+  .dependsOn(math)
+  .settings(
+    name := "schrodinger-kernel",
+    libraryDependencies ++= Seq(
+      "org.typelevel" %%% "cats-core" % CatsVersion
+    )
+  )
+  .jvmSettings(commonJvmSettings)
+
+lazy val stats = project
+  .in(file("stats"))
+  .dependsOn(kernel.jvm, math.jvm)
+  .settings(
+    name := "schrodinger-stats",
+    libraryDependencies ++= Seq(
+      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
+      "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
+      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
+    )
+  )
+  .settings(commonJvmSettings)
+
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
-  .dependsOn(kernel.jvm, math.jvm)
+  .dependsOn(kernel.jvm, stats)
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion,
       "org.typelevel" %%% "cats-effect-kernel-testkit" % CatsEffectVersion,
       "org.typelevel" %%% "vault" % VaultVersion,
@@ -95,23 +111,9 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
-lazy val random = project
-  .in(file("random"))
-  .dependsOn(kernel.jvm, math.jvm, kernelTestkit % Test)
-  .settings(
-    name := "schrodinger-random",
-    libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
-      "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
-    )
-  )
-  .settings(commonJvmSettings)
-
 lazy val core = project
   .in(file("core"))
-  .dependsOn(random)
+  .dependsOn(kernel.jvm)
   .settings(
     name := "schrodinger",
     libraryDependencies ++= Seq(
@@ -155,22 +157,9 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
   )
   .jvmSettings(commonJvmSettings)
 
-lazy val stats = project
-  .in(file("stats"))
-  .dependsOn(kernel.jvm, math.jvm)
-  .settings(
-    name := "schrodinger-stats",
-    libraryDependencies ++= Seq(
-      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
-      "org.typelevel" %%% "cats-core" % CatsVersion,
-      "org.typelevel" %%% "cats-laws" % CatsVersion % Test
-    )
-  )
-  .settings(commonJvmSettings)
-
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, math.jvm, testkit % Test)
+  .dependsOn(kernel.jvm, stats, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
