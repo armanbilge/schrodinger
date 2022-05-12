@@ -159,7 +159,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, math.jvm, testkit % Test)
+  .dependsOn(kernel.jvm, stats, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(

@@ -69,8 +69,6 @@ import cats.syntax.functor.*
 import cats.syntax.invariant.*
 import cats.syntax.semigroup.*
 import cats.~>
-import schrodinger.kernel.Density
-import schrodinger.kernel.Distribution
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless

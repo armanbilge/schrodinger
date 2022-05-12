@@ -17,7 +17,6 @@
 package schrodinger.montecarlo
 
 import fs2.Stream
-import schrodinger.kernel.Distribution
 
 trait MarkovChain[F[_], G[_], A]:
   def markovChain(initial: A)(transition: A => G[A]): F[A]
