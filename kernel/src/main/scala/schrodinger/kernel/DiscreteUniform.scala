@@ -40,6 +40,9 @@ object DiscreteUniform:
         val inv = support.toIterable.view.zipWithIndex.toMap
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
 
+  def apply[F[_]: Invariant](support: Range)(using u: DiscreteUniform[F, Long]): F[Int] =
+    apply(support.length.toLong).imap(i => support(i.toInt))(support.indexOf(_).toLong)
+
   given [F[_]: FlatMap: Random]: DiscreteUniform[F, Long] with
     def discreteUniform(n: Long) =
       if (n & -n) == n then Random.long.map(_ & (n - 1))
