@@ -61,6 +61,7 @@ import schrodinger.kernel.Exponential
 import schrodinger.kernel.FairBernoulli
 import schrodinger.kernel.Gamma
 import schrodinger.kernel.Gaussian
+import schrodinger.kernel.LogNormal
 import schrodinger.kernel.Uniform
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
@@ -201,6 +202,24 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         x <- r.gaussian(mean, standardDeviation)
         d <- d.gaussian(mean, standardDeviation)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: LogNormal[F, A],
+      d: LogNormal[Density[F, W, _], A]): LogNormal[WeightedT[F, W, _], A] with
+
+    def logNormal = WeightedT {
+      for
+        x <- r.logNormal
+        d <- d.logNormal(x)
+      yield Weighted(d, x)
+    }
+
+    def logNormal(mu: A, sigma: A) = WeightedT {
+      for
+        x <- r.logNormal(mu, sigma)
+        d <- d.logNormal(mu, sigma)(x)
       yield Weighted(d, x)
     }
 
