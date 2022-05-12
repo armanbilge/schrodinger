@@ -74,6 +74,7 @@ import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.DiscreteUniform
 import schrodinger.kernel.FairBernoulli
+import schrodinger.kernel.Gaussian
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
@@ -199,6 +200,24 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
         i <- r.categorical(probabilities)
         d <- d.categorical(probabilities)(i)
       yield Weighted(d, i)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Gaussian[F, A],
+      d: Gaussian[Density[F, W, _], A]): Gaussian[WeightedT[F, W, _], A] with
+
+    def gaussian = WeightedT {
+      for
+        x <- r.gaussian
+        d <- d.gaussian(x)
+      yield Weighted(d, x)
+    }
+
+    def gaussian(mean: A, standardDeviation: A) = WeightedT {
+      for
+        x <- r.gaussian(mean, standardDeviation)
+        d <- d.gaussian(mean, standardDeviation)(x)
+      yield Weighted(d, x)
     }
 
 sealed private class WeightedTInstances0 extends WeightedTInstances1:
