@@ -73,7 +73,9 @@ import cats.~>
 import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.DiscreteUniform
+import schrodinger.kernel.Exponential
 import schrodinger.kernel.FairBernoulli
+import schrodinger.kernel.Gamma
 import schrodinger.kernel.Gaussian
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
@@ -217,6 +219,34 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         x <- r.gaussian(mean, standardDeviation)
         d <- d.gaussian(mean, standardDeviation)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Exponential[F, A],
+      d: Exponential[Density[F, W, _], A]): Exponential[WeightedT[F, W, _], A] with
+
+    def exponential = WeightedT {
+      for
+        x <- r.exponential
+        d <- d.exponential(x)
+      yield Weighted(d, x)
+    }
+
+    def exponential(rate: A) = WeightedT {
+      for
+        x <- r.exponential(rate)
+        d <- d.exponential(rate)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Gamma[F, A],
+      d: Gamma[Density[F, W, _], A]): Gamma[WeightedT[F, W, _], A] with
+    def gamma(shape: A, rate: A) = WeightedT {
+      for
+        x <- r.gamma(shape, rate)
+        d <- d.gamma(shape, rate)(x)
       yield Weighted(d, x)
     }
 
