@@ -16,6 +16,7 @@
 
 package schrodinger.kernel
 
+import algebra.Priority
 import algebra.ring.AdditiveMonoid
 import algebra.ring.Semiring
 import cats.Functor
@@ -37,16 +38,16 @@ object Categorical:
       using c: Categorical[F, V, I]
   ): F[I] = c.categorical(probabilites)
 
-  def apply[F[_], P, G[_]: NonEmptyTraverse, A: Hash](support: G[(A, P)])(
-      using F: Invariant[F],
+  def apply[F[_], P, G[_]: NonEmptyTraverse, A](support: G[(A, P)])(
+      using F: Priority[Functor[F], (Invariant[F], Hash[A])],
       P: Semiring[P],
       c: Categorical[F, G[P], Long]
   ): F[A] =
     val probabilities = support.map(_._2)
     F match
-      case given Functor[f] =>
+      case Priority.Preferred(given Functor[f]) =>
         apply(probabilities).map(support.get(_).get._1)
-      case _ =>
+      case Priority.Fallback((given Invariant[f], _)) =>
         val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
 

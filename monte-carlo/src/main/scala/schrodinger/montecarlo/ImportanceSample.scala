@@ -20,7 +20,6 @@ import algebra.ring.Semifield
 import cats.Monad
 import cats.data.NonEmptyList
 import cats.kernel.Eq
-import cats.kernel.Hash
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 import schrodinger.math.syntax.*
@@ -37,7 +36,7 @@ object ImportanceSample:
       sampleCount: Int): G[A] =
     is.importanceSample(target, proposal, sampleCount)
 
-  given [F[_]: Monad, P: Hash, A: Hash](
+  given [F[_]: Monad, P: Eq, A](
       using P: Semifield[P],
       c: Categorical[F, NonEmptyList[P], Long]
   ): ImportanceSample[Density[F, P, _], WeightedT[F, P, _], A] with
