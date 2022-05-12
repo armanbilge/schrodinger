@@ -70,6 +70,9 @@ import cats.syntax.functor.*
 import cats.syntax.invariant.*
 import cats.syntax.semigroup.*
 import cats.~>
+import schrodinger.kernel.Bernoulli
+import schrodinger.kernel.Categorical
+import schrodinger.kernel.DiscreteUniform
 import schrodinger.kernel.FairBernoulli
 import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
@@ -78,8 +81,6 @@ import schrodinger.stats.Density
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import schrodinger.kernel.Bernoulli
-import schrodinger.kernel.DiscreteUniform
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
 object WeightedT extends WeightedTInstances:
@@ -187,6 +188,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         i <- r.discreteUniform(n)
         d <- d.discreteUniform(n)(i)
+      yield Weighted(d, i)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, V, I](
+      using r: Categorical[F, V, I],
+      d: Categorical[Density[F, W, _], V, I]): Categorical[WeightedT[F, W, _], V, I] with
+    def categorical(probabilities: V) = WeightedT {
+      for
+        i <- r.categorical(probabilities)
+        d <- d.categorical(probabilities)(i)
       yield Weighted(d, i)
     }
 
