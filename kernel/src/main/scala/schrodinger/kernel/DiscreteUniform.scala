@@ -17,9 +17,9 @@
 package schrodinger.kernel
 
 import algebra.Priority
+import cats.FlatMap
 import cats.Functor
 import cats.Invariant
-import cats.FlatMap
 import cats.Reducible
 import cats.syntax.all.*
 
