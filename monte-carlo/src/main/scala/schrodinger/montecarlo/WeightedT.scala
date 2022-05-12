@@ -35,7 +35,6 @@ import cats.Functor
 import cats.Invariant
 import cats.InvariantSemigroupal
 import cats.Monad
-import cats.MonadError
 import cats.Monoid
 import cats.MonoidK
 import cats.Order
@@ -44,22 +43,6 @@ import cats.PartialOrder
 import cats.Semigroup
 import cats.SemigroupK
 import cats.Show
-import cats.effect.kernel.Async
-import cats.effect.kernel.CancelScope
-import cats.effect.kernel.Clock
-import cats.effect.kernel.Cont
-import cats.effect.kernel.Deferred
-import cats.effect.kernel.Fiber
-import cats.effect.kernel.GenConcurrent
-import cats.effect.kernel.GenSpawn
-import cats.effect.kernel.GenTemporal
-import cats.effect.kernel.MonadCancel
-import cats.effect.kernel.Outcome
-import cats.effect.kernel.Poll
-import cats.effect.kernel.Ref
-import cats.effect.kernel.Sync
-import cats.effect.kernel.Sync.Type
-import cats.effect.kernel.Unique
 import cats.kernel.Hash
 import cats.syntax.InvariantSyntax
 import cats.syntax.applicative.*
@@ -82,9 +65,6 @@ import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 import schrodinger.stats.Density
-
-import scala.concurrent.ExecutionContext
-import scala.concurrent.duration.FiniteDuration
 
 opaque type WeightedT[F[_], W, A] = F[Weighted[W, A]]
 object WeightedT extends WeightedTInstances:
