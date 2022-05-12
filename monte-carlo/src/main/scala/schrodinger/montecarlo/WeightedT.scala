@@ -56,6 +56,7 @@ import cats.~>
 import schrodinger.kernel.Bernoulli
 import schrodinger.kernel.Beta
 import schrodinger.kernel.Categorical
+import schrodinger.kernel.Dirichlet
 import schrodinger.kernel.DiscreteUniform
 import schrodinger.kernel.Exponential
 import schrodinger.kernel.FairBernoulli
@@ -283,6 +284,16 @@ sealed private class WeightedTInstances extends WeightedTInstances0:
       for
         x <- r.beta(alpha, beta)
         d <- d.beta(alpha, beta)(x)
+      yield Weighted(d, x)
+    }
+
+  given [F[_]: FlatMap, W: MultiplicativeMonoid, A](
+      using r: Dirichlet[F, A],
+      d: Dirichlet[Density[F, W, _], A]): Dirichlet[WeightedT[F, W, _], A] with
+    def dirichlet(concentration: A) = WeightedT {
+      for
+        x <- r.dirichlet(concentration)
+        d <- d.dirichlet(concentration)(x)
       yield Weighted(d, x)
     }
 
