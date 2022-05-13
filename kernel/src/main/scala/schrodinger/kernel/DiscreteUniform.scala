@@ -17,11 +17,10 @@
 package schrodinger.kernel
 
 import algebra.Priority
+import cats.FlatMap
 import cats.Functor
 import cats.Invariant
-import cats.FlatMap
 import cats.Reducible
-import cats.kernel.Hash
 import cats.syntax.all.*
 
 trait DiscreteUniform[F[_], I]:
@@ -31,7 +30,7 @@ object DiscreteUniform:
   inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
-  def apply[F[_], G[_]: Reducible, A: Hash](support: G[A])(
+  def apply[F[_], G[_]: Reducible, A](support: G[A])(
       using F: Priority[Functor[F], InvariantAndHash[F, A]],
       u: DiscreteUniform[F, Long]): F[A] =
     F match
@@ -40,6 +39,9 @@ object DiscreteUniform:
       case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
         val inv = support.toIterable.view.zipWithIndex.toMap
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
+
+  def apply[F[_]: Invariant](support: Range)(using u: DiscreteUniform[F, Long]): F[Int] =
+    apply(support.length.toLong).imap(i => support(i.toInt))(support.indexOf(_).toLong)
 
   given [F[_]: FlatMap: Random]: DiscreteUniform[F, Long] with
     def discreteUniform(n: Long) =
