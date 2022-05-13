@@ -47,12 +47,14 @@ final case class Dist[P, A](support: Map[A, P]):
   def map[B](f: A => B)(using P: AdditiveMonoid[P]): Dist[P, B] =
     Dist(support.groupMapReduce(kv => f(kv._1))(_._2)(P.plus(_, _)))
 
-  def flatMap[B](f: A => Dist[P, B])(using P: Rig[P]): Dist[P, B] =
+  def flatMap[B](f: A => Dist[P, B])(using P: Rig[P], eq: Eq[P]): Dist[P, B] =
     given Monoid[P] = P.additive
     Dist(
       support
         .view
-        .map((a, p) => f(a).support.view.mapValues(P.times(p, _)).toMap)
+        .map { (a, p) =>
+          f(a).support.view.filterNot(_._2 === P.zero).mapValues(P.times(p, _)).toMap
+        }
         .toList
         .combineAll
     )
