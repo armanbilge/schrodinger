@@ -45,7 +45,7 @@ object DiscreteUniform:
 
   given [F[_]: FlatMap: Random]: DiscreteUniform[F, Long] with
     def discreteUniform(n: Long) =
-      if (n & -n) == n then Random.long.map(_ & (n - 1))
+      if (n & -n) == n then Random.long.map(_ & n - 1)
       else
         Random
           .long

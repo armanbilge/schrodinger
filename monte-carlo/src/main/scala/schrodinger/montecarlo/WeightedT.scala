@@ -80,11 +80,11 @@ object WeightedT extends WeightedTInstances, WeightedTDistributionInstances:
     fa.map(Weighted.pure)
 
   def liftK[F[_]: Applicative, W: MultiplicativeMonoid]: F ~> WeightedT[F, W, _] =
-    new (F ~> WeightedT[F, W, _]):
+    new F ~> WeightedT[F, W, _]:
       def apply[A](a: F[A]): WeightedT[F, W, A] = WeightedT.liftF(a)
 
   def liftFunctionK[F[_], G[_], A](f: F ~> G): WeightedT[F, A, _] ~> WeightedT[G, A, _] =
-    new (WeightedT[F, A, _] ~> WeightedT[G, A, _]):
+    new WeightedT[F, A, _] ~> WeightedT[G, A, _]:
       def apply[B](k: WeightedT[F, A, B]): WeightedT[G, A, B] = WeightedT.mapK(k)(f)
 
   def fromWeighted[F[_]: Applicative, W, A](wa: Weighted[W, A]): WeightedT[F, W, A] = wa.pure

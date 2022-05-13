@@ -61,7 +61,7 @@ object SimulationResult:
         val p = equidistributedBelief(xcounts, ycounts, Array.fill(allValues.size)(1.0))
 
         if p > eqvThreshold then true
-        else if (1 - p) > neqvThreshold then false
+        else if 1 - p > neqvThreshold then false
         else throw new EqUndecidableException
 
   private def equidistributedBelief(

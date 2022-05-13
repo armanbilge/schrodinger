@@ -36,7 +36,7 @@ object Pcg32:
         x
 
       final override def nextLong(): Long =
-        (s.nextInt().toLong << 32) | s.nextInt().toLong
+        s.nextInt().toLong << 32 | s.nextInt().toLong
 
       final override def split(): Pcg32 =
         val inc = s.nextLong()
@@ -46,7 +46,7 @@ object Pcg32:
 
   object Pcg32XshRr extends Pcg32Rng:
     override protected def output(state: Long): Int =
-      lang.Integer.rotateRight((((state >>> 18) ^ state) >>> 27).toInt, (state >>> 59).toInt)
+      lang.Integer.rotateRight(((state >>> 18 ^ state) >>> 27).toInt, (state >>> 59).toInt)
 
   given schrodingerRngSplittableRngForPcg32: SplittableRng[Pcg32] = Pcg32XshRr
 

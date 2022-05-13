@@ -92,7 +92,7 @@ sealed abstract class RVT[F[_], S, A]:
             case Cont(body) =>
               sim.upgrade(
                 body(
-                  new (RVT[F, S, _] ~> F):
+                  new RVT[F, S, _] ~> F:
                     def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva))
                 ))
 
@@ -127,7 +127,7 @@ object RVT extends RVTInstances:
   def eval[F[_], S, A](fa: F[A]): RVT[F, S, A] = Eval(fa)
 
   def evalK[F[_], S]: F ~> RVT[F, S, _] =
-    new (F ~> RVT[F, S, _]):
+    new F ~> RVT[F, S, _]:
       def apply[A](fa: F[A]): RVT[F, S, A] = RVT.eval(fa)
 
   def int[F[_], S]: RVT[F, S, Int] = NextInt()
@@ -334,8 +334,8 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E](
       (Fiber[RVT[F, S, _], E, A], Outcome[RVT[F, S, _], E, B])]] =
     rva.split.product(rvb.split).evalMap { (fa, fb) =>
       F.racePair(fa, fb).map {
-        case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
-        case Right((fib, oc)) => Right((liftFiber(fib), liftOutcome(oc)))
+        case Left(oc, fib) => Left((liftOutcome(oc), liftFiber(fib)))
+        case Right(fib, oc) => Right((liftFiber(fib), liftOutcome(oc)))
       }
     }
 

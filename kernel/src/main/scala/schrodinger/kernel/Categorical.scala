@@ -56,7 +56,7 @@ object Categorical:
       u: Uniform[F, P]): Categorical[F, G[P], Long] with
     def categorical(probabilities: G[P]) =
       val cumSum =
-        probabilities.reduceLeftTo(Chain.one(_))((c, p) => c :+ (c.lastOption.get + p)).toVector
+        probabilities.reduceLeftTo(Chain.one(_))((c, p) => c :+ c.lastOption.get + p).toVector
       val sum = cumSum.last
       Uniform(P.zero, sum).map(
         cumSum.search(_)(using Order[P].toOrdering).insertionPoint

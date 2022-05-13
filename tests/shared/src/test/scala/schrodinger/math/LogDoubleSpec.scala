@@ -47,9 +47,7 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
     checkAll("LogDouble", MonusTests[LogDouble].monus)
 
     "LogDouble" should {
-      "correctly add identical values" in prop { (x: LogDouble) =>
-        (x + x) === LogDouble.Two * x
-      }
+      "correctly add identical values" in prop { (x: LogDouble) => x + x === LogDouble.Two * x }
 
       "have alley-lawful subtraction" in prop { (x: LogDouble, y: LogDouble) =>
         val z = x - y

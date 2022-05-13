@@ -42,7 +42,7 @@ class UInt128Spec extends Specification, ScalaCheck:
     }
 
     "multiply" in prop { (x: UInt128, y: UInt128) =>
-      (x * y).toBigInt === (x.toBigInt * y.toBigInt) % BigInt(2).pow(128)
+      (x * y).toBigInt === x.toBigInt * y.toBigInt % BigInt(2).pow(128)
     }
 
     "or" in prop { (x: UInt128, y: UInt128) => (x | y).toBigInt === (x.toBigInt | y.toBigInt) }

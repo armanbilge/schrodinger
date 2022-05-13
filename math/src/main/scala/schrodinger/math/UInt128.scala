@@ -65,16 +65,16 @@ final case class UInt128(hi: Long, lo: Long):
 
   @tailrec
   def <<(n: Int): UInt128 =
-    if n >= 128 then this << (n % 128)
-    else if n >= 64 then UInt128(lo << (n - 64), 0)
-    else if n > 0 then UInt128((hi << n) | (lo >>> (64 - n)), lo << n)
+    if n >= 128 then this << n % 128
+    else if n >= 64 then UInt128(lo << n - 64, 0)
+    else if n > 0 then UInt128(hi << n | lo >>> 64 - n, lo << n)
     else this
 
   @tailrec
   def >>(n: Int): UInt128 =
-    if n >= 128 then this >> (n % 128)
-    else if n >= 64 then UInt128(0, hi >>> (n - 64))
-    else if n > 0 then UInt128(hi >>> n, (hi << (64 - n)) | (lo >>> n))
+    if n >= 128 then this >> n % 128
+    else if n >= 64 then UInt128(0, hi >>> n - 64)
+    else if n > 0 then UInt128(hi >>> n, hi << 64 - n | lo >>> n)
     else this
 
   def toBigInt =

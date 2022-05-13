@@ -58,7 +58,7 @@ object Gamma:
 
       def marsagliaTsang: F[Double] =
         val dOptim = shape - 1 / 3.0
-        val cOptim = (1 / 3.0) / Math.sqrt(dOptim)
+        val cOptim = 1 / 3.0 / Math.sqrt(dOptim)
 
         val go: F[Option[Double]] = G.flatMap { x =>
           val oPcTx = 1 + cOptim * x

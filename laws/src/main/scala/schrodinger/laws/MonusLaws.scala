@@ -26,14 +26,14 @@ trait MonusLaws[A](using val A: Monus[A]):
   private given AdditiveCommutativeMonoid[A] = A.additiveCommutativeMonoid
   import given_AdditiveCommutativeMonoid_A.*
 
-  def monusAxiom1(x: A, y: A) = x + (y ∸ x) <-> y + (x ∸ y)
+  def monusAxiom1(x: A, y: A) = x + y ∸ x <-> y + x ∸ y
 
   def monusAxiom2(x: A, y: A, z: A) =
-    (x ∸ y) ∸ z <-> x ∸ (y + z)
+    x ∸ y ∸ z <-> x ∸ (y + z)
 
-  def monusAxiom3(x: A) = (x ∸ x) <-> zero
+  def monusAxiom3(x: A) = x ∸ x <-> zero
 
-  def monusAxiom4(x: A) = (zero ∸ x) <-> zero
+  def monusAxiom4(x: A) = zero ∸ x <-> zero
 
   def monusNaturalOrderConsistency(x: A, y: A) =
     A.naturalOrder.lteqv(x, x + y)
