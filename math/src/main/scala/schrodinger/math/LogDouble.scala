@@ -23,13 +23,13 @@ import cats.kernel.Order
 opaque type LogDouble = Double
 
 object LogDouble:
-  val Zero: LogDouble = Double.NegativeInfinity
-  val One: LogDouble = 0.0
-  val Two: LogDouble = 0.6931471805599453
-  val MinPositiveValue: LogDouble = Double.MinValue
-  val MaxValue: LogDouble = Double.MaxValue
-  val PositiveInfinity: LogDouble = Double.PositiveInfinity
-  val NaN: LogDouble = Double.NaN
+  final val Zero: LogDouble = Double.NegativeInfinity
+  final val One: LogDouble = 0.0
+  final val Two: LogDouble = 0.6931471805599453
+  final val MinPositiveValue: LogDouble = Double.MinValue
+  final val MaxValue: LogDouble = Double.MaxValue
+  final val PositiveInfinity: LogDouble = Double.PositiveInfinity
+  final val NaN: LogDouble = Double.NaN
 
   inline def apply(x: Double): LogDouble = Math.log(x)
   inline def exp(x: Double): LogDouble = x
