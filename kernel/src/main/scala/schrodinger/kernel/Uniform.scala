@@ -18,6 +18,7 @@ package schrodinger.kernel
 
 import cats.Functor
 import cats.syntax.all.*
+import schrodinger.math.LogDouble
 
 trait Uniform[F[_], A]:
   def uniform01: F[A]
@@ -37,6 +38,17 @@ object Uniform:
     def uniform10 = Random.long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
 
     def uniform(include: Double, exclude: Double) =
+      if exclude >= include then
+        val delta = exclude - include
+        uniform01.map(_ * delta + include)
+      else
+        val delta = include - exclude
+        uniform10.map(_ * delta + exclude)
+
+  given [F[_]: Functor](using double: Uniform[F, Double]): Uniform[F, LogDouble] with
+    def uniform01 = double.uniform01.map(LogDouble(_))
+    def uniform10 = double.uniform10.map(LogDouble(_))
+    def uniform(include: LogDouble, exclude: LogDouble) =
       if exclude >= include then
         val delta = exclude - include
         uniform01.map(_ * delta + include)
