@@ -19,7 +19,7 @@ val Fs2Version = "3.2.7"
 val Specs2Version = "5.0.0"
 val Specs2CatsVersion = "1.0.0-ALPHA-07"
 val ScalaCheckVersion = "1.16.0"
-val VaultVersion = "3.1.0"
+val VaultVersion = "3.2.1"
 val DisciplineVersion = "1.1.5"
 val DisciplineSpecs2Version = "2.0.0"
 
