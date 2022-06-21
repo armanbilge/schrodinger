@@ -8,7 +8,7 @@ ThisBuild / startYear := Some(2021)
 ThisBuild / tlUntaggedAreSnapshots := false
 ThisBuild / tlSonatypeUseLegacyHost := false
 
-val Scala3 = "3.1.2"
+val Scala3 = "3.1.3"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.8.0"
