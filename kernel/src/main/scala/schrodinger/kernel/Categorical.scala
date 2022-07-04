@@ -18,7 +18,6 @@ package schrodinger.kernel
 
 import algebra.Priority
 import algebra.ring.AdditiveMonoid
-import algebra.ring.Semiring
 import cats.Functor
 import cats.Invariant
 import cats.NonEmptyTraverse
@@ -40,7 +39,7 @@ object Categorical:
 
   def apply[F[_], P, G[_]: NonEmptyTraverse, A](support: G[(A, P)])(
       using F: Priority[Functor[F], InvariantAndHash[F, A]],
-      P: Semiring[P],
+      P: AdditiveMonoid[P],
       c: Categorical[F, G[P], Long]
   ): F[A] =
     val probabilities = support.map(_._2)
