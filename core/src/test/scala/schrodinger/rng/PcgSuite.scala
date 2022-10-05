@@ -32,7 +32,7 @@ class PcgSuite extends ScalaCheckSuite:
     for
       state <- Gen.long
       inc <- Gen.long
-    yield Pcg32(state, inc | 1)
+    yield Pcg32(state, inc | 1),
   )
 
   property("Pcg32XshRr generate ints") {

@@ -38,7 +38,7 @@ class LogDoubleSuite extends DisciplineSuite:
     case (LogDouble.Zero, LogDouble.Zero) => true
     case (LogDouble.One, LogDouble.One) => true
     case (x, y) if x.isNaN & y.isNaN => true
-    case (x, y) => ((x.log - y.log) / (x.log max y.log)).abs < eps
+    case (x, y) => ((x.log - y.log) / (x.log.max(y.log))).abs < eps
 
   {
     given eq: Eq[LogDouble] = approxEq(1e-8)
@@ -46,7 +46,7 @@ class LogDoubleSuite extends DisciplineSuite:
     checkAll("LogDouble", MonusTests[LogDouble].monus)
 
     property("correctly add identical values") {
-      forAll { (x: LogDouble) => (x + x) == LogDouble.Two * x }
+      forAll((x: LogDouble) => (x + x) == LogDouble.Two * x)
     }
 
     property("have alley-lawful subtraction") {

@@ -38,5 +38,5 @@ class DensitySuite extends DisciplineSuite:
 
   checkAll(
     "Density",
-    InvariantMonoidalTests[Density[Eval, Long, _]].invariantMonoidal[MiniInt, MiniInt, MiniInt]
+    InvariantMonoidalTests[Density[Eval, Long, _]].invariantMonoidal[MiniInt, MiniInt, MiniInt],
   )

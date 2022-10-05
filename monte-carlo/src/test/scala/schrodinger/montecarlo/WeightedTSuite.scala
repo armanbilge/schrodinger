@@ -58,5 +58,5 @@ class WeightedTSuite extends DisciplineSuite:
   checkAll("WeightedT", MonoidTests[WeightedT[List, Int, Int]].monoid)
   checkAll(
     "WeightedT",
-    InvariantSemigroupalTests[WeightedT[Eval, Int, _]].invariantSemigroupal[Int, Int, Int]
+    InvariantSemigroupalTests[WeightedT[Eval, Int, _]].invariantSemigroupal[Int, Int, Int],
   )

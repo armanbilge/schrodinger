@@ -92,7 +92,8 @@ object PureRVT:
 
     Arbitrary(generators.generators[A])
 
-  given [F[_]: Monad, S: PureRng: ExhaustiveCheck, A: Eq](
-      using Confidence,
-      Eq[F[SimulationResult[A]]]): Eq[PureRVT[F, S, A]] =
+  given [F[_]: Monad, S: PureRng: ExhaustiveCheck, A: Eq](using
+      Confidence,
+      Eq[F[SimulationResult[A]]],
+  ): Eq[PureRVT[F, S, A]] =
     PseudoRandomEq[PureRVT[F, S, _], F, S, A]

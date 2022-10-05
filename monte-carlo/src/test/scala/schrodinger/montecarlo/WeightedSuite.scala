@@ -33,5 +33,6 @@ class WeightedSuite extends DisciplineSuite:
 
   checkAll(
     "Weighted",
-    InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int])
+    InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int],
+  )
   checkAll("Weighted", OrderTests[Weighted[Int, Int]].order)

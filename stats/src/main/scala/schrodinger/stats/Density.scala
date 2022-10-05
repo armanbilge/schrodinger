@@ -55,9 +55,9 @@ sealed private class DensityInvariantSemigroupal[F[_]: Apply, P: MultiplicativeS
   def product[A, B](da: Density[F, P, A], db: Density[F, P, B]) =
     Density((a, b) => (da(a), db(b)).mapN(_ * _))
 
-sealed private class DensityInvariantMonoidal[F[_]: Applicative, P](
-    using P: MultiplicativeMonoid[P])
-    extends DensityInvariantSemigroupal[F, P],
+sealed private class DensityInvariantMonoidal[F[_]: Applicative, P](using
+    P: MultiplicativeMonoid[P],
+) extends DensityInvariantSemigroupal[F, P],
       InvariantMonoidal[Density[F, P, _]]:
   def unit = Density(_ => P.one.pure)
 

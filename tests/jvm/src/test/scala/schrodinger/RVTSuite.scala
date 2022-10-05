@@ -64,14 +64,17 @@ class RVTSuite extends DisciplineSuite, RVTestkit:
     "RVT",
     CommutativeMonadTests[RVT[Option, SplitMix, _]]
       .commutativeMonad[Boolean, Boolean, Boolean]
-      .random)
+      .random,
+  )
 
   checkAll(
     "RVT",
     FunctorFilterTests[RVT[Option, SplitMix, _]]
       .functorFilter[Boolean, Boolean, Boolean]
-      .random)
+      .random,
+  )
 
   checkAll(
     "RVT",
-    AlternativeTests[RVT[Option, SplitMix, _]].alternative[Boolean, Boolean, Boolean].random)
+    AlternativeTests[RVT[Option, SplitMix, _]].alternative[Boolean, Boolean, Boolean].random,
+  )

@@ -18,9 +18,8 @@ package schrodinger
 
 import schrodinger.unsafe.rng.Rng
 
-/**
- * Provides the capability to "dispatch" an independent rng that can be used in unsafe lands.
- */
+/** Provides the capability to "dispatch" an independent rng that can be used in unsafe lands.
+  */
 trait RngDispatcher[F[_]]:
   type S
   def rng: Rng[S]

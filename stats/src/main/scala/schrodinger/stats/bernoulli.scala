@@ -28,8 +28,8 @@ import schrodinger.math.syntax.*
 
 private trait BernoulliInstances:
 
-  given [F[_]: Applicative, A](
-      using A: Semifield[A]
+  given [F[_]: Applicative, A](using
+      A: Semifield[A],
   ): FairBernoulli[Density[F, A, _], Boolean] with
     def fairBernoulli =
       val half = A.fromInt(2).reciprocal.pure

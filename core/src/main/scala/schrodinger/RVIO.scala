@@ -60,7 +60,8 @@ object RVIO:
 
   final private class State[S](
       val rng: S = null.asInstanceOf[S],
-      var cachedGaussian: Double = Double.NaN)
+      var cachedGaussian: Double = Double.NaN,
+  )
 
   final class Algebra[S0: SplittableRng] private[RVIO] (state: IOLocal[State[S0]])
       extends Async[RVIO[S0, _]],
@@ -109,16 +110,15 @@ object RVIO:
     def start[A](fa: RVIO[S, A]): RVIO[S, Fiber[RVIO[S, _], Throwable, A]] =
       dispatch.flatMap(rng => (state.set(State(rng)) *> fa).start)
 
-    override def racePair[A, B](fa: RVIO[S, A], fb: RVIO[S, B]): RVIO[
-      S,
-      Either[
-        (Outcome[RVIO[S, _], Throwable, A], Fiber[RVIO[S, _], Throwable, B]),
-        (Fiber[RVIO[S, _], Throwable, A], Outcome[RVIO[S, _], Throwable, B])]] =
+    override def racePair[A, B](fa: RVIO[S, A], fb: RVIO[S, B]): RVIO[S, Either[
+      (Outcome[RVIO[S, _], Throwable, A], Fiber[RVIO[S, _], Throwable, B]),
+      (Fiber[RVIO[S, _], Throwable, A], Outcome[RVIO[S, _], Throwable, B]),
+    ]] =
       dispatch.flatMap { rng1 =>
         dispatch.flatMap { rng2 =>
           IO.racePair(
             state.set(State(rng1)) *> fa,
-            state.set(State(rng2)) *> fb
+            state.set(State(rng2)) *> fb,
           )
         }
       }
@@ -135,15 +135,16 @@ object RVIO:
       IO.uncancelable(body)
 
     override def bracketFull[A, B](acquire: Poll[RVIO[S, _]] => RVIO[S, A])(
-        use: A => RVIO[S, B])(
-        release: (A, Outcome[RVIO[S, _], Throwable, B]) => RVIO[S, Unit]): RVIO[S, B] =
+        use: A => RVIO[S, B],
+    )(release: (A, Outcome[RVIO[S, _], Throwable, B]) => RVIO[S, Unit]): RVIO[S, B] =
       IO.bracketFull(acquire)(use)(release)
 
     override def guarantee[A](fa: RVIO[S, A])(finalizer: RVIO[S, Unit]): RVIO[S, A] =
       fa.guarantee(finalizer)
 
     override def guaranteeCase[A](fa: RVIO[S, A])(
-        finalizer: Outcome[RVIO[S, _], Throwable, A] => RVIO[S, Unit]): RVIO[S, A] =
+        finalizer: Outcome[RVIO[S, _], Throwable, A] => RVIO[S, Unit],
+    ): RVIO[S, A] =
       fa.guaranteeCase(finalizer)
 
     extension [A](fa: RVIO[S, A])
@@ -172,9 +173,10 @@ object RVIO:
     def show(rv: RVIO[S, A]): String = s"RV${show.show(rv)}"
 
   given [S, A](using m: Monoid[IO[A]]): Monoid[RVIO[S, A]] = m
-  given [S, A](
-      using s: Semigroup[IO[A]],
-      not: NotGiven[Monoid[RVIO[S, A]]]): Semigroup[RVIO[S, A]] = s
+  given [S, A](using
+      s: Semigroup[IO[A]],
+      not: NotGiven[Monoid[RVIO[S, A]]],
+  ): Semigroup[RVIO[S, A]] = s
   given [S]: SemigroupK[RVIO[S, _]] = IO.semigroupKForIO
   given [S]: Align[RVIO[S, _]] = IO.alignForIO
   given [S](using Spawn[RVIO[S, _]]): Parallel[RVIO[S, _]] = spawn.parallelForGenSpawn

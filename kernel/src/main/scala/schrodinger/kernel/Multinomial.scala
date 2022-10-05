@@ -20,6 +20,6 @@ trait Multinomial[F[_], V, I, J]:
   def multinomial(probabilites: V, trials: I): F[J]
 
 object Multinomial:
-  inline def apply[F[_], V, I, J](probabilites: V, trials: I)(
-      using m: Multinomial[F, V, I, J]
+  inline def apply[F[_], V, I, J](probabilites: V, trials: I)(using
+      m: Multinomial[F, V, I, J],
   ): F[J] = m.multinomial(probabilites, trials)

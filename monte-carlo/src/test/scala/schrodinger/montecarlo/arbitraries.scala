@@ -29,7 +29,7 @@ given [W: Arbitrary: Eq: Rig, A: Arbitrary]: Arbitrary[Weighted[W, A]] =
       w <- Arbitrary.arbitrary[W]
       d <- Arbitrary.arbitrary[W]
       a <- Arbitrary.arbitrary[A]
-    } yield Weighted(w, d, a)
+    } yield Weighted(w, d, a),
   )
 
 given [A](using cogen: Cogen[Option[A]]): Cogen[Weighted[Int, A]] =

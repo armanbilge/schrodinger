@@ -28,15 +28,16 @@ import scala.collection.mutable
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
 
 object PseudoRandomEq:
-  def apply[F[_]: Monad, G[_], S, A: Eq](
-      using pseudo: PseudoRandom.Aux[F, G, S],
+  def apply[F[_]: Monad, G[_], S, A: Eq](using
+      pseudo: PseudoRandom.Aux[F, G, S],
       seeds: ExhaustiveCheck[S],
       confidence: Confidence,
-      eq: Eq[G[SimulationResult[A]]]
+      eq: Eq[G[SimulationResult[A]]],
   ): Eq[F[A]] =
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
     Eq.by[F[A], S => G[SimulationResult[A]]](rv =>
-      s => rv.replicateA(confidence.replicates).map(SimulationResult(_)).simulate(s))
+      s => rv.replicateA(confidence.replicates).map(SimulationResult(_)).simulate(s),
+    )
 
 final case class SimulationResult[A](samples: List[A])
 
@@ -67,7 +68,8 @@ object SimulationResult:
   private def equidistributedBelief(
       trial1: Array[Int],
       trial2: Array[Int],
-      dirichletPrior: Array[Double]): Double =
+      dirichletPrior: Array[Double],
+  ): Double =
     val marginal1 = dirichletMultinomialLogPmf(trial1, trial2, dirichletPrior)
     val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) *
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
@@ -89,7 +91,8 @@ object SimulationResult:
   private def dirichletMultinomialLogPmf(
       x1: Array[Int],
       x2: Array[Int],
-      alpha: Array[Double]): LogDouble =
+      alpha: Array[Double],
+  ): LogDouble =
     val A = sum(alpha)
     val n1 = sum(x1)
     val n2 = sum(x2)
@@ -98,7 +101,8 @@ object SimulationResult:
     var k = 0
     while k < x1.length do
       pmf *= gamma(x1(k) + x2(k) + alpha(k)) / gamma(alpha(k)) / gamma(x1(k) + 1.0) / gamma(
-        x2(k) + 1.0)
+        x2(k) + 1.0,
+      )
       k += 1
     pmf
 

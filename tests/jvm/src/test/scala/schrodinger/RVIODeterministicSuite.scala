@@ -69,17 +69,19 @@ class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIn
 
   given Order[RVIO[SplitMix, FiniteDuration]] =
     Order.by[RVIO[SplitMix, FiniteDuration], List[IO[FiniteDuration]]](rv =>
-      seeds.allValues.map(rv.simulate))
+      seeds.allValues.map(rv.simulate),
+    )
 
   given [A](using seeds: ExhaustiveCheck[SplitMix], orderF: Eq[IO[A]]): Eq[RVIO[SplitMix, A]] =
     Eq.by[RVIO[SplitMix, A], List[IO[A]]](rv =>
-      seeds
-        .allValues
+      seeds.allValues
         .map(
           rv.simulate(_)
             .attempt
             .flatTap(x => x.left.toOption.fold(IO.unit)(e => IO(() => e.printStackTrace())))
-            .flatMap(IO.fromEither)))
+            .flatMap(IO.fromEither),
+        ),
+    )
 
   given [A: Arbitrary: Cogen]: Arbitrary[RVIO[SplitMix, A]] =
     val generators =

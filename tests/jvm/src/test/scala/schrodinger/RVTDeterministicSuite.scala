@@ -65,11 +65,13 @@ class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIns
 
   given Order[RVT[IO, SplitMix, FiniteDuration]] =
     Order.by[RVT[IO, SplitMix, FiniteDuration], List[IO[FiniteDuration]]](rv =>
-      seeds.allValues.map(rv.simulate))
+      seeds.allValues.map(rv.simulate),
+    )
 
-  given [A](
-      using seeds: ExhaustiveCheck[SplitMix],
-      orderF: Eq[IO[A]]): Eq[RVT[IO, SplitMix, A]] =
+  given [A](using
+      seeds: ExhaustiveCheck[SplitMix],
+      orderF: Eq[IO[A]],
+  ): Eq[RVT[IO, SplitMix, A]] =
     Eq.by[RVT[IO, SplitMix, A], List[IO[A]]](rv => seeds.allValues.map(rv.simulate))
 
   given [A: Arbitrary: Cogen]: Arbitrary[RVT[IO, SplitMix, A]] =

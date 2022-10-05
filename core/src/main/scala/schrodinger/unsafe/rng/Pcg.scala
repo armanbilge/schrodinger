@@ -54,7 +54,8 @@ final case class Pcg64 private (
     private var stateHi: Long,
     private var stateLo: Long,
     private var incHi: Long,
-    private var incLo: Long)
+    private var incLo: Long,
+)
 
 object Pcg64:
   def apply(stateHi: Long, stateLo: Long, incHi: Long, incLo: Long): Pcg64 =

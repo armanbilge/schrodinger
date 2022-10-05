@@ -31,7 +31,7 @@ trait MonusTests[A](laws: MonusLaws[A]) extends Laws:
       "axiom 2" -> forAll(laws.monusAxiom2),
       "axiom 3" -> forAll(laws.monusAxiom3),
       "axiom 4" -> forAll(laws.monusAxiom4),
-      "natural order consistency" -> forAll(laws.monusNaturalOrderConsistency)
+      "natural order consistency" -> forAll(laws.monusNaturalOrderConsistency),
     ) ++ PartialOrderTests[A](using laws.A.naturalOrder).partialOrder.all.properties
 
     DefaultRuleSet("monus", None, props*)

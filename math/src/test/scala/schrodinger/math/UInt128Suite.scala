@@ -27,14 +27,14 @@ class UInt128Suite extends DisciplineSuite:
     for
       lo <- Arbitrary.arbLong.arbitrary
       hi <- Arbitrary.arbLong.arbitrary
-    yield UInt128(hi, lo)
+    yield UInt128(hi, lo),
   )
 
   final case class Shift(shift: Int)
   given Arbitrary[Shift] = Arbitrary(Gen.chooseNum(0, 127).map(Shift(_)))
 
   property("roundtrip with BigInt") {
-    forAll { (x: UInt128) => UInt128(x.toBigInt) == x }
+    forAll((x: UInt128) => UInt128(x.toBigInt) == x)
   }
 
   property("add") {
@@ -50,15 +50,15 @@ class UInt128Suite extends DisciplineSuite:
   }
 
   property("or") {
-    forAll { (x: UInt128, y: UInt128) => (x | y).toBigInt == (x.toBigInt | y.toBigInt) }
+    forAll((x: UInt128, y: UInt128) => (x | y).toBigInt == (x.toBigInt | y.toBigInt))
   }
 
   property("and") {
-    forAll { (x: UInt128, y: UInt128) => (x & y).toBigInt == (x.toBigInt & y.toBigInt) }
+    forAll((x: UInt128, y: UInt128) => (x & y).toBigInt == (x.toBigInt & y.toBigInt))
   }
 
   property("xor") {
-    forAll { (x: UInt128, y: UInt128) => (x ^ y).toBigInt == (x.toBigInt ^ y.toBigInt) }
+    forAll((x: UInt128, y: UInt128) => (x ^ y).toBigInt == (x.toBigInt ^ y.toBigInt))
   }
 
   property("shift left") {
@@ -68,5 +68,5 @@ class UInt128Suite extends DisciplineSuite:
   }
 
   property("shift right") {
-    forAll { (x: UInt128, y: Shift) => (x >> y.shift).toBigInt == x.toBigInt >> y.shift }
+    forAll((x: UInt128, y: Shift) => (x >> y.shift).toBigInt == x.toBigInt >> y.shift)
   }

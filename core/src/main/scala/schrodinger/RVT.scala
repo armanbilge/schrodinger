@@ -93,8 +93,9 @@ sealed abstract class RVT[F[_], S, A]:
               sim.upgrade(
                 body(
                   new (RVT[F, S, _] ~> F):
-                    def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva))
-                ))
+                    def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva)),
+                ),
+              )
 
             case NextInt() => G.delay(rng.nextInt())
 
@@ -147,7 +148,7 @@ object RVT extends RVTInstances:
       extends RVT[F, S, B]
 
   final private case class Cont[F[_], S, A](
-      body: RVT[F, S, _] ~> F => F[A]
+      body: RVT[F, S, _] ~> F => F[A],
   ) extends RVT[F, S, A]
 
   final private case class NextInt[F[_], S]() extends RVT[F, S, Int]
@@ -176,8 +177,9 @@ sealed private[schrodinger] trait RVTInstances8 extends RVTInstances7:
     def rootCancelScope: CancelScope = F.rootCancelScope
 
 sealed private[schrodinger] trait RVTInstances7 extends RVTInstances6:
-  given [F[_], S: SplittableRng, E](
-      using F: GenConcurrent[F, E]): GenConcurrent[RVT[F, S, _], E] =
+  given [F[_], S: SplittableRng, E](using
+      F: GenConcurrent[F, E],
+  ): GenConcurrent[RVT[F, S, _], E] =
     new RVTConcurrent[F, S, E] {}
 
   given [F[_]: Clock, S, E]: Clock[RVT[F, S, _]] =
@@ -188,9 +190,9 @@ sealed private[schrodinger] trait RVTInstances6 extends RVTInstances5:
     new RVTSpawn[F, S, E] {}
 
 sealed private[schrodinger] trait RVTInstances5 extends RVTInstances4:
-  given [F[_], S, E](using F: MonadCancel[F, E]): MonadCancel[RVT[F, S, _], E]
-    with RVTMonadCancel[F, S, E]
-    with
+  given [F[_], S, E](using
+      F: MonadCancel[F, E],
+  ): MonadCancel[RVT[F, S, _], E] with RVTMonadCancel[F, S, E] with
     def rootCancelScope: CancelScope = F.rootCancelScope
 
 sealed private[schrodinger] trait RVTInstances4 extends RVTInstances3:
@@ -260,7 +262,7 @@ private[schrodinger] trait RVTMonadError[F[_], S, E](using F: MonadError[F, E])
   def raiseError[A](e: E): RVT[F, S, A] = RVT.eval(F.raiseError(e))
 
   def handleErrorWith[A](rva: RVT[F, S, A])(f: E => RVT[F, S, A]): RVT[F, S, A] =
-    RVT.cont { sim => sim(rva).handleErrorWith(e => sim(f(e))) }
+    RVT.cont(sim => sim(rva).handleErrorWith(e => sim(f(e))))
 
 sealed private[schrodinger] trait RVTFunctorFilter[F[_], S](using FunctorFilter[F])
     extends FunctorFilter[RVT[F, S, _]]:
@@ -311,10 +313,10 @@ sealed private[schrodinger] trait RVTMonadCancel[F[_], S, E](using F: MonadCance
       }
     }
 
-sealed private[schrodinger] trait RVTSpawn[F[_], S, E](
-    using F: GenSpawn[F, E],
-    S: SplittableRng[S])
-    extends GenSpawn[RVT[F, S, _], E],
+sealed private[schrodinger] trait RVTSpawn[F[_], S, E](using
+    F: GenSpawn[F, E],
+    S: SplittableRng[S],
+) extends GenSpawn[RVT[F, S, _], E],
       RVTMonadCancel[F, S, E]:
 
   val unique: RVT[F, S, Unique.Token] = RVT.eval(F.unique)
@@ -326,12 +328,10 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E](
   def start[A](rva: RVT[F, S, A]): RVT[F, S, Fiber[RVT[F, S, _], E, A]] =
     rva.split.evalMap(_.start.map(liftFiber))
 
-  def racePair[A, B](rva: RVT[F, S, A], rvb: RVT[F, S, B]): RVT[
-    F,
-    S,
-    Either[
-      (Outcome[RVT[F, S, _], E, A], Fiber[RVT[F, S, _], E, B]),
-      (Fiber[RVT[F, S, _], E, A], Outcome[RVT[F, S, _], E, B])]] =
+  def racePair[A, B](rva: RVT[F, S, A], rvb: RVT[F, S, B]): RVT[F, S, Either[
+    (Outcome[RVT[F, S, _], E, A], Fiber[RVT[F, S, _], E, B]),
+    (Fiber[RVT[F, S, _], E, A], Outcome[RVT[F, S, _], E, B]),
+  ]] =
     rva.split.product(rvb.split).evalMap { (fa, fb) =>
       F.racePair(fa, fb).map {
         case Left((oc, fib)) => Left((liftOutcome(oc), liftFiber(fib)))
@@ -393,8 +393,9 @@ sealed private[schrodinger] trait RVTAsync[F[_], S: SplittableRng](using F: Asyn
     RVT.cont { sim =>
       F.cont {
         new CECont[F, K, R]:
-          def apply[G[_]](using G: MonadCancel[G, Throwable])
-              : (Either[Throwable, K] => Unit, G[K], F ~> G) => G[R] =
+          def apply[G[_]](using
+              G: MonadCancel[G, Throwable],
+          ): (Either[Throwable, K] => Unit, G[K], F ~> G) => G[R] =
             (cb, gk, nat) => body[G].apply(cb, gk, sim.andThen(nat))
       }
     }

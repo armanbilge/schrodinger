@@ -19,10 +19,9 @@ package schrodinger.math
 import algebra.ring.AdditiveCommutativeMonoid
 import cats.kernel.PartialOrder
 
-/**
- * Amer, K. Equationally complete classes of commutative monoids with monus. Algebra Universalis
- * 18, 129–131 (1984). [[https://doi.org/10.1007/BF01182254]]
- */
+/** Amer, K. Equationally complete classes of commutative monoids with monus. Algebra
+  * Universalis 18, 129–131 (1984). [[https://doi.org/10.1007/BF01182254]]
+  */
 trait Monus[A]:
 
   def monus(x: A, y: A): A
