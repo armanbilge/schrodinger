@@ -29,9 +29,9 @@ object Dirichlet:
   inline def apply[F[_], V](concentration: V)(using d: Dirichlet[F, V]): F[V] =
     d.dirichlet(concentration)
 
-  given [F[_]: Apply, G[_]: NonEmptyTraverse, A](
-      using A: Semifield[A],
-      g: Gamma[F, A]
+  given [F[_]: Apply, G[_]: NonEmptyTraverse, A](using
+      A: Semifield[A],
+      g: Gamma[F, A],
   ): Dirichlet[F, G[A]] with
     def dirichlet(concentration: G[A]) =
       concentration.nonEmptyTraverse(Gamma(_, A.one)).map { xs =>

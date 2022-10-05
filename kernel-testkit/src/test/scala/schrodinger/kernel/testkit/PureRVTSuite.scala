@@ -29,7 +29,8 @@ class PureRVTSuite extends DisciplineSuite:
   // TODO PureRV needs a cogen
   given Arbitrary[(PureRV[SplitMix64, Boolean] => PureRV[SplitMix64, Boolean])] =
     Arbitrary(
-      Arbitrary.arbitrary[Boolean => Boolean].map(f => (_: PureRV[SplitMix64, Boolean]).map(f)))
+      Arbitrary.arbitrary[Boolean => Boolean].map(f => (_: PureRV[SplitMix64, Boolean]).map(f)),
+    )
 
   override def scalaCheckInitialSeed = "InZXKRfzpRf8Ujb786p43rDN_G7LkKV64730MJvidUO="
 

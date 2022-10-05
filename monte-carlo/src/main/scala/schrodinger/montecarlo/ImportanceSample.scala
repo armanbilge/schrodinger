@@ -30,21 +30,21 @@ trait ImportanceSample[F[_], G[_], A]:
 
 object ImportanceSample:
 
-  inline def apply[F[_], G[_], A](using is: ImportanceSample[F, G, A])(
-      target: F[A],
-      proposal: G[A],
-      sampleCount: Int): G[A] =
+  inline def apply[F[_], G[_], A](using
+      is: ImportanceSample[F, G, A],
+  )(target: F[A], proposal: G[A], sampleCount: Int): G[A] =
     is.importanceSample(target, proposal, sampleCount)
 
-  given [F[_]: Monad, P: Eq, A](
-      using P: Semifield[P],
-      c: Categorical[F, NonEmptyList[P], Long]
+  given [F[_]: Monad, P: Eq, A](using
+      P: Semifield[P],
+      c: Categorical[F, NonEmptyList[P], Long],
   ): ImportanceSample[Density[F, P, _], WeightedT[F, P, _], A] with
 
     def importanceSample(
         target: Density[F, P, A],
         proposal: WeightedT[F, P, A],
-        sampleCount: Int) = WeightedT {
+        sampleCount: Int,
+    ) = WeightedT {
       proposal.importanceF(target).value.replicateA(sampleCount).flatMap { samples =>
         val marginal = P.sum(samples.view.map(_.weight)) / P.fromInt(sampleCount)
         Categorical(NonEmptyList.fromListUnsafe(samples).fproduct(_.weight)).map {

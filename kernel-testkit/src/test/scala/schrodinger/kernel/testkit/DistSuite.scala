@@ -35,14 +35,15 @@ class DistSuite extends DisciplineSuite:
           p <- Gen.geometric(100)
         yield a -> p)
         .map(_.toMap)
-        .map(Dist(_)))
+        .map(Dist(_)),
+    )
 
   given [A](using cogen: Cogen[Map[A, Int]]): Cogen[Dist[Int, A]] =
     cogen.contramap(_.support)
 
   checkAll(
     "Dist",
-    CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte]
+    CommutativeMonadTests[Dist[Int, _]].commutativeMonad[Byte, Byte, Byte],
   )
 
   checkAll("Dist", EqTests[Dist[Int, Byte]].eqv)

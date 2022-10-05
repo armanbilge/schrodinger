@@ -16,10 +16,9 @@
 
 package schrodinger.kernel
 
-/**
- * A pseudo-random `F` is a random that can be transformed deterministically to a `G` via a seed
- * `S`.
- */
+/** A pseudo-random `F` is a random that can be transformed deterministically to a `G` via a
+  * seed `S`.
+  */
 trait PseudoRandom[F[_]] extends Random[F]:
   type G[_]
   type S

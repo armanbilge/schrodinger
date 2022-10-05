@@ -38,7 +38,7 @@ class BetaSuite extends ScalaCheckSuite:
       for
         alpha <- Gen.posNum[Double]
         beta <- Gen.posNum[Double]
-      yield BetaParams(alpha, beta)
+      yield BetaParams(alpha, beta),
     )
 
   property("match Apache implementation") {

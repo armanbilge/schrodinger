@@ -37,11 +37,10 @@ import schrodinger.stats.Density
 
 import scala.util.NotGiven
 
-/**
- * @note
- *   The implementation relies on universal equals and hashCode of `A` for performance. Results
- *   will be incorrect otherwise.
- */
+/** @note
+  *   The implementation relies on universal equals and hashCode of `A` for performance. Results
+  *   will be incorrect otherwise.
+  */
 final case class Dist[P, A](support: Map[A, P]):
 
   def map[B](f: A => B)(using P: AdditiveMonoid[P]): Dist[P, B] =
@@ -50,13 +49,12 @@ final case class Dist[P, A](support: Map[A, P]):
   def flatMap[B](f: A => Dist[P, B])(using P: Rig[P], eq: Eq[P]): Dist[P, B] =
     given Monoid[P] = P.additive
     Dist(
-      support
-        .view
+      support.view
         .map { (a, p) =>
           f(a).support.view.filterNot(_._2 === P.zero).mapValues(P.times(p, _)).toMap
         }
         .toList
-        .combineAll
+        .combineAll,
     )
 
   def expect(f: A => P)(using P: Rig[P]): P =
@@ -107,15 +105,15 @@ object Dist:
       val f = Bernoulli(successProbability)
       Dist(List(false, true).fproduct(f).toMap)
 
-  given [P](
-      using DiscreteUniform[Density[Id, P, _], Long]
+  given [P](using
+      DiscreteUniform[Density[Id, P, _], Long],
   ): DiscreteUniform[Dist[P, _], Long] with
     def discreteUniform(n: Long) =
       val f = DiscreteUniform(n)
       Dist((0L until n).toList.fproduct(f).toMap)
 
-  given [G[_]: Reducible, P](
-      using Categorical[Density[Id, P, _], G[P], Long]
+  given [G[_]: Reducible, P](using
+      Categorical[Density[Id, P, _], G[P], Long],
   ): Categorical[Dist[P, _], G[P], Long] with
     def categorical(support: G[P]) =
       val f = Categorical(support)

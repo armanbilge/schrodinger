@@ -26,7 +26,7 @@ val MunitCatsEffectVersion = "2.0.0-M3"
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
 val commonJvmSettings = Seq(
-  Test / run / fork := true
+  Test / run / fork := true,
 )
 
 lazy val root = tlCrossRootProject.aggregate(
@@ -38,7 +38,8 @@ lazy val root = tlCrossRootProject.aggregate(
   testkit,
   tests,
   stats,
-  monteCarlo)
+  monteCarlo,
+)
 
 lazy val math = crossProject(JVMPlatform, JSPlatform)
   .crossType(CrossType.Pure)
@@ -49,8 +50,8 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "algebra" % CatsVersion,
       "org.typelevel" %%% "algebra-laws" % CatsVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
-      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test
-    )
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
+    ),
   )
   .jvmSettings(commonJvmSettings)
 
@@ -61,8 +62,8 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-kernel",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-core" % CatsVersion
-    )
+      "org.typelevel" %%% "cats-core" % CatsVersion,
+    ),
   )
   .jvmSettings(commonJvmSettings)
 
@@ -75,8 +76,8 @@ lazy val stats = project
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
-      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test
-    )
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
+    ),
   )
   .settings(commonJvmSettings)
 
@@ -93,8 +94,8 @@ lazy val kernelTestkit = project
       "org.scalacheck" %%% "scalacheck" % ScalaCheckVersion,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
-      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
-    )
+      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
+    ),
   )
   .settings(commonJvmSettings)
 
@@ -106,8 +107,8 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform)
     name := "schrodinger-laws",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-laws" % CatsVersion,
-      "org.typelevel" %%% "algebra-laws" % CatsVersion
-    )
+      "org.typelevel" %%% "algebra-laws" % CatsVersion,
+    ),
   )
   .jvmSettings(commonJvmSettings)
 
@@ -120,8 +121,8 @@ lazy val core = project
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
-      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
-    )
+      "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
+    ),
   )
   .settings(commonJvmSettings)
 
@@ -131,8 +132,8 @@ lazy val testkit = project
   .settings(
     name := "schrodinger-testkit",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion
-    )
+      "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion,
+    ),
   )
   .settings(commonJvmSettings)
 
@@ -146,15 +147,15 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
-      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test
-    )
+      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
+    ),
   )
   .jvmConfigure(_.dependsOn(testkit % Test))
   .jvmSettings(
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
-      "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test
-    )
+      "org.apache.commons" % "commons-rng-sampling" % CommonsRngVersion % Test,
+    ),
   )
   .jvmSettings(commonJvmSettings)
 
@@ -171,7 +172,7 @@ lazy val monteCarlo = project
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
-      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test
-    )
+      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
+    ),
   )
   .settings(commonJvmSettings)

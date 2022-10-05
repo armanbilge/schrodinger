@@ -73,7 +73,8 @@ sealed abstract class Weighted[W, A] extends Product, Serializable:
     importanceA[Id](f)
 
   final def importanceA[F[_]: Applicative](
-      f: A => F[W])(using Semifield[W], Eq[W]): F[Weighted[W, A]] =
+      f: A => F[W],
+  )(using Semifield[W], Eq[W]): F[Weighted[W, A]] =
     this match
       case Heavy(w, d, a) =>
         f(a).map(fa => Weighted(w * (fa / d), fa, a))

@@ -22,8 +22,8 @@ trait MarkovChain[F[_], G[_], A]:
   def markovChain(initial: A)(transition: A => G[A]): F[A]
 
 object MarkovChain:
-  inline def apply[F[_], G[_], A](initial: A)(transition: A => G[A])(
-      using mc: MarkovChain[F, G, A]
+  inline def apply[F[_], G[_], A](initial: A)(transition: A => G[A])(using
+      mc: MarkovChain[F, G, A],
   ): F[A] = mc.markovChain(initial)(transition)
 
   given [F[_], A]: MarkovChain[Stream[F, _], F, A] with

@@ -35,9 +35,9 @@ object Gaussian:
 
   inline def standard[F[_], A](using g: Gaussian[F, A]): F[A] = g.gaussian
 
-  given [F[_]: Monad](
-      using U: Uniform[F, Double],
-      cache: GaussianCache[F, Double]
+  given [F[_]: Monad](using
+      U: Uniform[F, Double],
+      cache: GaussianCache[F, Double],
   ): Gaussian[F, Double] with
     def gaussian(mean: Double, standardDeviation: Double) =
       gaussian.map(_ * standardDeviation + mean)

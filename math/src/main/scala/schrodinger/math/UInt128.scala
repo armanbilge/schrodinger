@@ -80,7 +80,8 @@ final case class UInt128(hi: Long, lo: Long):
   def toBigInt =
     BigInt(toUnsignedString(hi, 16) + "0000000000000000", 16) + BigInt(
       toUnsignedString(lo, 16),
-      16)
+      16,
+    )
 
 object UInt128:
 

@@ -30,9 +30,9 @@ object DiscreteUniform:
   inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
-  def apply[F[_], G[_]: Reducible, A](support: G[A])(
-      using F: Priority[Functor[F], InvariantAndHash[F, A]],
-      u: DiscreteUniform[F, Long]): F[A] =
+  def apply[F[_], G[_]: Reducible, A](
+      support: G[A],
+  )(using F: Priority[Functor[F], InvariantAndHash[F, A]], u: DiscreteUniform[F, Long]): F[A] =
     F match
       case Priority.Preferred(given Functor[f]) =>
         apply(support.size).map(support.get(_).get)
@@ -47,11 +47,8 @@ object DiscreteUniform:
     def discreteUniform(n: Long) =
       if (n & -n) == n then Random.long.map(_ & (n - 1))
       else
-        Random
-          .long
-          .map { x =>
-            val b = x >>> 1
-            val v = b % n
-            Option.when(b - v + (n - 1) >= 0)(v)
-          }
-          .untilDefinedM
+        Random.long.map { x =>
+          val b = x >>> 1
+          val v = b % n
+          Option.when(b - v + (n - 1) >= 0)(v)
+        }.untilDefinedM

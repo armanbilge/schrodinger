@@ -30,7 +30,7 @@ class SplitMixSuite extends ScalaCheckSuite:
   val N = 100
 
   given Arbitrary[SplitMix] = Arbitrary(
-    Gen.long.map(SplitMix(_, SplitMix.GoldenGamma))
+    Gen.long.map(SplitMix(_, SplitMix.GoldenGamma)),
   )
 
   property("generate ints") {

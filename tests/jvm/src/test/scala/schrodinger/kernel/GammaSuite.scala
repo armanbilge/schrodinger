@@ -38,7 +38,7 @@ class GammaSuite extends ScalaCheckSuite:
       for
         shape <- Gen.posNum[Double]
         rate <- Gen.posNum[Double]
-      yield GammaParams(shape, rate)
+      yield GammaParams(shape, rate),
     )
 
   property("match Apache implementation") {
@@ -49,7 +49,7 @@ class GammaSuite extends ScalaCheckSuite:
           new AhrensDieterMarsagliaTsangGammaSampler(
             new source64.SplitMix64(seed),
             shape,
-            1.0 / rate
+            1.0 / rate,
           )
         else
           val splitMix = new source64.SplitMix64(seed)

@@ -36,10 +36,12 @@ class CategoricalSuite extends ScalaCheckSuite:
   property("generate valid samples") {
     forAll { (rng: SplitMix64) =>
       val sample = Categorical[PureRV[SplitMix64, _], NonEmptyVector[Double], Long](
-        NonEmptyVector.of(0.0, 1.0, 2.0))
+        NonEmptyVector.of(0.0, 1.0, 2.0),
+      )
       val samples = sample.replicateA(N).simulate(rng).value
       assert(
         clue(samples.toSet) == Set(1, 2) &&
-          clue(samples.count(_ == 2L)) > clue(samples.count(_ == 1L)))
+          clue(samples.count(_ == 2L)) > clue(samples.count(_ == 1L)),
+      )
     }
   }
