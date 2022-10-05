@@ -18,20 +18,20 @@ package schrodinger.kernel
 
 import cats.effect.SyncIO
 import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
 import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
+import org.scalacheck.Prop.*
 import org.typelevel.vault.Key
 import schrodinger.kernel.Gaussian
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class GaussianSpec extends Specification, ScalaCheck:
+class GaussianSuite extends ScalaCheckSuite:
   val N = 100
 
-  "Gaussian" should {
-    "match Apache implementation" in prop { (seed: Long) =>
+  property("match Apache implementation") {
+    forAll { (seed: Long) =>
       val apache = new BoxMullerNormalizedGaussianSampler(new source64.SplitMix64(seed))
       Gaussian
         .standard[PureRV[SplitMix64, _], Double]

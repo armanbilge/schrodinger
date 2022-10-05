@@ -44,28 +44,22 @@ import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Prop
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.rng.Rng
 import schrodinger.unsafe.rng.SplitMix
 import schrodinger.unsafe.rng.SplittableRng
+import munit.DisciplineSuite
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 // Testing for equivalence of distributions is just too ambitious
-class RVTDeterministicSpec
-    extends Specification,
-      Discipline,
-      ScalaCheck,
+class RVTDeterministicSuite
+    extends DisciplineSuite,
       cats.effect.testkit.TestInstances:
-
-  sequential
 
   given Ticker = Ticker()
   given seeds: ExhaustiveCheck[SplitMix] =

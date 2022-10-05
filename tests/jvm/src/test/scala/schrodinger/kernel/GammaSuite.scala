@@ -17,18 +17,18 @@
 package schrodinger.kernel
 
 import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
 import org.apache.commons.rng.sampling.distribution.AhrensDieterMarsagliaTsangGammaSampler
 import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
+import org.scalacheck.Prop.*
 import schrodinger.kernel.Gamma
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class GammaSpec extends Specification, ScalaCheck:
+class GammaSuite extends ScalaCheckSuite:
   val N = 100
 
   case class GammaParams(shape: Double, rate: Double)
@@ -41,8 +41,8 @@ class GammaSpec extends Specification, ScalaCheck:
       yield GammaParams(shape, rate)
     )
 
-  "Gamma" should {
-    "match Apache implementation" in prop { (seed: Long, params: GammaParams) =>
+  property("match Apache implementation") {
+    forAll { (seed: Long, params: GammaParams) =>
       val GammaParams(shape, rate) = params
       val apache =
         if shape < 1 then

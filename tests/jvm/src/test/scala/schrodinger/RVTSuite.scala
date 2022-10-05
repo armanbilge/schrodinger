@@ -34,11 +34,8 @@ import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.FunctorFilterTests
 import cats.laws.discipline.SerializableTests
 import cats.syntax.all.*
+import munit.DisciplineSuite
 import org.scalacheck.Prop
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.specs2.scalacheck.Parameters
-import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
@@ -47,12 +44,9 @@ import schrodinger.unsafe.rng.SplitMix
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
-class RVTSpec extends Specification, Discipline, ScalaCheck, RVTestkit:
+class RVTSuite extends DisciplineSuite, RVTestkit:
 
-  sequential
-
-  given Parameters =
-    Parameters(seed = Parameters.makeSeed("Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="))
+  override protected def scalaCheckInitialSeed: String = "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
 
   given Confidence = Confidence(1000, 0.9, 0.9)
 

@@ -43,16 +43,14 @@ import cats.laws.discipline.InvariantMonoidalTests
 import cats.laws.discipline.InvariantSemigroupalTests
 import cats.laws.discipline.ParallelTests
 import cats.laws.discipline.arbitrary.*
+import munit.DisciplineSuite
 import org.scalacheck.Prop
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
 import scala.concurrent.duration.DurationInt
 
-class WeightedTSpec extends Specification, Discipline, ScalaCheck:
+class WeightedTSuite extends DisciplineSuite:
 
   checkAll("WeightedT", DeferTests[WeightedT[Eval, Int, _]].defer[Int])
   checkAll("WeightedT", OrderTests[WeightedT[Option, Int, Int]].order)

@@ -27,11 +27,9 @@ import cats.laws.discipline.AlignTests
 import cats.laws.discipline.CommutativeMonadTests
 import cats.laws.discipline.InvariantMonoidalTests
 import cats.laws.discipline.arbitrary.*
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
+import munit.DisciplineSuite
 
-class WeightedSpec extends Specification, Discipline, ScalaCheck:
+class WeightedSuite extends DisciplineSuite:
 
   checkAll(
     "Weighted",

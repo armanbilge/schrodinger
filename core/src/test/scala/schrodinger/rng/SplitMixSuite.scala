@@ -18,14 +18,14 @@ package schrodinger
 package unsafe.rng
 
 import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
+import org.scalacheck.Prop.*
 
 import java.util.SplittableRandom
 
-class SplitMixSpec extends Specification, ScalaCheck:
+class SplitMixSuite extends ScalaCheckSuite:
 
   val N = 100
 
@@ -33,23 +33,26 @@ class SplitMixSpec extends Specification, ScalaCheck:
     Gen.long.map(SplitMix(_, SplitMix.GoldenGamma))
   )
 
-  "SplitMix" should {
-
-    "generate ints" in prop { (state: SplitMix) =>
+  property("generate ints") {
+    forAll { (state: SplitMix) =>
       val ints = RV.int[SplitMix].replicateA(N).simulate(state)
       val random = new SplittableRandom(state.seed)
       val expectedInts = List.fill(N)(random.nextInt())
       ints === expectedInts
     }
+  }
 
-    "generate longs" in prop { (state: SplitMix) =>
+  property("generate longs") {
+    forAll { (state: SplitMix) =>
       val longs = RV.long[SplitMix].replicateA(N).simulate(state)
       val random = new SplittableRandom(state.seed)
       val expectedLongs = List.fill(N)(random.nextLong())
       longs === expectedLongs
     }
+  }
 
-    "split" in prop { (state: SplitMix) =>
+  property("split") {
+    forAll { (state: SplitMix) =>
       val ints = RV.int[SplitMix].split.evalMap(identity).replicateA(N).simulate(state)
       val random = new SplittableRandom(state.seed)
       val expectedInts = List.fill(N)(random.split().nextInt())

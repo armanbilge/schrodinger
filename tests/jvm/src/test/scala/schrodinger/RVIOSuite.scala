@@ -19,24 +19,21 @@ package schrodinger
 import cats.effect.IO
 import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
-import org.specs2.cats.effect.CatsEffect
-import org.specs2.mutable.Specification
+import munit.CatsEffectSuite
 import schrodinger.kernel.Random
 import schrodinger.unsafe.rng.SplitMix
 
 import scala.concurrent.duration.*
 
-class RVIOSpec extends Specification with CatsEffect:
+class RVIOSuite extends CatsEffectSuite:
 
   given RV: RVIO.Algebra[SplitMix] = RVIO.algebra[SplitMix].unsafeRunSync()
   val randomSum = (RV.sleep(0.millis) *> RV.int).parReplicateA(100).map(_.sum)
 
-  "RVIO" should {
-    "run deterministically" in {
-      for
-        rng <- SplitMix.fromTime[IO]
-        program = randomSum.simulate(rng)
-        (left, right) <- program.both(program)
-      yield left === right
-    }
+  test("run deterministically") {
+    for
+      rng <- SplitMix.fromTime[IO]
+      program = randomSum.simulate(rng)
+      (left, right) <- program.both(program)
+    yield left === right
   }

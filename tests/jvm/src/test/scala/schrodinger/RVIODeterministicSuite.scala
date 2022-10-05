@@ -45,12 +45,10 @@ import cats.laws.discipline.SemigroupKTests
 import cats.laws.discipline.SerializableTests
 import cats.laws.discipline.arbitrary.*
 import cats.syntax.all.*
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Prop
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
@@ -63,13 +61,9 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 // Testing for equivalence of distributions is just too ambitious
-class RVIODeterministicSpec
-    extends Specification,
-      Discipline,
-      ScalaCheck,
+class RVIODeterministicSuite
+    extends DisciplineSuite,
       cats.effect.testkit.TestInstances:
-
-  sequential
 
   given Ticker = Ticker()
   given seeds: ExhaustiveCheck[SplitMix] =
