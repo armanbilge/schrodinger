@@ -24,7 +24,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Prop.*
 
-class PcgSpec extends ScalaCheckSuite:
+class PcgSuite extends ScalaCheckSuite:
 
   val N = 100
 
