@@ -46,7 +46,8 @@ import scala.concurrent.duration.FiniteDuration
 
 class RVTSuite extends DisciplineSuite, RVTestkit:
 
-  override protected def scalaCheckInitialSeed: String = "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
+  override protected def scalaCheckInitialSeed: String =
+    "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
 
   given Confidence = Confidence(1000, 0.9, 0.9)
 

@@ -57,9 +57,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 // Testing for equivalence of distributions is just too ambitious
-class RVTDeterministicSuite
-    extends DisciplineSuite,
-      cats.effect.testkit.TestInstances:
+class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestInstances:
 
   given Ticker = Ticker()
   given seeds: ExhaustiveCheck[SplitMix] =
