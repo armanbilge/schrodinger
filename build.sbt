@@ -67,9 +67,9 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   )
   .jvmSettings(commonJvmSettings)
 
-lazy val stats = project
+lazy val stats = crossProject(JVMPlatform, NativePlatform)
   .in(file("stats"))
-  .dependsOn(kernel.jvm, math.jvm)
+  .dependsOn(kernel, math)
   .settings(
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
@@ -79,11 +79,11 @@ lazy val stats = project
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
     ),
   )
-  .settings(commonJvmSettings)
+  .jvmSettings(commonJvmSettings)
 
 lazy val kernelTestkit = project
   .in(file("kernel-testkit"))
-  .dependsOn(kernel.jvm, stats)
+  .dependsOn(kernel.jvm, stats.jvm)
   .settings(
     name := "schrodinger-kernel-testkit",
     libraryDependencies ++= Seq(
@@ -165,7 +165,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, stats, testkit % Test)
+  .dependsOn(kernel.jvm, stats.jvm, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
