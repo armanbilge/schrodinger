@@ -22,15 +22,14 @@ import cats.kernel.Eq
 import cats.kernel.laws.discipline.HashTests
 import cats.kernel.laws.discipline.OrderTests
 import cats.kernel.laws.discipline.SerializableTests
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
+import org.scalacheck.Prop.*
 import schrodinger.laws.MonusTests
 
-class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
+class LogDoubleSuite extends DisciplineSuite:
 
   given Arbitrary[LogDouble] = Arbitrary(Gen.double.map(LogDouble.exp(_)))
   given Cogen[LogDouble] = Cogen.cogenDouble.contramap(_.log)
@@ -46,22 +45,26 @@ class LogDoubleSpec extends Specification, Discipline, ScalaCheck:
     checkAll("LogDouble", RingLaws[LogDouble].commutativeSemifield)
     checkAll("LogDouble", MonusTests[LogDouble].monus)
 
-    "LogDouble" should {
-      "correctly add identical values" in prop { (x: LogDouble) =>
-        (x + x) === LogDouble.Two * x
-      }
+    property("correctly add identical values") {
+      forAll { (x: LogDouble) => (x + x) == LogDouble.Two * x }
+    }
 
-      "have alley-lawful subtraction" in prop { (x: LogDouble, y: LogDouble) =>
+    property("have alley-lawful subtraction") {
+      forAll { (x: LogDouble, y: LogDouble) =>
         val z = x - y
         if x > y then eq.eqv(z + y, x)
         else z.isNaN
       }
+    }
 
-      "have consistent IArray sum" in prop { (xs: List[LogDouble]) =>
+    property("have consistent IArray sum") {
+      forAll { (xs: List[LogDouble]) =>
         eq.eqv(LogDouble.sum(IArray.from(xs)), CommutativeSemifield[LogDouble].sum(xs))
       }
+    }
 
-      "have consistent Iterable sum" in prop { (xs: List[LogDouble]) =>
+    property("have consistent Iterable sum") {
+      forAll { (xs: List[LogDouble]) =>
         eq.eqv(LogDouble.sum(xs), CommutativeSemifield[LogDouble].sum(xs))
       }
 

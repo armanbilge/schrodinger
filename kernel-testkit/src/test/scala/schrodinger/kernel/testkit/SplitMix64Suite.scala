@@ -16,18 +16,18 @@
 
 package schrodinger.kernel.testkit
 
-import cats.syntax.all.*
 import cats.Traverse
+import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
+import org.scalacheck.Prop.forAll
 import schrodinger.kernel.Random
 
-class SplitMix64Spec extends Specification, ScalaCheck:
+class SplitMix64Suite extends ScalaCheckSuite:
   val N = 100
 
-  "SplitMix64" should {
-    "match Apache implementation" in prop { (seed: Long) =>
+  property("match Apache implementation") {
+    forAll { (seed: Long) =>
       val apache = new source64.SplitMix64(seed)
       Random.long[PureRV[SplitMix64, _]].replicateA(N).simulate(SplitMix64(seed)).value ===
         List.fill(N)(apache.nextLong())

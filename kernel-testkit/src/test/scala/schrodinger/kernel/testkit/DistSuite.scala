@@ -20,13 +20,12 @@ import algebra.instances.all.*
 import cats.CommutativeMonad
 import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.CommutativeMonadTests
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
 
-class DistSpec extends Specification, Discipline:
+class DistSuite extends DisciplineSuite:
 
   given [A: Arbitrary]: Arbitrary[Dist[Int, A]] =
     Arbitrary(

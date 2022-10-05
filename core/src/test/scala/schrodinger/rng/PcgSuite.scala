@@ -18,13 +18,13 @@ package schrodinger
 package unsafe.rng
 
 import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source32.PcgXshRr32 as ApachePcgXshRr32
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
+import org.scalacheck.Prop.*
 
-class PcgSpec extends Specification, ScalaCheck:
+class PcgSuite extends ScalaCheckSuite:
 
   val N = 100
 
@@ -35,8 +35,8 @@ class PcgSpec extends Specification, ScalaCheck:
     yield Pcg32(state, inc | 1)
   )
 
-  "Pcg32XshRr" should {
-    "generate ints" in prop { (state: Pcg32) =>
+  property("Pcg32XshRr generate ints") {
+    forAll { (state: Pcg32) =>
       val ints = RV.int[Pcg32].replicateA(N + 1).simulate(state).tail
       val provider = new ApachePcgXshRr32(Array(state.state - state.inc, state.inc >>> 1))
       val expectedInts = List.fill(N)(provider.nextInt())

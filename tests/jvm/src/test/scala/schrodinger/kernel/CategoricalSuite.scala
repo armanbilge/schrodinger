@@ -18,27 +18,28 @@ package schrodinger.kernel
 
 import cats.syntax.all.*
 import cats.instances.vector.*
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
 import schrodinger.kernel.Categorical
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.math.LogDouble
+import org.scalacheck.Prop.*
 import algebra.instances.all.*
+import munit.ScalaCheckSuite
 
 import scala.language.implicitConversions
 import cats.data.NonEmptyVector
 
-class CategoricalSpec extends Specification, ScalaCheck:
+class CategoricalSuite extends ScalaCheckSuite:
 
   val N = 1000
 
-  "Categorical" should {
-    "generate valid samples" in prop { (rng: SplitMix64) =>
+  property("generate valid samples") {
+    forAll { (rng: SplitMix64) =>
       val sample = Categorical[PureRV[SplitMix64, _], NonEmptyVector[Double], Long](
         NonEmptyVector.of(0.0, 1.0, 2.0))
       val samples = sample.replicateA(N).simulate(rng).value
-      samples.toSet must be_==(Set(1, 2)) and
-        (samples.count(_ == 2L) must be_>(samples.count(_ == 1L)))
+      assert(
+        clue(samples.toSet) == Set(1, 2) &&
+          clue(samples.count(_ == 2L)) > clue(samples.count(_ == 1L)))
     }
   }

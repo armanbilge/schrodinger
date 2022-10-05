@@ -16,12 +16,12 @@ val CatsEffectVersion = "3.3.14"
 val CommonsMathVersion = "3.6.1"
 val CommonsRngVersion = "1.4"
 val Fs2Version = "3.3.0"
-val Specs2Version = "5.0.7"
-val Specs2CatsVersion = "1.0.0-ALPHA-07"
 val ScalaCheckVersion = "1.17.0"
 val VaultVersion = "3.3.0"
 val DisciplineVersion = "1.1.5"
-val DisciplineSpecs2Version = "2.0.0"
+val MunitVersion = "1.0.0-M6"
+val DisciplineMunitVersion = "2.0.0-M3"
+val MunitCatsEffectVersion = "2.0.0-M3"
 
 ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 
@@ -47,9 +47,9 @@ lazy val math = crossProject(JVMPlatform, JSPlatform)
     name := "schrodinger-math",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "algebra" % CatsVersion,
-      "org.specs2" %%% "specs2-core" % Specs2Version % Test,
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %%% "algebra-laws" % CatsVersion % Test
+      "org.typelevel" %%% "algebra-laws" % CatsVersion % Test,
+      "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test
     )
   )
   .jvmSettings(commonJvmSettings)
@@ -74,8 +74,8 @@ lazy val stats = project
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
+      "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test
     )
   )
   .settings(commonJvmSettings)
@@ -91,8 +91,8 @@ lazy val kernelTestkit = project
       "org.typelevel" %%% "vault" % VaultVersion,
       "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.scalacheck" %%% "scalacheck" % ScalaCheckVersion,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
+      "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
@@ -118,7 +118,8 @@ lazy val core = project
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
+      "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test
     )
   )
@@ -142,10 +143,10 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
   .settings(
     name := "schrodinger-tests",
     libraryDependencies ++= Seq(
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test,
-      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
-      "org.specs2" %%% "specs2-scalacheck" % Specs2Version % Test,
-      "org.specs2" %%% "specs2-cats-effect" % Specs2CatsVersion % Test
+      "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
+      "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test
     )
   )
   .jvmConfigure(_.dependsOn(testkit % Test))
@@ -169,7 +170,8 @@ lazy val monteCarlo = project
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
       "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion % Test,
-      "org.typelevel" %%% "discipline-specs2" % DisciplineSpecs2Version % Test
+      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test
     )
   )
   .settings(commonJvmSettings)

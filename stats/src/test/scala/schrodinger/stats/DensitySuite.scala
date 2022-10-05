@@ -25,12 +25,10 @@ import cats.laws.discipline.MiniInt
 import cats.laws.discipline.arbitrary.*
 import cats.laws.discipline.eq.*
 import cats.syntax.all.*
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.discipline.specs2.mutable.Discipline
 
-class DensitySpec extends Specification, Discipline, ScalaCheck:
+class DensitySuite extends DisciplineSuite:
 
   given [F[_]: Functor, A](using arb: Arbitrary[A => F[Int]]): Arbitrary[Density[F, Long, A]] =
     Arbitrary(arb.arbitrary.map(_.andThen(_.map(_.toLong.abs))).map(Density(_)))

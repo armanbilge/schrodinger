@@ -16,37 +16,23 @@
 
 package schrodinger.kernel
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
+import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
-import org.apache.commons.rng.sampling.distribution.ChengBetaSampler
-import org.scalacheck.Arbitrary
-import org.scalacheck.Gen
-import org.specs2.ScalaCheck
-import org.specs2.mutable.Specification
-import org.typelevel.vault.Key
-import schrodinger.kernel.Beta
+import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampler
+import org.scalacheck.Prop.*
+import schrodinger.kernel.Exponential
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class BetaSpec extends Specification, ScalaCheck:
+class ExponentialSuite extends ScalaCheckSuite:
   val N = 100
 
-  case class BetaParams(alpha: Double, beta: Double)
-
-  given Arbitrary[BetaParams] =
-    Arbitrary(
-      for
-        alpha <- Gen.posNum[Double]
-        beta <- Gen.posNum[Double]
-      yield BetaParams(alpha, beta)
-    )
-
-  "Beta" should {
-    "match Apache implementation" in prop { (seed: Long, params: BetaParams) =>
-      val apache =
-        new ChengBetaSampler(new source64.SplitMix64(seed), params.alpha, params.beta)
-      Beta[PureRV[SplitMix64, _], Double](params.alpha, params.beta)
+  property("match Apache implementation") {
+    forAll { (seed: Long) =>
+      val apache = new AhrensDieterExponentialSampler(new source64.SplitMix64(seed), 1.0)
+      Exponential
+        .standard[PureRV[SplitMix64, _], Double]
         .replicateA(N)
         .simulate(SplitMix64(seed))
         .value ===
