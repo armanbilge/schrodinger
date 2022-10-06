@@ -21,8 +21,8 @@ import cats.Eq
 import cats.Monad
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
-import org.apache.commons.math3.special.Gamma
 import schrodinger.math.LogDouble
+import schrodinger.math.special.logGamma
 import scala.collection.mutable
 
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
@@ -76,7 +76,7 @@ object SimulationResult:
     (marginal1 / (marginal1 + marginal2)).real
 
   private def gamma(x: Double): LogDouble =
-    LogDouble.exp(Gamma.logGamma(x))
+    LogDouble.exp(logGamma(x))
 
   private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): LogDouble =
     val A = sum(alpha)
