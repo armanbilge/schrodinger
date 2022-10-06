@@ -174,9 +174,10 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(commonJvmSettings)
   .nativeConfigure(_.dependsOn(testkit.native % Test))
 
-lazy val monteCarlo = project
+lazy val monteCarlo = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, stats.jvm, testkit.jvm % Test)
+  .dependsOn(kernel, stats, testkit % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
@@ -190,4 +191,4 @@ lazy val monteCarlo = project
       "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
     ),
   )
-  .settings(commonJvmSettings)
+  .jvmSettings(commonJvmSettings)
