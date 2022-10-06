@@ -49,6 +49,11 @@ class RVTSuite extends DisciplineSuite, RVTestkit:
   override protected def scalaCheckInitialSeed: String =
     "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
 
+  override def scalaCheckTestParameters =
+    super.scalaCheckTestParameters.withMinSuccessfulTests(
+      if System.getProperty("java.vm.name") == "Scala Native" then 10 else 100,
+    )
+
   given Confidence = Confidence(1000, 0.9, 0.9)
 
   given seeds: ExhaustiveCheck[SplitMix] =

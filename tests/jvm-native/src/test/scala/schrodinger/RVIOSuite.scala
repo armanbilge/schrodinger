@@ -19,6 +19,7 @@ package schrodinger
 import cats.effect.IO
 import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
+import cats.effect.syntax.all.*
 import munit.CatsEffectSuite
 import schrodinger.kernel.Random
 import schrodinger.unsafe.rng.SplitMix
@@ -27,11 +28,10 @@ import scala.concurrent.duration.*
 
 class RVIOSuite extends CatsEffectSuite:
 
-  given RV: RVIO.Algebra[SplitMix] = RVIO.algebra[SplitMix].unsafeRunSync()
-  val randomSum = (RV.sleep(0.millis) *> RV.int).parReplicateA(100).map(_.sum)
-
   test("run deterministically") {
     for
+      given RVIO.Algebra[SplitMix] <- RVIO.algebra[SplitMix]
+      randomSum = Random.int.delayBy(0.millis).parReplicateA(100).map(_.sum)
       rng <- SplitMix.fromTime[IO]
       program = randomSum.simulate(rng)
       (left, right) <- program.both(program)

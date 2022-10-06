@@ -139,18 +139,19 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     ),
   )
 
-lazy val testkit = project
+lazy val testkit = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("testkit"))
-  .dependsOn(core.jvm, kernelTestkit.jvm)
+  .dependsOn(core, kernelTestkit)
   .settings(
     name := "schrodinger-testkit",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect-testkit" % CatsEffectVersion,
     ),
   )
-  .settings(commonJvmSettings)
+  .jvmSettings(commonJvmSettings)
 
-lazy val tests = crossProject(JVMPlatform, JSPlatform)
+lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .in(file("tests"))
   .enablePlugins(NoPublishPlugin)
   .dependsOn(laws % Test)
@@ -163,7 +164,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
     ),
   )
-  .jvmConfigure(_.dependsOn(testkit % Test))
+  .jvmConfigure(_.dependsOn(testkit.jvm % Test))
   .jvmSettings(
     libraryDependencies ++= Seq(
       "org.apache.commons" % "commons-rng-core" % CommonsRngVersion % Test,
@@ -171,10 +172,11 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform)
     ),
   )
   .jvmSettings(commonJvmSettings)
+  .nativeConfigure(_.dependsOn(testkit.native % Test))
 
 lazy val monteCarlo = project
   .in(file("monte-carlo"))
-  .dependsOn(kernel.jvm, stats.jvm, testkit % Test)
+  .dependsOn(kernel.jvm, stats.jvm, testkit.jvm % Test)
   .settings(
     name := "schrodinger-monte-carlo",
     libraryDependencies ++= Seq(
