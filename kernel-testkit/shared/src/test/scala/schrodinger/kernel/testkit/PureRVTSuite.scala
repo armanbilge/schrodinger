@@ -34,5 +34,10 @@ class PureRVTSuite extends DisciplineSuite:
 
   override def scalaCheckInitialSeed = "InZXKRfzpRf8Ujb786p43rDN_G7LkKV64730MJvidUO="
 
+  override def scalaCheckTestParameters =
+    super.scalaCheckTestParameters.withMinSuccessfulTests(
+      if System.getProperty("java.vm.name") == "Scala Native" then 10 else 100,
+    )
+
   checkAll("PureRV", EqTests[PureRV[SplitMix64, Boolean]].eqv.random)
   checkAll("PureRV", MonadTests[PureRV[SplitMix64, _]].monad[Boolean, Boolean, Boolean].random)
