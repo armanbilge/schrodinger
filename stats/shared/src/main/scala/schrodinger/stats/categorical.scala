@@ -23,7 +23,7 @@ import cats.Reducible
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 
-private trait CategoricalInstances:
+object categorical:
   given [F[_]: Applicative, G[_]: Reducible, A](using
       A: Rig[A],
   ): Categorical[Density[F, A, _], G[A], Long] with

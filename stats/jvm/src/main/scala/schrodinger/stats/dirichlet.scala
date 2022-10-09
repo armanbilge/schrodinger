@@ -28,7 +28,7 @@ import schrodinger.kernel
 import schrodinger.kernel.Dirichlet
 import schrodinger.math.LogDouble
 
-private trait DirichletInstances:
+object dirichlet:
   given [F[_]: Applicative, G[_]: NonEmptyTraverse: NonEmptyParallel]
       : Dirichlet[Density[F, LogDouble, _], G[Double]] with
     def dirichlet(concentration: G[Double]) =

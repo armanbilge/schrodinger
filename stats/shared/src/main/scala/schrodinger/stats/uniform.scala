@@ -22,7 +22,7 @@ import cats.syntax.all.*
 import schrodinger.kernel.Uniform
 import schrodinger.math.LogDouble
 
-private trait UniformInstances:
+object uniform:
   given [F[_]: Applicative]: Uniform[Density[F, LogDouble, _], Double] with
     def uniform01 = uniform(0, 1)
     def uniform10 = uniform(1, 0)

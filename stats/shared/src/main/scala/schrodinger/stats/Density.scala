@@ -30,9 +30,19 @@ import schrodinger.math.syntax.*
 
 opaque type Density[F[_], P, A] <: (A => F[P]) = A => F[P]
 
-object Density extends DensityLowPriority0, DensityDistributionInstances:
+object Density extends DensityLowPriority0:
 
   inline def apply[F[_], P, A](f: A => F[P]): Density[F, P, A] = f
+
+  export bernoulli.given
+  export beta.given
+  export categorical.given
+  export discreteUniform.given
+  export exponential.given
+  export gamma.given
+  export gaussian.given
+  export logNormal.given
+  export uniform.given
 
 sealed private class DensityLowPriority0 extends DensityLowPriority1:
   given [F[_]: Applicative, P: MultiplicativeMonoid]: InvariantMonoidal[Density[F, P, _]] =
@@ -60,14 +70,3 @@ sealed private class DensityInvariantMonoidal[F[_]: Applicative, P](using
 ) extends DensityInvariantSemigroupal[F, P],
       InvariantMonoidal[Density[F, P, _]]:
   def unit = Density(_ => P.one.pure)
-
-sealed private trait DensityDistributionInstances
-    extends BernoulliInstances,
-      BetaInstances,
-      CategoricalInstances,
-      DiscreteUniformInstances,
-      ExponentialInstances,
-      GammaInstances,
-      GaussianInstances,
-      LogNormalInstances,
-      UniformInstances

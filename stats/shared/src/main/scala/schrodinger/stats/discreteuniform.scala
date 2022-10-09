@@ -22,7 +22,7 @@ import cats.syntax.all.*
 import schrodinger.kernel.DiscreteUniform
 import schrodinger.math.syntax.*
 
-private trait DiscreteUniformInstances:
+object discreteUniform:
   given [F[_]: Applicative, A](using A: Semifield[A]): DiscreteUniform[Density[F, A, _], Long]
     with
     def discreteUniform(n: Long) =

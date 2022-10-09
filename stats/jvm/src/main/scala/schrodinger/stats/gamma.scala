@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.GammaDistribution
 import schrodinger.kernel.Gamma
 import schrodinger.math.LogDouble
 
-private trait GammaInstances:
+object gamma:
   given [F[_]: Applicative]: Gamma[Density[F, LogDouble, _], Double] with
     def gamma(shape: Double, rate: Double) =
       val distribution = new GammaDistribution(null, shape, 1.0 / rate)
