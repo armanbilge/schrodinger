@@ -74,6 +74,7 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(commonJvmSettings)
 
 lazy val stats = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("stats"))
   .dependsOn(kernel, math)
   .settings(
