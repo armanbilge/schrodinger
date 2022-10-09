@@ -26,18 +26,16 @@ import cats.syntax.all.*
 import schrodinger.kernel
 import schrodinger.kernel.Dirichlet
 import schrodinger.math.LogDouble
-import schrodinger.math.special.logGamma
+import schrodinger.math.special.gamma
 
 object dirichlet:
   given [F[_]: Applicative, G[_]: NonEmptyTraverse: NonEmptyParallel]
       : Dirichlet[Density[F, LogDouble, _], G[Double]] with
     def dirichlet(concentration: G[Double]) =
 
-      def Gamma(x: Double) = LogDouble.exp(logGamma(x))
-
       val normalizingConstant =
-        Gamma(AdditiveMonoid[Double].sum(concentration.toIterable))
-          / concentration.reduceMap(Gamma)(_ * _)
+        gamma(AdditiveMonoid[Double].sum(concentration.toIterable))
+          / concentration.reduceMap(gamma)(_ * _)
 
       Density { x =>
         val density =

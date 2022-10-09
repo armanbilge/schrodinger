@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package schrodinger.math.special
+package schrodinger.math
+package special
 
 import org.apache.commons.numbers.gamma.LogGamma
 
 def logGamma(x: Double): Double = LogGamma.value(x)
+def gamma(x: Double): LogDouble = LogDouble.exp(logGamma(x))

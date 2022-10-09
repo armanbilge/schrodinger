@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package schrodinger.math.special
+package schrodinger.math
+package special
 
 import scala.scalanative.libc.math.*
 
 def logGamma(x: Double): Double = lgamma(x)
+def gamma(x: Double): LogDouble = LogDouble.exp(logGamma(x))
