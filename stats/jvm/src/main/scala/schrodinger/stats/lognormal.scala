@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.LogNormalDistribution
 import schrodinger.kernel.LogNormal
 import schrodinger.math.LogDouble
 
-private trait LogNormalInstances:
+object logNormal:
   given [F[_]: Applicative]: LogNormal[Density[F, LogDouble, _], Double] with
     def logNormal = logNormal(0, 1)
     def logNormal(mu: Double, sigma: Double) =

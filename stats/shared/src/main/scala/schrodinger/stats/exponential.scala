@@ -22,7 +22,7 @@ import cats.syntax.all.*
 import schrodinger.kernel.Exponential
 import schrodinger.math.LogDouble
 
-private trait ExponentialInstances:
+object exponential:
   given [F[_]: Applicative]: Exponential[Density[F, LogDouble, _], Double] with
     def exponential = exponential(1)
     def exponential(rate: Double) =

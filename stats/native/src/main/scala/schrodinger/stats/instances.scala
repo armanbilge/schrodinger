@@ -16,8 +16,8 @@
 
 package schrodinger.stats
 
-private trait BetaInstances
-private trait DirichletInstances
-private trait GammaInstances
-private trait GaussianInstances
-private trait LogNormalInstances
+object beta
+object dirichlet
+object gamma
+object gaussian
+object logNormal

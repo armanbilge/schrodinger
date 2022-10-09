@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.NormalDistribution
 import schrodinger.kernel.Gaussian
 import schrodinger.math.LogDouble
 
-private trait GaussianInstances:
+object gaussian:
   given [F[_]: Applicative]: Gaussian[Density[F, LogDouble, _], Double] with
     def gaussian = gaussian(0, 1)
     def gaussian(mean: Double, standardDeviation: Double) =

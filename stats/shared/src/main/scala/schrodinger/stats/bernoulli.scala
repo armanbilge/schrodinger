@@ -26,7 +26,7 @@ import schrodinger.kernel.FairBernoulli
 import schrodinger.math.Monus
 import schrodinger.math.syntax.*
 
-private trait BernoulliInstances:
+object bernoulli:
 
   given [F[_]: Applicative, A](using
       A: Semifield[A],

@@ -23,7 +23,7 @@ import org.apache.commons.math3.distribution.BetaDistribution
 import schrodinger.kernel.Beta
 import schrodinger.math.LogDouble
 
-private trait BetaInstances:
+object beta:
   given [F[_]: Applicative]: Beta[Density[F, LogDouble, _], Double] with
     def beta(alpha: Double, beta: Double) =
       val distribution = new BetaDistribution(null, alpha, beta)
