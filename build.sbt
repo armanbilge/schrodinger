@@ -13,7 +13,6 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.8.0"
 val CatsEffectVersion = "3.3.14"
-val CommonsMathVersion = "3.6.1"
 val CommonsNumbersGamma = "1.0"
 val CommonsRngVersion = "1.4"
 val Fs2Version = "3.3.0"
@@ -74,12 +73,12 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(commonJvmSettings)
 
 lazy val stats = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("stats"))
   .dependsOn(kernel, math)
   .settings(
     name := "schrodinger-stats",
     libraryDependencies ++= Seq(
-      "org.apache.commons" % "commons-math3" % CommonsMathVersion,
       "org.typelevel" %%% "cats-laws" % CatsVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,

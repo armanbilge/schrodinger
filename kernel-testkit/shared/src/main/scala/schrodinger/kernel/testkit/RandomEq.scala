@@ -22,7 +22,7 @@ import cats.Monad
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
 import schrodinger.math.LogDouble
-import schrodinger.math.special.logGamma
+import schrodinger.math.special.gamma
 import scala.collection.mutable
 
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
@@ -75,9 +75,6 @@ object SimulationResult:
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
     (marginal1 / (marginal1 + marginal2)).real
 
-  private def gamma(x: Double): LogDouble =
-    LogDouble.exp(logGamma(x))
-
   private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): LogDouble =
     val A = sum(alpha)
     val n = sum(x)
@@ -100,9 +97,8 @@ object SimulationResult:
     var pmf = gamma(A) * gamma(n1 + 1.0) * gamma(n2 + 1.0) / gamma(n + A)
     var k = 0
     while k < x1.length do
-      pmf *= gamma(x1(k) + x2(k) + alpha(k)) / gamma(alpha(k)) / gamma(x1(k) + 1.0) / gamma(
-        x2(k) + 1.0,
-      )
+      pmf *= gamma(x1(k) + x2(k) + alpha(k))
+        / gamma(alpha(k)) / gamma(x1(k) + 1.0) / gamma(x2(k) + 1.0)
       k += 1
     pmf
 

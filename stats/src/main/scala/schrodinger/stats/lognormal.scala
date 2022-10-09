@@ -19,13 +19,18 @@ package stats
 
 import cats.Applicative
 import cats.syntax.all.*
-import org.apache.commons.math3.distribution.NormalDistribution
 import schrodinger.kernel.Gaussian
+import schrodinger.kernel.LogNormal
 import schrodinger.math.LogDouble
 
-object gaussian:
-  given [F[_]: Applicative]: Gaussian[Density[F, LogDouble, _], Double] with
-    def gaussian = gaussian(0, 1)
-    def gaussian(mean: Double, standardDeviation: Double) =
-      val distribution = new NormalDistribution(null, mean, standardDeviation)
-      Density(x => LogDouble.exp(distribution.logDensity(x)).pure)
+object logNormal:
+  given [F[_]: Applicative](using
+      gaussian: Gaussian[Density[F, LogDouble, _], Double],
+  ): LogNormal[Density[F, LogDouble, _], Double] with
+    def logNormal = logNormal(0, 1)
+    def logNormal(mu: Double, sigma: Double) =
+      val delegate = gaussian.gaussian(mu, sigma)
+      Density { x =>
+        val logx = Math.log(x)
+        delegate(logx).map(_ / LogDouble.exp(logx))
+      }

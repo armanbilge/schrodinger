@@ -32,6 +32,7 @@ object LogDouble:
   final val NaN: LogDouble = Double.NaN
 
   inline def apply(x: Double): LogDouble = Math.log(x)
+  inline def `1+`(x: Double): LogDouble = Math.log1p(x)
   inline def exp(x: Double): LogDouble = x
 
   def sum(xs: IArray[LogDouble]): LogDouble =

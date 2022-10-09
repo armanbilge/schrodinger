@@ -19,12 +19,14 @@ package stats
 
 import cats.Applicative
 import cats.syntax.all.*
-import org.apache.commons.math3.distribution.BetaDistribution
-import schrodinger.kernel.Beta
+import schrodinger.kernel.Gamma
 import schrodinger.math.LogDouble
+import schrodinger.math.special
 
-object beta:
-  given [F[_]: Applicative]: Beta[Density[F, LogDouble, _], Double] with
-    def beta(alpha: Double, beta: Double) =
-      val distribution = new BetaDistribution(null, alpha, beta)
-      Density(x => LogDouble.exp(distribution.logDensity(x)).pure)
+object gamma:
+  given [F[_]](using F: Applicative[F]): Gamma[Density[F, LogDouble, _], Double] with
+    def gamma(shape: Double, rate: Double) =
+      val `β^α/Γ(α)` = LogDouble(rate) ** shape / special.gamma(shape)
+      Density { x =>
+        F.pure(`β^α/Γ(α)` * LogDouble(x) ** (shape - 1) * LogDouble.exp(-rate * x))
+      }
