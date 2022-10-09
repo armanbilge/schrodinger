@@ -23,10 +23,10 @@ import cats.Applicative
 import cats.NonEmptyParallel
 import cats.NonEmptyTraverse
 import cats.syntax.all.*
-import org.apache.commons.math3.special.Gamma.logGamma
 import schrodinger.kernel
 import schrodinger.kernel.Dirichlet
 import schrodinger.math.LogDouble
+import schrodinger.math.special.logGamma
 
 object dirichlet:
   given [F[_]: Applicative, G[_]: NonEmptyTraverse: NonEmptyParallel]

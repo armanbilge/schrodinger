@@ -17,7 +17,6 @@
 package schrodinger.stats
 
 object beta
-object dirichlet
 object gamma
 object gaussian
 object logNormal

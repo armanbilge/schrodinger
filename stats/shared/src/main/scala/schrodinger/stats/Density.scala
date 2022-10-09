@@ -37,6 +37,7 @@ object Density extends DensityLowPriority0:
   export bernoulli.given
   export beta.given
   export categorical.given
+  export dirichlet.given
   export discreteUniform.given
   export exponential.given
   export gamma.given
