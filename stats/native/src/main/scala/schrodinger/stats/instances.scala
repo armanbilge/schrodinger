@@ -17,4 +17,3 @@
 package schrodinger.stats
 
 object beta
-object gamma
