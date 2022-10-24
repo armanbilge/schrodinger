@@ -22,6 +22,7 @@ import cats.Functor
 import cats.Invariant
 import cats.NonEmptyTraverse
 import cats.Reducible
+import cats.collections.HashMap
 import cats.data.Chain
 import cats.data.NonEmptyVector
 import cats.kernel.Hash
@@ -46,8 +47,8 @@ object Categorical:
     F match
       case Priority.Preferred(given Functor[f]) =>
         apply(probabilities).map(support.get(_).get._1)
-      case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
-        val inv = support.toIterable.view.map(_._1).zipWithIndex.toMap
+      case Priority.Fallback(InvariantAndHash(given Invariant[f], given Hash[a])) =>
+        val inv = HashMap.fromIterableOnce(support.toIterable.view.map(_._1).zipWithIndex)
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
 
   given [F[_]: Functor, G[_]: Reducible, P: Order](using
