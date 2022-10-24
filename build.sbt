@@ -13,6 +13,7 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 
 val CatsVersion = "2.8.0"
 val CatsEffectVersion = "3.3.14"
+val CatsCollectionsVersion = "0.9.5"
 val CommonsNumbersGamma = "1.0"
 val CommonsRngVersion = "1.5"
 val Fs2Version = "3.3.0"
@@ -68,6 +69,7 @@ lazy val kernel = crossProject(JVMPlatform, JSPlatform, NativePlatform)
     name := "schrodinger-kernel",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-core" % CatsVersion,
+      "org.typelevel" %%% "cats-collections-core" % CatsCollectionsVersion,
     ),
   )
   .jvmSettings(commonJvmSettings)

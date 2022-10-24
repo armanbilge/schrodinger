@@ -21,6 +21,8 @@ import cats.FlatMap
 import cats.Functor
 import cats.Invariant
 import cats.Reducible
+import cats.collections.HashMap
+import cats.kernel.Hash
 import cats.syntax.all.*
 
 trait DiscreteUniform[F[_], I]:
@@ -36,8 +38,8 @@ object DiscreteUniform:
     F match
       case Priority.Preferred(given Functor[f]) =>
         apply(support.size).map(support.get(_).get)
-      case Priority.Fallback(InvariantAndHash(given Invariant[f], _)) =>
-        val inv = support.toIterable.view.zipWithIndex.toMap
+      case Priority.Fallback(InvariantAndHash(given Invariant[f], given Hash[a])) =>
+        val inv = HashMap.fromIterableOnce(support.toIterable.view.zipWithIndex)
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
 
   def apply[F[_]: Invariant](support: Range)(using u: DiscreteUniform[F, Long]): F[Int] =
