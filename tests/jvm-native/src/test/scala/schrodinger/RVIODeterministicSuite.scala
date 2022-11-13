@@ -103,7 +103,8 @@ class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIn
   given Conversion[RVIO[SplitMix, Boolean], Prop] =
     rv => ioBooleanToProp(seeds.allValues.forallM(rv.simulate(_)))
 
-  given RVIO.Algebra[SplitMix] = RVIO.algebra[SplitMix].syncStep.unsafeRunSync().toOption.get
+  given RVIO.Algebra[SplitMix] =
+    RVIO.algebra[SplitMix].syncStep(Int.MaxValue).unsafeRunSync().toOption.get
 
   checkAll("RVIO", AsyncTests[RVIO[SplitMix, _]].applicative[Int, Int, Int])
   checkAll("RVIO", AsyncTests[RVIO[SplitMix, _]].async[Int, Int, Int](100.millis))
