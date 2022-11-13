@@ -11,6 +11,9 @@ ThisBuild / tlSonatypeUseLegacyHost := false
 val Scala3 = "3.2.1"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
+ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
+ThisBuild / tlJdkRelease := Some(17)
+
 val CatsVersion = "2.9.0"
 val CatsEffectVersion = "3.3.14"
 val CatsCollectionsVersion = "0.9.5"
