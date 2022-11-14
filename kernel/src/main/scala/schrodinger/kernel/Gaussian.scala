@@ -26,7 +26,7 @@ trait Gaussian[F[_], A]:
   def gaussian(mean: A, standardDeviation: A): F[A]
 
 trait GaussianCache[F[_], A]:
-  def getAndClear: F[Option[A]]
+  def getAndClear: F[A]
   def set(a: A): F[Unit]
 
 object Gaussian:
@@ -43,14 +43,14 @@ object Gaussian:
       gaussian.map(_ * standardDeviation + mean)
 
     def gaussian =
-      val sampleAndCache = for
-        x <- U.uniform01
-        y <- U.uniform10
-        alpha = 2 * Math.PI * x
-        r = Math.sqrt(-2 * Math.log(y))
-        g1 = r * Math.cos(alpha)
-        g2 = r * Math.sin(alpha)
-        _ <- cache.set(g2)
-      yield g1
+      val sampleAndCache = (U.uniform01, U.uniform10).flatMapN { (x, y) =>
+        val alpha = 2 * Math.PI * x
+        val r = Math.sqrt(-2 * Math.log(y))
+        val g1 = r * Math.cos(alpha)
+        val g2 = r * Math.sin(alpha)
+        cache.set(g2).as(g1)
+      }
 
-      OptionT(cache.getAndClear).getOrElseF(sampleAndCache)
+      cache.getAndClear.flatMap { x =>
+        if x.isNaN then sampleAndCache else x.pure
+      }
