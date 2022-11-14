@@ -19,6 +19,8 @@
           name = "schrodinger-shell";
           typelevelShell = {
             jdk.package = pkgs.jdk17;
+            nodejs.enable = true;
+            native.enable = true;
           };
         };
       }
