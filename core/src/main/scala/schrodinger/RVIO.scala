@@ -160,9 +160,9 @@ object RVIO:
         rng <- IO(s.rng.copy())
       yield rng
 
-    def getAndClear: RVIO[S, Option[Double]] =
+    def getAndClear: RVIO[S, Double] =
       state.get.flatMap { s =>
-        IO.pure(Some(s.cachedGaussian).filterNot(_.isNaN)) <* IO(s.cachedGaussian = Double.NaN)
+        IO.pure(s.cachedGaussian) <* IO(s.cachedGaussian = Double.NaN)
       }
 
     def set(x: Double): RVIO[S, Unit] = state.get.flatMap(s => IO(s.cachedGaussian = x))

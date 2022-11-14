@@ -31,7 +31,7 @@ ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
 ThisBuild / Test / testOptions += Tests.Argument("+l")
 
 val commonJvmSettings = Seq(
-  Test / run / fork := true,
+  fork := true,
 )
 
 lazy val root = tlCrossRootProject.aggregate(
