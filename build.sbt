@@ -126,6 +126,7 @@ lazy val laws = crossProject(JVMPlatform, JSPlatform, NativePlatform)
   .jvmSettings(commonJvmSettings)
 
 lazy val core = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
   .in(file("core"))
   .dependsOn(kernel)
   .settings(
