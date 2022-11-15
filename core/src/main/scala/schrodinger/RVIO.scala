@@ -161,7 +161,7 @@ object RVIO:
     def dispatch: RVIO[S, S] =
       for
         s <- state.get
-        rng <- IO(s.rng.copy())
+        rng <- IO(s.rng.split())
       yield rng
 
     def getAndClear: RVIO[S, Double] =
