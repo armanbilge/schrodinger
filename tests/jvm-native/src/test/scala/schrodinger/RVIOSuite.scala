@@ -17,16 +17,20 @@
 package schrodinger
 
 import cats.effect.IO
+import cats.effect.syntax.all.*
 import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
-import cats.effect.syntax.all.*
 import munit.CatsEffectSuite
+import munit.ScalaCheckEffectSuite
+import org.scalacheck.effect.PropF.*
+import schrodinger.kernel.Gaussian
 import schrodinger.kernel.Random
+import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.rng.SplitMix
 
 import scala.concurrent.duration.*
 
-class RVIOSuite extends CatsEffectSuite:
+class RVIOSuite extends CatsEffectSuite, ScalaCheckEffectSuite, RVTestkit:
 
   test("run deterministically") {
     for
@@ -40,21 +44,24 @@ class RVIOSuite extends CatsEffectSuite:
 
   test("streams are not identical") {
     forAllF { (seed: SplitMix) =>
-      val nextLong = RVT.long[IO, SplitMix]
-      val prog = nextLong *> nextLong.both(nextLong).evalMap { (left, right) =>
-        IO(assert(clue(left) != clue(right)))
+      RVIO.algebra[SplitMix].flatMap { case given RVIO.Algebra[SplitMix] =>
+        val nextLong = Random.long[RVIO[SplitMix, *]]
+        val prog = nextLong *> nextLong.both(nextLong).evalMap { (left, right) =>
+          IO(assert(clue(left) != clue(right)))
+        }
+        prog.simulate(seed)
       }
-      prog.simulate(seed)
     }
   }
 
   test("streams of gaussians are not identical") {
     forAllF { (seed: SplitMix) =>
-      val nextGaussian = Gaussian.standard[RVT[IO, SplitMix, *], Double]
-      val prog = nextGaussian *> nextGaussian.both(nextGaussian).evalMap { (left, right) =>
-        IO(assert(clue(left) != clue(right)))
+      RVIO.algebra[SplitMix].flatMap { case given RVIO.Algebra[SplitMix] =>
+        val nextGaussian = Gaussian.standard[RVIO[SplitMix, *], Double]
+        val prog = nextGaussian *> nextGaussian.both(nextGaussian).evalMap { (left, right) =>
+          IO(assert(clue(left) != clue(right)))
+        }
+        prog.simulate(seed)
       }
-      prog.simulate(seed)
     }
   }
-

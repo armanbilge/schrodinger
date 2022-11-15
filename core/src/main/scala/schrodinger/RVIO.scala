@@ -48,9 +48,13 @@ import scala.util.NotGiven
 opaque type RVIO[S, +A] = IO[A]
 
 object RVIO:
+  extension [S, A](rvioa: RVIO[S, A])
+    inline def evalMap[B](f: A => IO[B]): RVIO[S, B] =
+      rvioa.flatMap(a => eval(f(a)))
+
   type Par[S, A] = ParallelF[RVIO[S, _], A]
 
-  def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
+  inline def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
 
   def evalK[S]: IO ~> RVIO[S, _] =
     new:
