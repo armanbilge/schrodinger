@@ -39,6 +39,7 @@ import schrodinger.unsafe.rng.SplittableRng
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+import schrodinger.unsafe.rng.SplitMix
 
 trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
 
@@ -79,6 +80,10 @@ trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
       cogen: Cogen[F[A]],
   ): Cogen[RVT[F, S, A]] =
     Cogen[List[F[A]]].contramap(rv => seeds.allValues.map(pseudo.simulate(rv)))
+
+  given Arbitrary[SplitMix] = Arbitrary(
+    Arbitrary.arbitrary[Long].map(SplitMix(_, SplitMix.GoldenGamma)),
+  )
 
 sealed private[testkit] trait RVTestkitLowPriority:
   given [F[_]: Monad, S, A: Arbitrary: Cogen](using

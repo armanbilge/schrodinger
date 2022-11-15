@@ -21,6 +21,7 @@ val CommonsNumbersGamma = "1.1"
 val CommonsRngVersion = "1.5"
 val Fs2Version = "3.3.0"
 val ScalaCheckVersion = "1.17.0"
+val ScalaCheckEffectVersion = "2.0.0-M2"
 val VaultVersion = "3.3.0"
 val DisciplineVersion = "1.1.5"
 val MunitVersion = "1.0.0-M6"
@@ -167,6 +168,7 @@ lazy val tests = crossProject(JVMPlatform, JSPlatform, NativePlatform)
       "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
       "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
       "org.typelevel" %%% "cats-effect-laws" % CatsEffectVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % ScalaCheckEffectVersion % Test,
     ),
   )
   .jvmConfigure(_.dependsOn(testkit.jvm % Test))
