@@ -35,11 +35,11 @@ import schrodinger.kernel.testkit.PseudoRandomEq
 import schrodinger.kernel.testkit.RandomGenerators
 import schrodinger.kernel.testkit.SimulationResult
 import schrodinger.unsafe.rng.Rng
+import schrodinger.unsafe.rng.SplitMix
 import schrodinger.unsafe.rng.SplittableRng
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import schrodinger.unsafe.rng.SplitMix
 
 trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
 
