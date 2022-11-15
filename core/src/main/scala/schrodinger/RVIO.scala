@@ -36,6 +36,7 @@ import cats.effect.kernel.Sync
 import cats.effect.std.Console
 import cats.kernel.Monoid
 import cats.kernel.Semigroup
+import cats.syntax.all.*
 import cats.~>
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.GaussianCache
@@ -48,9 +49,13 @@ import scala.util.NotGiven
 opaque type RVIO[S, +A] = IO[A]
 
 object RVIO:
+  extension [S, A](rvioa: RVIO[S, A])
+    inline def evalMap[B](f: A => IO[B]): RVIO[S, B] =
+      rvioa.flatMap(a => eval(f(a)))
+
   type Par[S, A] = ParallelF[RVIO[S, _], A]
 
-  def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
+  inline def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
 
   def evalK[S]: IO ~> RVIO[S, _] =
     new:
@@ -114,13 +119,11 @@ object RVIO:
       (Outcome[RVIO[S, _], Throwable, A], Fiber[RVIO[S, _], Throwable, B]),
       (Fiber[RVIO[S, _], Throwable, A], Outcome[RVIO[S, _], Throwable, B]),
     ]] =
-      dispatch.flatMap { rng1 =>
-        dispatch.flatMap { rng2 =>
-          IO.racePair(
-            state.set(State(rng1)) *> fa,
-            state.set(State(rng2)) *> fb,
-          )
-        }
+      (dispatch, dispatch).flatMapN { (rng1, rng2) =>
+        IO.racePair(
+          state.set(State(rng1)) *> fa,
+          state.set(State(rng2)) *> fb,
+        )
       }
 
     def sleep(time: FiniteDuration): RVIO[S, Unit] = IO.sleep(time)
@@ -157,7 +160,7 @@ object RVIO:
     def dispatch: RVIO[S, S] =
       for
         s <- state.get
-        rng <- IO(s.rng.copy())
+        rng <- IO(s.rng.split())
       yield rng
 
     def getAndClear: RVIO[S, Double] =

@@ -27,6 +27,7 @@ import cats.effect.IO
 import cats.effect.SyncIO
 import cats.effect.kernel.Sync
 import cats.effect.laws.AsyncTests
+import cats.effect.syntax.all.*
 import cats.effect.testkit.TestInstances
 import cats.laws.discipline.AlternativeTests
 import cats.laws.discipline.CommutativeMonadTests
@@ -34,8 +35,12 @@ import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.FunctorFilterTests
 import cats.laws.discipline.SerializableTests
 import cats.syntax.all.*
+import munit.CatsEffectSuite
 import munit.DisciplineSuite
+import munit.ScalaCheckEffectSuite
 import org.scalacheck.Prop
+import org.scalacheck.effect.PropF.*
+import schrodinger.kernel.Gaussian
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
@@ -44,7 +49,7 @@ import schrodinger.unsafe.rng.SplitMix
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
-class RVTSuite extends DisciplineSuite, RVTestkit:
+class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, RVTestkit:
 
   override protected def scalaCheckInitialSeed: String =
     "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
@@ -83,3 +88,23 @@ class RVTSuite extends DisciplineSuite, RVTestkit:
     "RVT",
     AlternativeTests[RVT[Option, SplitMix, _]].alternative[Boolean, Boolean, Boolean].random,
   )
+
+  test("streams are not identical") {
+    forAllF { (seed: SplitMix) =>
+      val nextLong = RVT.long[IO, SplitMix]
+      val prog = nextLong *> nextLong.both(nextLong).evalMap { (left, right) =>
+        IO(assert(clue(left) != clue(right)))
+      }
+      prog.simulate(seed)
+    }
+  }
+
+  test("streams of gaussians are not identical") {
+    forAllF { (seed: SplitMix) =>
+      val nextGaussian = Gaussian.standard[RVT[IO, SplitMix, *], Double]
+      val prog = nextGaussian *> nextGaussian.both(nextGaussian).evalMap { (left, right) =>
+        IO(assert(clue(left) != clue(right)))
+      }
+      prog.simulate(seed)
+    }
+  }
