@@ -89,8 +89,6 @@ class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, 
     AlternativeTests[RVT[Option, SplitMix, _]].alternative[Boolean, Boolean, Boolean].random,
   )
 
-  val seed = SplitMix(1234567890L, SplitMix.GoldenGamma)
-
   test("streams are not identical") {
     forAllF { (seed: SplitMix) =>
       val nextLong = RVT.long[IO, SplitMix]
