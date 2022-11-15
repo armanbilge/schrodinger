@@ -36,6 +36,7 @@ import cats.effect.kernel.Sync
 import cats.effect.std.Console
 import cats.kernel.Monoid
 import cats.kernel.Semigroup
+import cats.syntax.all.*
 import cats.~>
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.GaussianCache
@@ -118,13 +119,11 @@ object RVIO:
       (Outcome[RVIO[S, _], Throwable, A], Fiber[RVIO[S, _], Throwable, B]),
       (Fiber[RVIO[S, _], Throwable, A], Outcome[RVIO[S, _], Throwable, B]),
     ]] =
-      dispatch.flatMap { rng1 =>
-        dispatch.flatMap { rng2 =>
-          IO.racePair(
-            state.set(State(rng1)) *> fa,
-            state.set(State(rng2)) *> fb,
-          )
-        }
+      (dispatch, dispatch).flatMapN { (rng1, rng2) =>
+        IO.racePair(
+          state.set(State(rng1)) *> fa,
+          state.set(State(rng2)) *> fb,
+        )
       }
 
     def sleep(time: FiniteDuration): RVIO[S, Unit] = IO.sleep(time)
