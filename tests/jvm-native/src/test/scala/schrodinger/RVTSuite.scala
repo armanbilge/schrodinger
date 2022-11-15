@@ -40,6 +40,7 @@ import munit.DisciplineSuite
 import munit.ScalaCheckEffectSuite
 import org.scalacheck.Prop
 import org.scalacheck.effect.PropF.*
+import schrodinger.kernel.Gaussian
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
@@ -94,6 +95,16 @@ class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, 
     forAllF { (seed: SplitMix) =>
       val nextLong = RVT.long[IO, SplitMix]
       val prog = nextLong *> nextLong.both(nextLong).evalMap { (left, right) =>
+        IO(assert(clue(left) != clue(right)))
+      }
+      prog.simulate(seed)
+    }
+  }
+
+  test("streams of gaussians are not identical") {
+    forAllF { (seed: SplitMix) =>
+      val nextGaussian = Gaussian.standard[RVT[IO, SplitMix, *], Double]
+      val prog = nextGaussian *> nextGaussian.both(nextGaussian).evalMap { (left, right) =>
         IO(assert(clue(left) != clue(right)))
       }
       prog.simulate(seed)

@@ -37,3 +37,24 @@ class RVIOSuite extends CatsEffectSuite:
       (left, right) <- program.both(program)
     yield left === right
   }
+
+  test("streams are not identical") {
+    forAllF { (seed: SplitMix) =>
+      val nextLong = RVT.long[IO, SplitMix]
+      val prog = nextLong *> nextLong.both(nextLong).evalMap { (left, right) =>
+        IO(assert(clue(left) != clue(right)))
+      }
+      prog.simulate(seed)
+    }
+  }
+
+  test("streams of gaussians are not identical") {
+    forAllF { (seed: SplitMix) =>
+      val nextGaussian = Gaussian.standard[RVT[IO, SplitMix, *], Double]
+      val prog = nextGaussian *> nextGaussian.both(nextGaussian).evalMap { (left, right) =>
+        IO(assert(clue(left) != clue(right)))
+      }
+      prog.simulate(seed)
+    }
+  }
+
