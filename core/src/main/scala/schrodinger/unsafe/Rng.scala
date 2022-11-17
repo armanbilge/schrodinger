@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.unsafe.rng
+package schrodinger.unsafe
 
 trait Rng[S] extends Serializable:
   extension (s: S)

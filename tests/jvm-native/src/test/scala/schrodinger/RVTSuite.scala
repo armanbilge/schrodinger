@@ -44,7 +44,7 @@ import schrodinger.kernel.Gaussian
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
-import schrodinger.unsafe.rng.SplitMix
+import schrodinger.unsafe.SplitMix
 
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration

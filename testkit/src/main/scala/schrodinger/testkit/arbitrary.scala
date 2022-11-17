@@ -20,6 +20,6 @@ package arbitrary
 
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
-import schrodinger.unsafe.rng.SplitMix
+import schrodinger.unsafe.SplitMix
 
 given Arbitrary[SplitMix] = Arbitrary(Gen.long.map(SplitMix(_, SplitMix.GoldenGamma)))
