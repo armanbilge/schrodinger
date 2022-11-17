@@ -16,7 +16,7 @@
 
 package schrodinger
 
-import schrodinger.unsafe.rng.Rng
+import schrodinger.unsafe.Rng
 
 /** Provides the capability to "dispatch" an independent rng that can be used in unsafe lands.
   */

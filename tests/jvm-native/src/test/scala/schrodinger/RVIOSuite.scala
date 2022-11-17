@@ -26,7 +26,7 @@ import org.scalacheck.effect.PropF.*
 import schrodinger.kernel.Gaussian
 import schrodinger.kernel.Random
 import schrodinger.testkit.RVTestkit
-import schrodinger.unsafe.rng.SplitMix
+import schrodinger.unsafe.SplitMix
 
 import scala.concurrent.duration.*
 

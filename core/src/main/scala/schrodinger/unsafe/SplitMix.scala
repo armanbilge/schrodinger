@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package schrodinger.unsafe.rng
+package schrodinger.unsafe
 
 import cats.Applicative
 import cats.effect.kernel.Clock
@@ -22,7 +22,7 @@ import cats.syntax.all.*
 
 import java.lang
 
-final class SplitMix(private[rng] var seed: Long, val gamma: Long) extends Serializable
+final class SplitMix(private[unsafe] var seed: Long, val gamma: Long) extends Serializable
 
 object SplitMix:
 

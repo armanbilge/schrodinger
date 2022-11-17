@@ -15,7 +15,7 @@
  */
 
 package schrodinger
-package unsafe.rng
+package unsafe
 
 import cats.syntax.all.*
 import munit.ScalaCheckSuite

@@ -34,9 +34,9 @@ import schrodinger.kernel.testkit.Confidence
 import schrodinger.kernel.testkit.PseudoRandomEq
 import schrodinger.kernel.testkit.RandomGenerators
 import schrodinger.kernel.testkit.SimulationResult
-import schrodinger.unsafe.rng.Rng
-import schrodinger.unsafe.rng.SplitMix
-import schrodinger.unsafe.rng.SplittableRng
+import schrodinger.unsafe.Rng
+import schrodinger.unsafe.SplitMix
+import schrodinger.unsafe.SplittableRng
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration

@@ -46,8 +46,8 @@ import cats.syntax.all.*
 import cats.~>
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.GaussianCache
-import schrodinger.unsafe.rng.Rng
-import schrodinger.unsafe.rng.SplittableRng
+import schrodinger.unsafe.Rng
+import schrodinger.unsafe.SplittableRng
 
 import scala.collection.mutable
 import scala.concurrent.ExecutionContext
