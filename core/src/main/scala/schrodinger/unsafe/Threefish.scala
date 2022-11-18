@@ -54,12 +54,34 @@ object Threefish:
         Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq, ctr, bIndex, bseqIndex)
 
       def nextInt() =
-        ???
+        import tf.*
+        if bIndex >= 8 then incrementCtr()
+
+        val bi = Array(b0, b1, b2, b3)(bIndex / 2)
+        val shift = 32 * (bIndex % 2)
+        val rtn = Int.MaxValue & (bi >>> shift)
+
+        bIndex = (bIndex + 1).toByte
+
+        rtn.toInt
 
       def nextLong() =
-        ???
+        import tf.*
+        if bIndex >= 7 then incrementCtr()
+
+        bIndex = (bIndex + (bIndex % 2)).toByte
+        val bi = Array(b0, b1, b2, b3)(bIndex / 2)
+        val shift = 32 * (bIndex % 2)
+        val rtn = Int.MaxValue & (bi >>> shift)
+
+        bIndex = (bIndex + 2).toByte
+
+        rtn.toInt
 
       def split() =
+        import tf.*
+        // if bseqIndex >= 64 then
+
         val right = copy()
         goLeft()
         right.goRight()
