@@ -15,12 +15,93 @@
  */
 
 /*
+ * Copyright (c) 2012-2013, Michał Pałka
+ * Licensed under the BSD-3 license
+ */
+
+/*
  * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
+ * Licensed under the MIT license
  */
 
 package schrodinger.unsafe
 
-private object Threefish:
+final class Threefish private (
+    // state
+    private var s0: Long,
+    private var s1: Long,
+    private var s2: Long,
+    private var s3: Long,
+    // output
+    private var b0: Long,
+    private var b1: Long,
+    private var b2: Long,
+    private var b3: Long,
+    // path
+    private var bseq: Long,
+    private var ctr: Long,
+    // indices
+    private var bIndex: Byte,
+    private var bseqIndex: Byte,
+) extends Serializable
+
+object Threefish:
+
+  given SplittableRng[Threefish] with
+    extension (tf: Threefish)
+      def copy() =
+        import tf.*
+        Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq, ctr, bIndex, bseqIndex)
+
+      def nextInt() =
+        ???
+
+      def nextLong() =
+        ???
+
+      def split() =
+        val right = copy()
+        goLeft()
+        right.goRight()
+        right
+
+      private def goLeft(): Unit =
+        ???
+
+      private def goRight(): Unit =
+        ???
+
+      private def incrementCtr(): Unit =
+        if tf.ctr == Long.MaxValue then goLeft()
+        else
+          tf.ctr += 1
+          rehash()
+
+      private def rehash(): Unit =
+        import tf.*
+
+        val key = Array(s0, s1, s2, s3)
+        val block = Array(bseq, ctr, 0, 0)
+        val out = new Array[Long](4)
+        processBlock(key, block, out)
+        b0 = out(0)
+        b1 = out(1)
+        b2 = out(2)
+        b3 = out(3)
+
+        bseq = 0
+        ctr = 0
+        bIndex = 0
+        bseqIndex = 0
+
+      private def reseed(): Unit =
+        import tf.*
+        rehash()
+        s0 = b0
+        s1 = b1
+        s2 = b2
+        s3 = b3
+        rehash()
 
   private final val C240 = 0x1bd11bdaa9fc1a22L
 
@@ -39,7 +120,7 @@ private object Threefish:
   private inline def rotlXor(x: Long, n: Int, xor: Long): Long =
     ((x << n) | (x >>> -n)) ^ xor
 
-  def processBlock(
+  private[unsafe] def processBlock(
       key: Array[Long],
       block: Array[Long],
       out: Array[Long],
