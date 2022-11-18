@@ -50,7 +50,7 @@ private object Threefish:
     kw(1) = key(1); kw(5 + 1) = kw(1)
     kw(2) = key(2); kw(5 + 2) = kw(2)
     kw(3) = key(3); kw(5 + 3) = kw(3)
-    kw(5) = C240 ^ kw(0) ^ kw(1) ^ kw(2) ^ kw(3)
+    kw(4) = C240 ^ kw(0) ^ kw(1) ^ kw(2) ^ kw(3)
 
     var b0 = block(0)
     var b1 = block(1)
