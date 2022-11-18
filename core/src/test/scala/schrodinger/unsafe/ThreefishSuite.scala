@@ -21,7 +21,7 @@ import scodec.bits.*
 
 class ThreefishSuite extends FunSuite:
 
-  test("test vector") {
+  test("skein_golden_kat_internals") {
     val out = new Array[Long](4)
     Threefish.processBlock(new Array(4), new Array(4), out)
     assertEquals(
