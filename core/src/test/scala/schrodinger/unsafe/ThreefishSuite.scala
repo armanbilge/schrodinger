@@ -26,6 +26,6 @@ class ThreefishSuite extends FunSuite:
     Threefish.processBlock(new Array(4), new Array(4), out)
     assertEquals(
       out.map(ByteVector.fromLong(_)).reduce(_ ++ _),
-      hex"84da2a1f8beaee947066ae3e3103f1ad536db1f4a1192495116b9f3ce6133fd8",
+      hex"94EEEA8B1F2ADA84ADF103313EAE6670952419A1F4B16D53D83F13E63C9F6B11",
     )
   }
