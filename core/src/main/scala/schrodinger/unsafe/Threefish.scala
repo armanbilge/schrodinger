@@ -89,7 +89,7 @@ private object Threefish:
       b0 += kw(dm5)
       b1 += kw(dm5 + 1)
       b2 += kw(dm5 + 2)
-      b3 += kw(dm5 + 3)
+      b3 += kw(dm5 + 3) + d
 
       b0 += b1
       b1 = rotlXor(b1, R40, b0)
