@@ -70,13 +70,11 @@ object Threefish:
         if bIndex >= 7 then incrementCtr()
 
         bIndex = (bIndex + (bIndex % 2)).toByte
-        val bi = Array(b0, b1, b2, b3)(bIndex / 2)
-        val shift = 32 * (bIndex % 2)
-        val rtn = Int.MaxValue & (bi >>> shift)
+        val rtn = Array(b0, b1, b2, b3)(bIndex / 2)
 
         bIndex = (bIndex + 2).toByte
 
-        rtn.toInt
+        rtn
 
       def split() =
         import tf.*
