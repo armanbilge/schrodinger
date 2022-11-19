@@ -103,7 +103,7 @@ object Threefish:
         import tf.*
 
         val key = Array(s0, s1, s2, s3)
-        val block = Array(bseq, ctr, 0, 0)
+        val block = Array(bseq, ctr, bseqIndex, 0)
         val out = new Array[Long](4)
         processBlock(key, block, out)
         b0 = out(0)
