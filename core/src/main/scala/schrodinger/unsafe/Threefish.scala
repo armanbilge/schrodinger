@@ -38,11 +38,12 @@ final class Threefish private (
     private var b2: Long,
     private var b3: Long,
     // path
-    private var bseq: Long,
-    private var ctr: Long,
+    private var bseq0: Long,
+    private var bseq1: Long,
+    private var ctr: Int,
     // indices
     private var bIndex: Byte,
-    private var bseqIndex: Byte,
+    private var bseqLength: Byte,
 ) extends Serializable
 
 object Threefish:
@@ -51,10 +52,11 @@ object Threefish:
     extension (tf: Threefish)
       def copy() =
         import tf.*
-        Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq, ctr, bIndex, bseqIndex)
+        Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 
       def nextInt() =
         import tf.*
+
         if bIndex >= 8 then incrementCtr()
 
         val bi = Array(b0, b1, b2, b3)(bIndex / 2)
@@ -67,6 +69,7 @@ object Threefish:
 
       def nextLong() =
         import tf.*
+
         if bIndex >= 7 then incrementCtr()
 
         bIndex = (bIndex + (bIndex % 2)).toByte
@@ -78,50 +81,66 @@ object Threefish:
 
       def split() =
         import tf.*
-        // if bseqIndex >= 64 then
 
-        val right = copy()
-        goLeft()
-        right.goRight()
-        right
+        if bseqLength == -128 then // overflow
+          reseed()
 
-      private def goLeft(): Unit =
-        ???
+        val i = bseqLength
+        bseqLength = (bseqLength + 1).toByte
 
-      private def goRight(): Unit =
-        ???
+        val left = copy()
+        left.rehash()
+
+        // go right
+        setBseq(i)
+        rehash()
+
+        left
+
+      private inline def setBseq(i: Int): Unit =
+        if i < 64 then tf.bseq0 |= 1L << i
+        else tf.bseq1 |= 1L << (i - 64)
 
       private def incrementCtr(): Unit =
-        if tf.ctr == Long.MaxValue then goLeft()
+        import tf.*
+
+        if ctr == Int.MaxValue then
+          reseed()
+          rehash()
+          ()
         else
-          tf.ctr += 1
+          ctr += 1
           rehash()
 
       private def rehash(): Unit =
         import tf.*
 
         val key = Array(s0, s1, s2, s3)
-        val block = Array(bseq, ctr, bseqIndex, 0)
+        val block = Array(bseq0, bseq1, ctr, bseqLength)
         val out = new Array[Long](4)
         processBlock(key, block, out)
         b0 = out(0)
         b1 = out(1)
         b2 = out(2)
         b3 = out(3)
-
-        bseq = 0
-        ctr = 0
         bIndex = 0
-        bseqIndex = 0
 
       private def reseed(): Unit =
         import tf.*
+
+        bseqLength = -1
+
         rehash()
+
         s0 = b0
         s1 = b1
         s2 = b2
         s3 = b3
-        rehash()
+
+        bseq0 = 0
+        bseq1 = 0
+        ctr = 0
+        bseqLength = 0
 
   private final val C240 = 0x1bd11bdaa9fc1a22L
 
