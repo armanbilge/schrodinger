@@ -104,7 +104,7 @@ object Threefish:
       private def incrementCtr(): Unit =
         import tf.*
 
-        if ctr == Int.MaxValue then
+        if ctr == -1 then
           reseed()
           rehash()
           ()
