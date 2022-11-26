@@ -26,6 +26,10 @@
 
 package schrodinger.unsafe
 
+import cats.Apply
+import cats.effect.std.SecureRandom
+import cats.syntax.all.*
+
 import Threefish.*
 
 final class Threefish private (
@@ -49,7 +53,7 @@ final class Threefish private (
 ) extends Serializable:
 
   private[unsafe] def copy() =
-    Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
+    new Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 
   private[unsafe] def nextInt() =
     if bIndex >= 8 then incrementCtr()
@@ -129,6 +133,15 @@ final class Threefish private (
     bseqLength = 0
 
 object Threefish:
+
+  def apply(s0: Long, s1: Long, s2: Long, s3: Long): Threefish =
+    val tf = new Threefish(s0, s1, s2, s3, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    tf.rehash()
+    tf
+
+  def fromSecureRandom[F[_]: Apply](random: SecureRandom[F]): F[Threefish] =
+    (random.nextLong, random.nextLong, random.nextLong, random.nextLong)
+      .mapN(Threefish(_, _, _, _))
 
   given SplittableRng[Threefish] with
     extension (tf: Threefish)
