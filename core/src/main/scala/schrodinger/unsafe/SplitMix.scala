@@ -27,7 +27,7 @@ final class SplitMix(private[unsafe] var seed: Long, val gamma: Long) extends Se
 object SplitMix:
 
   def fromTime[F[_]: Applicative: Clock]: F[SplitMix] =
-    (Clock[F].realTime.map(_.toMillis), Clock[F].monotonic.map(_.toNanos)).mapN {
+    (Clock[F].realTime.map(_.length), Clock[F].monotonic.map(_.length)).mapN {
       (currentTimeMillis, nanoTime) =>
         val s = mix64(currentTimeMillis) ^ mix64(nanoTime)
         SplitMix(mix64(s), mixGamma(s + GoldenGamma))
