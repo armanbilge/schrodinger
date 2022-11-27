@@ -52,6 +52,8 @@ final class Threefish private (
     private var bseqLength: Byte,
 ) extends Serializable:
 
+  private[unsafe] def state(): (Long, Long, Long, Long) = (s0, s1, s2, s3)
+
   private[unsafe] def copy() =
     new Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 

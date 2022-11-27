@@ -16,10 +16,84 @@
 
 package schrodinger.unsafe
 
-import munit.FunSuite
+import cats.effect.SyncIO
+import cats.syntax.all.*
+import munit.ScalaCheckSuite
+import org.scalacheck.Arbitrary
+import org.scalacheck.Arbitrary.arbitrary
+import org.scalacheck.Gen
+import org.scalacheck.Prop.forAll
 import scodec.bits.*
 
-class ThreefishSuite extends FunSuite:
+import scala.collection.mutable
+
+class ThreefishSuite extends ScalaCheckSuite:
+
+  given Arbitrary[Threefish] = Arbitrary(
+    for
+      s0 <- arbitrary[Long]
+      s1 <- arbitrary[Long]
+      s2 <- arbitrary[Long]
+      s3 <- arbitrary[Long]
+    yield Threefish(s0, s1, s2, s3),
+  )
+
+  enum RngProg:
+    case Next(andThen: RngProg)
+    case Split(left: RngProg, right: RngProg)
+    case Done
+
+  object RngProg:
+
+    given Arbitrary[RngProg] = Arbitrary {
+      def gen: Gen[RngProg] = Gen.frequency(
+        1 -> Gen.const(Done),
+        9 -> (for
+          left <- gen
+          right <- gen
+        yield Split(left, right)),
+        90 -> gen.map(Next(_)),
+      )
+      gen
+    }
+
+    def run(
+        onNext: (Threefish, (Long, Long, Long, Long)) => SyncIO[Unit],
+        onSplit: (Threefish, Threefish) => SyncIO[Unit],
+    )(tf: Threefish, prog: RngProg): SyncIO[Unit] =
+      def go(tf: Threefish, prog: RngProg): SyncIO[Unit] = prog match
+        case Next(andThen) =>
+          val nextLong = SyncIO(tf.nextLong())
+          (nextLong, nextLong, nextLong, nextLong).flatMapN { (l0, l1, l2, l3) =>
+            onNext(tf, (l0, l1, l2, l3)) >> go(tf, andThen)
+          }
+        case Split(left, right) =>
+          SyncIO(tf.split()).flatTap(onSplit(tf, _)).flatMap(go(_, right)) >> go(tf, left)
+        case Done => SyncIO.unit
+
+      go(tf, prog)
+
+  property("prefix free") {
+    forAll { (tf: Threefish, prog: RngProg) =>
+      SyncIO(mutable.Set.empty[(Long, Long, Long, Long)])
+        .flatMap { states =>
+          SyncIO(states.add(tf.state())) >>
+            RngProg.run(
+              (tf, state) =>
+                SyncIO {
+                  assert(states.add(tf.state()))
+                  assert(states.add(state))
+                },
+              (left, right) =>
+                SyncIO {
+                  assert(states.add(left.state()))
+                  assert(states.add(right.state()))
+                },
+            )(tf, prog)
+        }
+        .unsafeRunSync()
+    }
+  }
 
   test("skein_golden_kat_internals") {
     val out = new Array[Long](4)
