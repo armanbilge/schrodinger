@@ -137,6 +137,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
       "org.scodec" %%% "scodec-bits" % ScodecBitsVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
     ),
   )
   .jvmSettings(commonJvmSettings)
