@@ -58,27 +58,23 @@ final class Threefish private (
     new Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 
   private[unsafe] def nextInt() =
-    var bIndex: Int = this.bIndex
-
     if bIndex >= 8 then incrementCtr()
 
     val bi = Array(b0, b1, b2, b3)(bIndex / 2)
     val shift = 32 * (bIndex % 2)
     val rtn = Int.MaxValue & (bi >>> shift)
 
-    this.bIndex = (bIndex + 1).toByte
+    bIndex = (bIndex + 1).toByte
 
     rtn.toInt
 
   private[unsafe] def nextLong() =
-    var bIndex: Int = this.bIndex
-
     if bIndex >= 7 then incrementCtr()
 
-    bIndex = bIndex + (bIndex % 2)
+    bIndex = (bIndex + (bIndex % 2)).toByte
     val rtn = Array(b0, b1, b2, b3)(bIndex / 2)
 
-    this.bIndex = (bIndex + 2).toByte
+    bIndex = (bIndex + 2).toByte
 
     rtn
 
