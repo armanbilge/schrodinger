@@ -49,10 +49,10 @@ class ThreefishSuite extends ScalaCheckSuite:
       def gen: Gen[RngProg] = Gen.frequency(
         1 -> Gen.const(Done),
         9 -> (for
-          left <- gen
-          right <- gen
+          left <- Gen.delay(gen)
+          right <- Gen.delay(gen)
         yield Split(left, right)),
-        90 -> gen.map(Next(_)),
+        90 -> Gen.delay(gen).map(Next(_)),
       )
       gen
     }
