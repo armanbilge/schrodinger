@@ -22,7 +22,7 @@ import munit.ScalaCheckSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.Prop.forAll
+import org.scalacheck.Prop.forAllNoShrink
 import scodec.bits.*
 
 import scala.collection.mutable
@@ -46,15 +46,15 @@ class ThreefishSuite extends ScalaCheckSuite:
   object RngProg:
 
     given Arbitrary[RngProg] = Arbitrary {
-      def gen: Gen[RngProg] = Gen.frequency(
+      def gen(depth: Int): Gen[RngProg] = Gen.frequency(
         1 -> Gen.const(Done),
-        9 -> (for
-          left <- Gen.delay(gen)
-          right <- Gen.delay(gen)
+        (if depth > 0 then 9 else 0) -> (for
+          left <- Gen.delay(gen(depth - 1))
+          right <- Gen.delay(gen(depth - 1))
         yield Split(left, right)),
-        90 -> Gen.delay(gen).map(Next(_)),
+        90 -> Gen.delay(gen(depth - 1)).map(Next(_)),
       )
-      gen
+      gen(128 * 4)
     }
 
     def run(
@@ -74,20 +74,20 @@ class ThreefishSuite extends ScalaCheckSuite:
       go(tf, prog)
 
   property("prefix free") {
-    forAll { (tf: Threefish, prog: RngProg) =>
+    forAllNoShrink { (tf: Threefish, prog: RngProg) =>
       SyncIO(mutable.Set.empty[(Long, Long, Long, Long)])
         .flatMap { states =>
           SyncIO(states.add(tf.state())) >>
             RngProg.run(
-              (tf, state) =>
+              (tf, next) =>
                 SyncIO {
-                  assert(states.add(tf.state()))
-                  assert(states.add(state))
+                  states.add(tf.state())
+                  assert(states(next))
                 },
               (left, right) =>
                 SyncIO {
-                  assert(states.add(left.state()))
-                  assert(states.add(right.state()))
+                  states.add(left.state())
+                  states.add(right.state())
                 },
             )(tf, prog)
         }
