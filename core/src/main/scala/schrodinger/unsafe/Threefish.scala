@@ -99,10 +99,9 @@ final class Threefish private (
     else bseq1 |= 1L << (i - 64)
 
   private def incrementCtr(): Unit =
-    if ctr == -1 then
+    if ctr == -1 then // max uint
       reseed()
       rehash()
-      ()
     else
       ctr += 1
       rehash()
