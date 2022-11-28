@@ -71,6 +71,7 @@ class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
     forAllF(arbitrary[Threefish], Gen.listOfN(128, Gen.oneOf(SplitRight, SplitLeft))) {
       (rng: Threefish, ops: List[RngOp]) =>
         run(rng, ops).flatMap { rng =>
+          println(rng.debug())
           (IO(rng.state()), IO(rng.split()).flatMap(l => IO(l.state())), IO(rng.state()))
             .flatMapN { (parent, left, right) =>
               IO(assert(clue(Set(parent, left, right)).size == 3))

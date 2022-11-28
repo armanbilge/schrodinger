@@ -54,6 +54,19 @@ final class Threefish private (
 
   private[unsafe] def state(): (Long, Long, Long, Long) = (s0, s1, s2, s3)
 
+  private[unsafe] def debug(): String =
+    def toBinString(l: Long) =
+      val s = l.toBinaryString
+      "0" * (64 - s.length) + s
+
+    s"""|Threefish(
+        |  s = ${(s0, s1, s2, s3)},
+        |  b = ${(b0, b1, b2, b3)},
+        |  bIndex = $bIndex,
+        |  bseq = ${toBinString(bseq0)}${toBinString(bseq1)},
+        |  bseqIndex = $bseqLength,
+        |)""".stripMargin
+
   private[unsafe] def copy() =
     new Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 
