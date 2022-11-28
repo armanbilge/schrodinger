@@ -132,7 +132,7 @@ final class Threefish private (
     bIndex = 0
 
   private def reseed(): Unit =
-    bseqLength = -1
+    bseqLength = -1 // never happens naturally, so guarantees prefix-free
 
     rehash()
 
