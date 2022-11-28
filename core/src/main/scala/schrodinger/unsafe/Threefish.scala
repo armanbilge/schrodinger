@@ -47,7 +47,7 @@ final class Threefish private (
   private[unsafe] def debug(): String =
     def toBinString(l: Long) =
       val s = l.toBinaryString
-      "0" * (64 - s.length) + s
+      ("0" * (64 - s.length) + s).reverse
 
     s"""|Threefish(
         |  s = ${(s0, s1, s2, s3)},

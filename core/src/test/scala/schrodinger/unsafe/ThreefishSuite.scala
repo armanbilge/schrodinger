@@ -23,7 +23,7 @@ import munit.ScalaCheckEffectSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
-import org.scalacheck.effect.PropF.forAllF
+import org.scalacheck.effect.PropF.*
 import scodec.bits.*
 
 class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
@@ -68,13 +68,12 @@ class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
   test("split") {
     import RngOp.*
 
-    forAllF(arbitrary[Threefish], Gen.listOfN(128, Gen.oneOf(SplitRight, SplitLeft))) {
+    forAllNoShrinkF(arbitrary[Threefish], Gen.listOfN(128, Gen.oneOf(SplitRight, SplitLeft))) {
       (rng: Threefish, ops: List[RngOp]) =>
         run(rng, ops).flatMap { rng =>
-          println(rng.debug())
           (IO(rng.state()), IO(rng.split()).flatMap(l => IO(l.state())), IO(rng.state()))
             .flatMapN { (parent, left, right) =>
-              IO(assert(clue(Set(parent, left, right)).size == 3))
+              IO(assert(clue(parent) != clue(right))) *> IO(assertEquals(left, right))
             }
         }
     }
