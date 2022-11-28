@@ -47,18 +47,35 @@ class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
   object RngOp:
     given Arbitrary[RngOp] = Arbitrary(Gen.oneOf(NextInt, NextLong, SplitRight, SplitLeft))
 
+  def run(rng: Threefish, ops: List[RngOp]): IO[Threefish] =
+    import RngOp.*
+
+    def go(rng: Threefish, ops: List[RngOp]): IO[Threefish] = ops match
+      case Nil => IO.pure(rng)
+      case NextInt :: tail => IO(rng.nextInt()) >> go(rng, tail)
+      case NextLong :: tail => IO(rng.nextLong()) >> go(rng, tail)
+      case SplitRight :: tail => IO(rng.split()) >> go(rng, tail)
+      case SplitLeft :: tail => IO(rng.split()).flatMap(go(_, tail))
+
+    go(rng, ops)
+
   test("generate") {
     forAllF { (rng: Threefish, ops: List[RngOp]) =>
-      import RngOp.*
+      run(rng, ops).void
+    }
+  }
 
-      def go(rng: Threefish, ops: List[RngOp]): IO[Unit] = ops match
-        case Nil => IO.unit
-        case NextInt :: tail => IO(rng.nextInt()) >> go(rng, tail)
-        case NextLong :: tail => IO(rng.nextLong()) >> go(rng, tail)
-        case SplitRight :: tail => IO(rng.split()) >> go(rng, tail)
-        case SplitLeft :: tail => IO(rng.split()).flatMap(go(_, tail))
+  test("split") {
+    import RngOp.*
 
-      go(rng, ops)
+    forAllF(arbitrary[Threefish], Gen.listOfN(128, Gen.oneOf(SplitRight, SplitLeft))) {
+      (rng: Threefish, ops: List[RngOp]) =>
+        run(rng, ops).flatMap { rng =>
+          (IO(rng.state()), IO(rng.split()).flatMap(l => IO(l.state())), IO(rng.state()))
+            .flatMapN { (parent, left, right) =>
+              IO(assert(clue(Set(parent, left, right)).size == 3))
+            }
+        }
     }
   }
 
