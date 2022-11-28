@@ -19,13 +19,14 @@ package schrodinger.unsafe
 import cats.effect.IO
 import cats.syntax.all.*
 import munit.CatsEffectSuite
+import munit.ScalaCheckEffectSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Arbitrary.arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.effect.PropF.forAllF
 import scodec.bits.*
 
-class ThreefishSuite extends CatsEffectSuite:
+class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
 
   given Arbitrary[Threefish] = Arbitrary(
     for
@@ -47,10 +48,10 @@ class ThreefishSuite extends CatsEffectSuite:
 
       def go(rng: Threefish, ops: List[RngOp]): IO[Unit] = ops match
         case Nil => IO.unit
-        case NextInt :: tail => IO(rng.nextInt()) >> go(rng, ops)
-        case NextLong :: tail => IO(rng.nextLong()) >> go(rng, ops)
-        case SplitRight :: tail => IO(rng.split()) >> go(rng, ops)
-        case SplitLeft :: tail => IO(rng.split()).flatMap(go(_, ops))
+        case NextInt :: tail => IO(rng.nextInt()) >> go(rng, tail)
+        case NextLong :: tail => IO(rng.nextLong()) >> go(rng, tail)
+        case SplitRight :: tail => IO(rng.split()) >> go(rng, tail)
+        case SplitLeft :: tail => IO(rng.split()).flatMap(go(_, tail))
 
       go(rng, ops)
     }
