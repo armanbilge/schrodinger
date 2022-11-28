@@ -16,7 +16,7 @@
 
 package schrodinger.unsafe
 
-import cats.Apply
+import cats.effect.kernel.Sync
 import cats.effect.std.SecureRandom
 import cats.syntax.all.*
 
@@ -148,9 +148,11 @@ object Threefish:
     tf.rehash()
     tf
 
-  def fromSecureRandom[F[_]: Apply](random: SecureRandom[F]): F[Threefish] =
+  def fromSecureRandom[F[_]](random: SecureRandom[F])(using F: Sync[F]): F[Threefish] =
     (random.nextLong, random.nextLong, random.nextLong, random.nextLong)
-      .mapN(Threefish(_, _, _, _))
+      .flatMapN { (s0, s1, s2, s3) =>
+        F.delay(Threefish(s0, s1, s2, s3))
+      }
 
   given SplittableRng[Threefish] with
     extension (tf: Threefish)
