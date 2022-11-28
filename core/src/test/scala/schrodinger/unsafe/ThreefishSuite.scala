@@ -28,6 +28,11 @@ import scodec.bits.*
 
 class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
 
+  override protected def scalaCheckTestParameters =
+    super.scalaCheckTestParameters
+      .withMinSize(128 * 64)
+      .withMinSize(128 * 1024)
+
   given Arbitrary[Threefish] = Arbitrary(
     for
       s0 <- arbitrary[Long]
