@@ -14,16 +14,6 @@
  * limitations under the License.
  */
 
-/*
- * Copyright (c) 2012-2013, Michał Pałka
- * Licensed under the BSD-3 license
- */
-
-/*
- * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
- * Licensed under the MIT license
- */
-
 package schrodinger.unsafe
 
 import cats.Apply
@@ -146,6 +136,11 @@ final class Threefish private (
     ctr = 0
     bseqLength = 0
 
+/** A splittable generator, as described in:
+  *
+  * K Claessen and MH Palka. Splittable Pseudorandom Number Generators using Cryptographic
+  * Hashing. Haskell '13. [[http://dx.doi.org/10.1145/2503778.2503784]]
+  */
 object Threefish:
 
   def apply(s0: Long, s1: Long, s2: Long, s3: Long): Threefish =
@@ -163,6 +158,11 @@ object Threefish:
       def nextInt() = tf.nextInt()
       def nextLong() = tf.nextLong()
       def split() = tf.split()
+
+  /*
+   * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
+   * Licensed under the MIT license
+   */
 
   private final val C240 = 0x1bd11bdaa9fc1a22L
 
