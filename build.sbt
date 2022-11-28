@@ -20,6 +20,7 @@ val CatsCollectionsVersion = "0.9.5"
 val CommonsNumbersGamma = "1.1"
 val CommonsRngVersion = "1.5"
 val Fs2Version = "3.4.0"
+val ScodecBitsVersion = "1.1.34"
 val ScalaCheckVersion = "1.17.0"
 val ScalaCheckEffectVersion = "2.0.0-M2"
 val VaultVersion = "3.3.0"
@@ -134,8 +135,10 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     name := "schrodinger",
     libraryDependencies ++= Seq(
       "org.typelevel" %%% "cats-effect" % CatsEffectVersion,
+      "org.scodec" %%% "scodec-bits" % ScodecBitsVersion % Test,
       "org.scalameta" %%% "munit-scalacheck" % MunitVersion % Test,
-      "org.typelevel" %%% "discipline-munit" % DisciplineMunitVersion % Test,
+      "org.typelevel" %%% "munit-cats-effect" % MunitCatsEffectVersion % Test,
+      "org.typelevel" %%% "scalacheck-effect-munit" % ScalaCheckEffectVersion % Test,
     ),
   )
   .jvmSettings(commonJvmSettings)
