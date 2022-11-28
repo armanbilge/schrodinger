@@ -64,7 +64,7 @@ final class Threefish private (
         |  b = ${(b0, b1, b2, b3)},
         |  bIndex = $bIndex,
         |  bseq = ${toBinString(bseq0)}${toBinString(bseq1)},
-        |  bseqIndex = $bseqLength,
+        |  bseqLength = $bseqLength,
         |)""".stripMargin
 
   private[unsafe] def copy() =
