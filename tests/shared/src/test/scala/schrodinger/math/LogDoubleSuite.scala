@@ -27,6 +27,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 import org.scalacheck.Prop.*
+import schrodinger.laws.LogarithmicTests
 import schrodinger.laws.MonusTests
 
 class LogDoubleSuite extends DisciplineSuite:
@@ -74,3 +75,5 @@ class LogDoubleSuite extends DisciplineSuite:
   checkAll("LogDouble", OrderTests[LogDouble].order)
   checkAll("LogDouble", HashTests[LogDouble].hash)
   checkAll("LogDoubleAlgebra", SerializableTests.serializable(CommutativeSemifield[LogDouble]))
+
+  checkAll("LogDouble", LogarithmicTests[Double, LogDouble].logarithmic)
