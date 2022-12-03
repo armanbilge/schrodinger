@@ -21,8 +21,7 @@ import algebra.ring.DivisionRing
 import algebra.ring.Field
 import algebra.ring.Semifield
 
-trait Logarithmic[A]:
-  type L
+trait Logarithmic[A, L]:
 
   def semifield: Semifield[L]
 
@@ -36,7 +35,7 @@ trait Logarithmic[A]:
 
   extension (a: A) inline def toLogarithm: L = logarithm(a)
 
-trait CommutativeLogarithmic[A] extends Logarithmic[A]:
+trait CommutativeLogarithmic[A, L] extends Logarithmic[A, L]:
   def commutativeSemifield: CommutativeSemifield[L]
 
   final def semifield = commutativeSemifield
@@ -45,18 +44,11 @@ trait CommutativeLogarithmic[A] extends Logarithmic[A]:
 
   final def divisionRing = field
 
-object CommutativeLogarithmic:
-  type Aux[A, L0] = CommutativeLogarithmic[A] { type L = L0 }
-
 object Logarithmic:
 
-  type Aux[A, L0] = Logarithmic[A] { type L = L0 }
+  inline def apply[A, L](using l: Logarithmic[A, L]): l.type = l
 
-  inline def apply[A](using l: Logarithmic[A]): l.type = l
-
-  given CommutativeLogarithmic.Aux[Double, LogDouble] = new CommutativeLogarithmic[Double]:
-    type L = LogDouble
-
+  given CommutativeLogarithmic[Double, LogDouble] with
     def commutativeSemifield =
       LogDouble.given_CommutativeSemifield_LogDouble_Monus_LogDouble_Order_LogDouble_Hash_LogDouble
 
@@ -64,4 +56,4 @@ object Logarithmic:
 
     val exponential = (_: LogDouble).log
 
-    val logarithm = LogDouble(_)
+    val logarithm = LogDouble.exp(_)
