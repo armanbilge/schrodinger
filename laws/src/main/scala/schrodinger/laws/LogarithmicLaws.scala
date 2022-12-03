@@ -40,4 +40,3 @@ trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]):
 
 object LogarithmicLaws:
   def apply[A, L](using Logarithmic[A, L]): LogarithmicLaws[A, L] = new {}
-  
