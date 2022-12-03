@@ -27,9 +27,9 @@ trait Logarithmic[A, L]:
 
   def divisionRing: DivisionRing[A]
 
-  def exponential: L => A
+  def exponential(l: L): A
 
-  def logarithm: A => L
+  def logarithm(a: A): L
 
   extension (l: L) inline def toExponential: A = exponential(l)
 
@@ -54,6 +54,6 @@ object Logarithmic:
 
     def field = algebra.instances.all.doubleAlgebra
 
-    val exponential = (_: LogDouble).log
+    def exponential(l: LogDouble) = l.log
 
-    val logarithm = LogDouble.exp(_)
+    def logarithm(a: Double) = LogDouble.exp(a)
