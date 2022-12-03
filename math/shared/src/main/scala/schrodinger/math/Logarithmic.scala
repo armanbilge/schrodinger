@@ -16,6 +16,7 @@
 
 package schrodinger.math
 
+import algebra.instances.all.*
 import algebra.ring.CommutativeSemifield
 import algebra.ring.DivisionRing
 import algebra.ring.Field
@@ -49,10 +50,9 @@ object Logarithmic:
   inline def apply[A, L](using l: Logarithmic[A, L]): l.type = l
 
   given CommutativeLogarithmic[Double, LogDouble] with
-    def commutativeSemifield =
-      LogDouble.given_CommutativeSemifield_LogDouble_Monus_LogDouble_Order_LogDouble_Hash_LogDouble
+    def commutativeSemifield = summon
 
-    def field = algebra.instances.all.doubleAlgebra
+    def field = summon
 
     def exponential(l: LogDouble) = l.log
 
