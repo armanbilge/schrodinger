@@ -47,9 +47,6 @@ import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
-import scala.annotation.tailrec
-import cats.kernel.Group
-
 sealed abstract class Weighted[W, A] extends Product, Serializable:
 
   def valueOption: Option[A]
@@ -79,6 +76,10 @@ sealed abstract class Weighted[W, A] extends Product, Serializable:
       case Heavy(w, d, a) =>
         f(a).map(fa => Weighted(w * (fa / d), fa, a))
       case weightless => weightless.pure
+
+  final def normalize(z: W)(using MultiplicativeGroup[W]): Weighted[W, A] = this match
+    case Heavy(w, d, a) => Heavy(w / z, d / z, a)
+    case weightless => weightless
 
   final override def toString: String =
     show(using Show.fromToString, Show.fromToString)
