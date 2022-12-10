@@ -17,6 +17,7 @@
 package schrodinger.montecarlo
 
 import algebra.ring.CommutativeRig
+import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
 import algebra.ring.Semifield
@@ -125,6 +126,9 @@ object WeightedT extends WeightedTInstances, WeightedTDistributionInstances:
         f: A => F[W],
     )(using F: Monad[F], W0: Semifield[W], W1: Eq[W]): WeightedT[F, W, A] =
       F.flatMap(value)(_.importanceA(f))
+
+    def normalize(z: W)(using F: Functor[F], W: MultiplicativeGroup[W]): WeightedT[F, W, A] =
+      WeightedT(F.map(value)(_.normalize(z)))
 
     def show(using F: Show[F[Weighted[W, A]]]): String = F.show(value)
 
