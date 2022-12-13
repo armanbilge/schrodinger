@@ -16,11 +16,17 @@
 
 package schrodinger.math.syntax
 
+import algebra.ring.AdditiveMonoid
 import algebra.ring.AdditiveSemigroup
 import algebra.ring.MultiplicativeGroup
+import algebra.ring.MultiplicativeMonoid
 import algebra.ring.MultiplicativeSemigroup
 import algebra.ring.Rig
 import algebra.ring.Ring
+
+inline def zero[A](using A: AdditiveMonoid[A]): A = A.zero
+
+inline def one[A](using A: MultiplicativeMonoid[A]): A = A.one
 
 extension [A](x: A)
   inline def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
