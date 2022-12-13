@@ -29,7 +29,7 @@ trait LogarithmicTests[A, L](laws: LogarithmicLaws[A, L]) extends Laws:
   def logarithmic(using Arbitrary[A], Arbitrary[L], Eq[A], Eq[L]): RuleSet =
     val props = Seq[(String, Prop)](
       "logarithm round trip" -> forAll(laws.logarithmRoundTrip(_)),
-      "exponential round trip" -> forAll(laws.exponentialRoundTrip(_)),
+      "linear round trip" -> forAll(laws.linearRoundTrip(_)),
       "one is zero" -> laws.oneIsZero,
       "times is plus" -> forAll(laws.timesIsPlus(_, _)),
       "div is minus" -> forAll(laws.divIsMinus(_, _)),

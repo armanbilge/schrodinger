@@ -22,21 +22,21 @@ import cats.kernel.laws.*
 trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]):
 
   def logarithmRoundTrip(a: A): IsEq[A] =
-    L.exponential(L.logarithm(a)) <-> a
+    L.linear(L.logarithm(a)) <-> a
 
-  def exponentialRoundTrip(l: L): IsEq[L] =
-    L.logarithm(L.exponential(l)) <-> l
+  def linearRoundTrip(l: L): IsEq[L] =
+    L.logarithm(L.linear(l)) <-> l
 
   def oneIsZero: IsEq[A] =
-    L.exponential(L.semifield.one) <-> L.divisionRing.zero
+    L.linear(L.semifield.one) <-> L.divisionRing.zero
 
   def timesIsPlus(x: L, y: L): IsEq[A] =
-    L.exponential(L.semifield.times(x, y)) <->
-      L.divisionRing.plus(L.exponential(x), L.exponential(y))
+    L.linear(L.semifield.times(x, y)) <->
+      L.divisionRing.plus(L.linear(x), L.linear(y))
 
   def divIsMinus(x: L, y: L): IsEq[A] =
-    L.exponential(L.semifield.div(x, y)) <->
-      L.divisionRing.minus(L.exponential(x), L.exponential(y))
+    L.linear(L.semifield.div(x, y)) <->
+      L.divisionRing.minus(L.linear(x), L.linear(y))
 
 object LogarithmicLaws:
   def apply[A, L](using Logarithmic[A, L]): LogarithmicLaws[A, L] = new {}
