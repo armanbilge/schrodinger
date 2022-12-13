@@ -23,18 +23,18 @@ import algebra.ring.Rig
 import algebra.ring.Ring
 
 extension [A](x: A)
-  def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
-  def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
-  def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
-  def reciprocal(using A: MultiplicativeGroup[A]): A = A.reciprocal(x)
+  inline def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
+  inline def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
+  inline def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
+  inline def reciprocal(using A: MultiplicativeGroup[A]): A = A.reciprocal(x)
 
 extension [A](A: Rig[A])
-  def fromInt(n: Int): A = fakeRing.fromInt(n)
-  def fromBigInt(n: BigInt): A = fakeRing.fromBigInt(n)
+  inline def fromInt(n: Int): A = fakeRing.fromInt(n)
+  inline def fromBigInt(n: BigInt): A = fakeRing.fromBigInt(n)
 
   private def fakeRing: Ring[A] = new:
-    override def zero = A.zero
-    override def one = A.one
-    override def plus(x: A, y: A) = A.plus(x, y)
-    override def times(x: A, y: A) = A.times(x, y)
-    override def negate(x: A) = throw new UnsupportedOperationException
+    def zero = A.zero
+    def one = A.one
+    def plus(x: A, y: A) = A.plus(x, y)
+    def times(x: A, y: A) = A.times(x, y)
+    def negate(x: A) = throw new UnsupportedOperationException
