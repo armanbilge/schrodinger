@@ -1,2 +1,5 @@
 # new scalafmt conf
 55235f001e64520781db06118be8dd18df3f6a55
+
+# Scala Steward: Reformat with scalafmt 3.7.0
+3757531d8f9909635b59c2ca3be44aaa79e077b9
