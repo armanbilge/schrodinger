@@ -94,13 +94,13 @@ object Dist:
       go(f(a), Map.empty)
 
   given [P](using FairBernoulli[Density[Id, P, _], Boolean]): FairBernoulli[Dist[P, _], Boolean]
-    with
+  with
     def fairBernoulli =
       val f = Bernoulli.fair
       Dist(List(false, true).fproduct(f).toMap)
 
   given [P](using Bernoulli[Density[Id, P, _], P, Boolean]): Bernoulli[Dist[P, _], P, Boolean]
-    with
+  with
     def bernoulli(successProbability: P) =
       val f = Bernoulli(successProbability)
       Dist(List(false, true).fproduct(f).toMap)

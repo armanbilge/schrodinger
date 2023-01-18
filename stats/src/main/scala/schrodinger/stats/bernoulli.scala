@@ -36,7 +36,7 @@ object bernoulli:
       Density(_ => half)
 
   given [F[_]: Applicative, A: Monus](using A: Rig[A]): Bernoulli[Density[F, A, _], A, Boolean]
-    with
+  with
     def bernoulli(successProbability: A) =
       val success = successProbability.pure
       val failure = (A.one ∸ successProbability).pure

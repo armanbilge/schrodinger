@@ -24,7 +24,7 @@ import schrodinger.math.syntax.*
 
 object discreteUniform:
   given [F[_]: Applicative, A](using A: Semifield[A]): DiscreteUniform[Density[F, A, _], Long]
-    with
+  with
     def discreteUniform(n: Long) =
       val zero = A.zero.pure
       val p = A.fromBigInt(n).reciprocal.pure
