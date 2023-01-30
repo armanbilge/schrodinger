@@ -8,7 +8,7 @@ ThisBuild / startYear := Some(2021)
 ThisBuild / tlUntaggedAreSnapshots := false
 ThisBuild / tlSonatypeUseLegacyHost := false
 
-val Scala3 = "3.2.1"
+val Scala3 = "3.2.2"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
