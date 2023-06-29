@@ -155,11 +155,10 @@ object Threefish:
       }
 
   given SplittableRng[Threefish] with
-    extension (tf: Threefish)
-      def copy() = tf.copy()
-      def nextInt() = tf.nextInt()
-      def nextLong() = tf.nextLong()
-      def split() = tf.split()
+    extension (tf: Threefish) def copy() = tf.copy()
+    def nextInt() = tf.nextInt()
+    def nextLong() = tf.nextLong()
+    def split() = tf.split()
 
   /*
    * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)

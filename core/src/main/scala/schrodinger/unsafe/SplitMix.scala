@@ -34,26 +34,24 @@ object SplitMix:
     }
 
   given SplittableRng[SplitMix] with
-    extension (s: SplitMix)
+    extension (s: SplitMix) def copy(): SplitMix = SplitMix(s.seed, s.gamma)
 
-      def copy(): SplitMix = SplitMix(s.seed, s.gamma)
+    def nextInt(): Int =
+      s.seed += s.gamma
+      mix32(s.seed)
 
-      def nextInt(): Int =
-        s.seed += s.gamma
-        mix32(s.seed)
+    def nextLong(): Long =
+      s.seed += s.gamma
+      mix64(s.seed)
 
-      def nextLong(): Long =
-        s.seed += s.gamma
-        mix64(s.seed)
+    def nextGamma(): Long =
+      s.seed += s.gamma
+      mixGamma(s.seed)
 
-      def nextGamma(): Long =
-        s.seed += s.gamma
-        mixGamma(s.seed)
-
-      def split(): SplitMix =
-        val seed = s.nextLong()
-        val gamma = s.nextGamma()
-        SplitMix(seed, gamma)
+    def split(): SplitMix =
+      val seed = s.nextLong()
+      val gamma = s.nextGamma()
+      SplitMix(seed, gamma)
 
   final val GoldenGamma = 0x9e3779b97f4a7c15L
 

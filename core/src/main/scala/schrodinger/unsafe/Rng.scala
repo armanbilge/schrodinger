@@ -17,10 +17,9 @@
 package schrodinger.unsafe
 
 trait Rng[S] extends Serializable:
-  extension (s: S)
-    def copy(): S
-    def nextInt(): Int
-    def nextLong(): Long
+  extension (s: S) def copy(): S
+  def nextInt(): Int
+  def nextLong(): Long
 
 trait SplittableRng[S] extends Rng[S]:
   extension (s: S) def split(): S
