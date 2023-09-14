@@ -25,7 +25,7 @@ val ScalaCheckVersion = "1.17.0"
 val ScalaCheckEffectVersion = "2.0.0-M2"
 val VaultVersion = "3.5.0"
 val DisciplineVersion = "1.1.5"
-val MunitVersion = "1.0.0-M7"
+val MunitVersion = "1.0.0-M9"
 val DisciplineMunitVersion = "2.0.0-M3"
 val MunitCatsEffectVersion = "2.0.0-M3"
 
