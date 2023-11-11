@@ -17,11 +17,8 @@
 package schrodinger.kernel
 
 import cats.syntax.all.*
-import cats.instances.vector.*
-import schrodinger.kernel.Categorical
 import schrodinger.kernel.testkit.SplitMix64
 import schrodinger.kernel.testkit.PureRV
-import schrodinger.math.LogDouble
 import org.scalacheck.Prop.*
 import algebra.instances.all.*
 import munit.ScalaCheckSuite

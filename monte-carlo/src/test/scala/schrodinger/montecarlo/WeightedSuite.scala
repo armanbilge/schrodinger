@@ -17,16 +17,8 @@
 package schrodinger.montecarlo
 
 import algebra.instances.int.*
-import cats.Align
-import cats.CommutativeMonad
-import cats.InvariantMonoidal
-import cats.kernel.CommutativeMonoid
-import cats.kernel.laws.discipline.CommutativeMonoidTests
 import cats.kernel.laws.discipline.OrderTests
-import cats.laws.discipline.AlignTests
-import cats.laws.discipline.CommutativeMonadTests
 import cats.laws.discipline.InvariantMonoidalTests
-import cats.laws.discipline.arbitrary.*
 import munit.DisciplineSuite
 
 class WeightedSuite extends DisciplineSuite:

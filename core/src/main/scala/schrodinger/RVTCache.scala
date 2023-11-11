@@ -16,7 +16,6 @@
 
 package schrodinger
 
-import cats.~>
 import cats.effect.kernel.Sync
 
 final class RVTCache[F[_], S, A](private[schrodinger] val default: A):

@@ -17,7 +17,6 @@
 package schrodinger
 package testkit
 
-import cats.ApplicativeError
 import cats.Monad
 import cats.effect.kernel.Async
 import cats.effect.kernel.testkit.AsyncGenerators
@@ -28,13 +27,11 @@ import cats.kernel.Order
 import cats.laws.discipline.ExhaustiveCheck
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
-import org.scalacheck.Gen
 import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.kernel.testkit.PseudoRandomEq
 import schrodinger.kernel.testkit.RandomGenerators
 import schrodinger.kernel.testkit.SimulationResult
-import schrodinger.unsafe.Rng
 import schrodinger.unsafe.SplitMix
 import schrodinger.unsafe.SplittableRng
 

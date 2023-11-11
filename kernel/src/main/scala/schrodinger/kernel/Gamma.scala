@@ -16,7 +16,6 @@
 
 package schrodinger.kernel
 
-import algebra.ring.MultiplicativeMonoid
 import cats.Monad
 import cats.syntax.all.*
 

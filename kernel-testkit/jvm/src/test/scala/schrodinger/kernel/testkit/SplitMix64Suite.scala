@@ -16,7 +16,6 @@
 
 package schrodinger.kernel.testkit
 
-import cats.Traverse
 import cats.syntax.all.*
 import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64

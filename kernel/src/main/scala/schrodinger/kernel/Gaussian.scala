@@ -16,9 +16,7 @@
 
 package schrodinger.kernel
 
-import algebra.ring.Rig
 import cats.Monad
-import cats.data.OptionT
 import cats.syntax.all.*
 
 trait Gaussian[F[_], A]:

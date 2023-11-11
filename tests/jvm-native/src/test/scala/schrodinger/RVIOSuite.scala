@@ -18,7 +18,6 @@ package schrodinger
 
 import cats.effect.IO
 import cats.effect.syntax.all.*
-import cats.effect.unsafe.implicits.*
 import cats.syntax.all.*
 import munit.CatsEffectSuite
 import munit.ScalaCheckEffectSuite

@@ -16,38 +16,25 @@
 
 package schrodinger
 
-import cats.Alternative
-import cats.CommutativeMonad
-import cats.Eval
 import cats.FunctorFilter
-import cats.Order
 import cats.data.OptionT
-import cats.effect.Async
 import cats.effect.IO
 import cats.effect.SyncIO
 import cats.effect.kernel.Sync
-import cats.effect.laws.AsyncTests
 import cats.effect.syntax.all.*
-import cats.effect.testkit.TestInstances
 import cats.laws.discipline.AlternativeTests
 import cats.laws.discipline.CommutativeMonadTests
 import cats.laws.discipline.ExhaustiveCheck
 import cats.laws.discipline.FunctorFilterTests
-import cats.laws.discipline.SerializableTests
 import cats.syntax.all.*
 import munit.CatsEffectSuite
 import munit.DisciplineSuite
 import munit.ScalaCheckEffectSuite
-import org.scalacheck.Prop
 import org.scalacheck.effect.PropF.*
 import schrodinger.kernel.Gaussian
-import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.SplitMix
-
-import scala.concurrent.duration.DurationInt
-import scala.concurrent.duration.FiniteDuration
 
 class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, RVTestkit:
 
