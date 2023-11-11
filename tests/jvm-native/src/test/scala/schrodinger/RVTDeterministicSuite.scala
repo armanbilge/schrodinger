@@ -26,11 +26,11 @@ import cats.effect.laws.AsyncTests
 import cats.effect.testkit.TestInstances
 import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
+import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Prop
 import schrodinger.unsafe.SplitMix
-import munit.DisciplineSuite
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.DurationInt

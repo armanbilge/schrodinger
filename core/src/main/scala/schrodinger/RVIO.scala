@@ -38,8 +38,8 @@ import cats.kernel.Monoid
 import cats.kernel.Semigroup
 import cats.syntax.all.*
 import cats.~>
-import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.GaussianCache
+import schrodinger.kernel.PseudoRandom
 import schrodinger.unsafe.SplittableRng
 
 import scala.concurrent.ExecutionContext

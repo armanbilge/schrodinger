@@ -23,6 +23,7 @@ import cats.laws.discipline.ExhaustiveCheck
 import cats.syntax.all.*
 import schrodinger.math.LogDouble
 import schrodinger.math.special.gamma
+
 import scala.collection.mutable
 
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)

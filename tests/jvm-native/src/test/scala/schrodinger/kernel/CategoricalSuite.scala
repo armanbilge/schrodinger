@@ -16,15 +16,15 @@
 
 package schrodinger.kernel
 
-import cats.syntax.all.*
-import schrodinger.kernel.testkit.SplitMix64
-import schrodinger.kernel.testkit.PureRV
-import org.scalacheck.Prop.*
 import algebra.instances.all.*
+import cats.data.NonEmptyVector
+import cats.syntax.all.*
 import munit.ScalaCheckSuite
+import org.scalacheck.Prop.*
+import schrodinger.kernel.testkit.PureRV
+import schrodinger.kernel.testkit.SplitMix64
 
 import scala.language.implicitConversions
-import cats.data.NonEmptyVector
 
 class CategoricalSuite extends ScalaCheckSuite:
 
