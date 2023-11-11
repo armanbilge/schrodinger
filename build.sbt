@@ -8,24 +8,24 @@ ThisBuild / startYear := Some(2021)
 ThisBuild / tlUntaggedAreSnapshots := false
 ThisBuild / tlSonatypeUseLegacyHost := false
 
-val Scala3 = "3.2.2"
+val Scala3 = "3.3.1"
 ThisBuild / crossScalaVersions := Seq(Scala3)
 
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 ThisBuild / tlJdkRelease := Some(17)
 
-val CatsVersion = "2.9.0"
-val CatsEffectVersion = "3.4.7"
-val CatsCollectionsVersion = "0.9.5"
+val CatsVersion = "2.10.0"
+val CatsEffectVersion = "3.5.2"
+val CatsCollectionsVersion = "0.9.8"
 val CommonsNumbersGamma = "1.1"
 val CommonsRngVersion = "1.5"
-val Fs2Version = "3.6.1"
-val ScodecBitsVersion = "1.1.35"
+val Fs2Version = "3.9.3"
+val ScodecBitsVersion = "1.1.38"
 val ScalaCheckVersion = "1.17.0"
 val ScalaCheckEffectVersion = "2.0.0-M2"
 val VaultVersion = "3.5.0"
 val DisciplineVersion = "1.1.5"
-val MunitVersion = "1.0.0-M7"
+val MunitVersion = "1.0.0-M10"
 val DisciplineMunitVersion = "2.0.0-M3"
 val MunitCatsEffectVersion = "2.0.0-M3"
 

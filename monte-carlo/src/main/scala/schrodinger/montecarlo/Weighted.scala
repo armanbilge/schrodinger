@@ -16,30 +16,18 @@
 
 package schrodinger.montecarlo
 
-import algebra.ring.CommutativeRig
-import algebra.ring.MultiplicativeCommutativeGroup
-import algebra.ring.MultiplicativeCommutativeMonoid
 import algebra.ring.MultiplicativeGroup
 import algebra.ring.MultiplicativeMonoid
 import algebra.ring.Rig
 import algebra.ring.Semifield
 import algebra.ring.Semiring
-import cats.Align
 import cats.Applicative
-import cats.CommutativeMonad
 import cats.Eq
-import cats.Functor
 import cats.Id
 import cats.Invariant
 import cats.InvariantMonoidal
 import cats.InvariantSemigroupal
-import cats.Monad
-import cats.Monoid
-import cats.Semigroup
 import cats.Show
-import cats.data.Ior
-import cats.kernel.CommutativeMonoid
-import cats.kernel.CommutativeSemigroup
 import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*

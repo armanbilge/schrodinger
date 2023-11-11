@@ -21,7 +21,6 @@ import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
 import org.apache.commons.rng.sampling.distribution.AhrensDieterExponentialSampler
 import org.scalacheck.Prop.*
-import schrodinger.kernel.Exponential
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 

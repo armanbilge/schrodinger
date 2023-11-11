@@ -24,7 +24,6 @@ import cats.NonEmptyTraverse
 import cats.Reducible
 import cats.collections.HashMap
 import cats.data.Chain
-import cats.data.NonEmptyVector
 import cats.kernel.Hash
 import cats.kernel.Order
 import cats.syntax.all.*

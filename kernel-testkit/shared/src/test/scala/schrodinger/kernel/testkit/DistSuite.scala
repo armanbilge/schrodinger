@@ -17,7 +17,6 @@
 package schrodinger.kernel.testkit
 
 import algebra.instances.all.*
-import cats.CommutativeMonad
 import cats.kernel.laws.discipline.EqTests
 import cats.laws.discipline.CommutativeMonadTests
 import munit.DisciplineSuite

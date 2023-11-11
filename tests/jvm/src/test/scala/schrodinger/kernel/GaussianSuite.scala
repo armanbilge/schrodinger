@@ -16,14 +16,11 @@
 
 package schrodinger.kernel
 
-import cats.effect.SyncIO
 import cats.syntax.all.*
 import munit.ScalaCheckSuite
 import org.apache.commons.rng.core.source64
 import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianSampler
 import org.scalacheck.Prop.*
-import org.typelevel.vault.Key
-import schrodinger.kernel.Gaussian
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 

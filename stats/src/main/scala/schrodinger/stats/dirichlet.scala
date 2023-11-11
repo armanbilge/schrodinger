@@ -23,7 +23,6 @@ import cats.Applicative
 import cats.NonEmptyParallel
 import cats.NonEmptyTraverse
 import cats.syntax.all.*
-import schrodinger.kernel
 import schrodinger.kernel.Dirichlet
 import schrodinger.math.LogDouble
 import schrodinger.math.special.gamma

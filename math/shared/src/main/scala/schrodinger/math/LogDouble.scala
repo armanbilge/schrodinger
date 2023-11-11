@@ -20,6 +20,8 @@ import algebra.ring.CommutativeSemifield
 import cats.kernel.Hash
 import cats.kernel.Order
 
+import scala.annotation.nowarn
+
 opaque type LogDouble = Double
 
 object LogDouble:
@@ -85,7 +87,7 @@ object LogDouble:
     override def monus(x: LogDouble, y: LogDouble) =
       if gt(x, y) then LogDouble.-(x)(y) else zero
     override def positiveSumN(x: LogDouble, n: Int): LogDouble = LogDouble.*(x)(LogDouble(n))
-    override def sum(as: TraversableOnce[LogDouble]): LogDouble =
+    override def sum(as: TraversableOnce[LogDouble] @nowarn("cat=deprecation")): LogDouble =
       as.asInstanceOf[Matchable] match
         case iterable: Iterable[LogDouble] @unchecked => LogDouble.sum(iterable)
         case _ => super.sum(as)

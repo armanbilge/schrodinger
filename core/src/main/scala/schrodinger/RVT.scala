@@ -272,8 +272,7 @@ sealed private[schrodinger] trait RVTFunctorFilter[F[_], S](using FunctorFilter[
   def mapFilter[A, B](rva: RVT[F, S, A])(f: A => Option[B]): RVT[F, S, B] =
     RVT.cont(sim => sim(rva).mapFilter(f))
 
-sealed private[schrodinger] trait RVTDefer[F[_], S](using F: Defer[F])
-    extends Defer[RVT[F, S, _]]:
+sealed private[schrodinger] trait RVTDefer[F[_], S] extends Defer[RVT[F, S, _]]:
 
   def defer[A](rva: => RVT[F, S, A]): RVT[F, S, A] = RVT.defer(rva)
 

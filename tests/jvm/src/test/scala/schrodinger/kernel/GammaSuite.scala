@@ -24,7 +24,6 @@ import org.apache.commons.rng.sampling.distribution.BoxMullerNormalizedGaussianS
 import org.scalacheck.Arbitrary
 import org.scalacheck.Gen
 import org.scalacheck.Prop.*
-import schrodinger.kernel.Gamma
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 

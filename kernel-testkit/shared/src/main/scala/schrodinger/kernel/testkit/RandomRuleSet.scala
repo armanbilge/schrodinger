@@ -18,7 +18,6 @@ package schrodinger.kernel.testkit
 
 import org.scalacheck.Prop
 import org.scalacheck.Prop.Result
-import org.scalacheck.Prop.Status
 import org.typelevel.discipline.Laws
 
 class EqUndecidableException extends Exception

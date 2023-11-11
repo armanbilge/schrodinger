@@ -16,40 +16,20 @@
 
 package schrodinger
 
-import cats.Alternative
-import cats.CommutativeMonad
 import cats.Eq
-import cats.Eval
-import cats.FunctorFilter
-import cats.Monad
 import cats.Order
-import cats.data.OptionT
 import cats.effect.Async
 import cats.effect.IO
-import cats.effect.SyncIO
-import cats.effect.kernel.Sync
 import cats.effect.kernel.testkit.AsyncGenerators
 import cats.effect.kernel.testkit.GenK
-import cats.effect.kernel.testkit.MonadGenerators
-import cats.effect.kernel.testkit.SyncGenerators
 import cats.effect.laws.AsyncTests
-import cats.effect.laws.SyncTests
 import cats.effect.testkit.TestInstances
-import cats.laws.discipline.AlternativeTests
-import cats.laws.discipline.CommutativeMonadTests
 import cats.laws.discipline.ExhaustiveCheck
-import cats.laws.discipline.FunctorFilterTests
-import cats.laws.discipline.SerializableTests
 import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Prop
-import schrodinger.kernel.PseudoRandom
-import schrodinger.kernel.testkit.Confidence
-import schrodinger.testkit.RVTestkit
-import schrodinger.unsafe.Rng
 import schrodinger.unsafe.SplitMix
-import schrodinger.unsafe.SplittableRng
 import munit.DisciplineSuite
 
 import scala.concurrent.ExecutionContext

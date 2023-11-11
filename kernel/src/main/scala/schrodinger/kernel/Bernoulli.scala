@@ -16,11 +16,9 @@
 
 package schrodinger.kernel
 
-import algebra.ring.Semifield
 import cats.Functor
 import cats.kernel.Order
 import cats.syntax.all.*
-import schrodinger.math.syntax.*
 
 trait FairBernoulli[F[_], B]:
   def fairBernoulli: F[B]

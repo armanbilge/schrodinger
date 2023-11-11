@@ -27,7 +27,6 @@ import cats.effect.kernel.Sync
 import cats.effect.kernel.testkit.MonadGenerators
 import cats.kernel.Eq
 import cats.laws.discipline.ExhaustiveCheck
-import cats.syntax.all.*
 import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.typelevel.vault.InsertKey
