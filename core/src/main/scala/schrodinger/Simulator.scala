@@ -18,8 +18,8 @@ package schrodinger
 
 import cats.Id
 import cats.Monad
-import cats.effect.kernel.Sync
 import cats.effect.SyncIO
+import cats.effect.kernel.Sync
 
 trait Simulator[F[_]: Monad]:
   type G[_]

@@ -44,8 +44,8 @@ import cats.effect.kernel.syntax.all.*
 import cats.effect.kernel.Cont as CECont
 import cats.syntax.all.*
 import cats.~>
-import schrodinger.kernel.PseudoRandom
 import schrodinger.kernel.GaussianCache
+import schrodinger.kernel.PseudoRandom
 import schrodinger.unsafe.Rng
 import schrodinger.unsafe.SplittableRng
 

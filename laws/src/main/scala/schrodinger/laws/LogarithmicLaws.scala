@@ -16,8 +16,8 @@
 
 package schrodinger.laws
 
-import schrodinger.math.Logarithmic
 import cats.kernel.laws.*
+import schrodinger.math.Logarithmic
 
 trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]):
 
