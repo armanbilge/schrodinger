@@ -3,3 +3,6 @@
 
 # Scala Steward: Reformat with scalafmt 3.7.0
 3757531d8f9909635b59c2ca3be44aaa79e077b9
+
+# Bring back the braces
+8bbefe811c8cbe0ac5cdf483e89b5e2837feac15
