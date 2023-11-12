@@ -35,7 +35,7 @@ import schrodinger.math.syntax.*
 import schrodinger.montecarlo.Weighted.Heavy
 import schrodinger.montecarlo.Weighted.Weightless
 
-sealed abstract class Weighted[W, A] extends Product, Serializable:
+sealed abstract class Weighted[W, A] extends Product, Serializable {
 
   def valueOption: Option[A]
   def weight: W
@@ -44,15 +44,17 @@ sealed abstract class Weighted[W, A] extends Product, Serializable:
   def isWeightless: Boolean
   final def isHeavy: Boolean = !isWeightless
 
-  final def imap[B](f: A => B)(g: B => A): Weighted[W, B] = this match
+  final def imap[B](f: A => B)(g: B => A): Weighted[W, B] = this match {
     case Heavy(w, d, a) => Heavy(w, d, f(a))
     case Weightless(w) => new Weightless(w)
+  }
 
   final def product[B](b: Weighted[W, B])(using Semiring[W], Eq[W]): Weighted[W, (A, B)] =
-    (this, b) match
+    (this, b) match {
       case (Heavy(wa, da, a), Heavy(wb, db, b)) => Weighted(wa * wb, da * db, (a, b))
       case (Weightless(w), _) => new Weightless(w)
       case (_, Weightless(w)) => new Weightless(w)
+    }
 
   final def importance(f: A => W)(using Semifield[W], Eq[W]): Weighted[W, A] =
     importanceA[Id](f)
@@ -60,29 +62,34 @@ sealed abstract class Weighted[W, A] extends Product, Serializable:
   final def importanceA[F[_]: Applicative](
       f: A => F[W],
   )(using Semifield[W], Eq[W]): F[Weighted[W, A]] =
-    this match
+    this match {
       case Heavy(w, d, a) =>
         f(a).map(fa => Weighted(w * (fa / d), fa, a))
       case weightless => weightless.pure
+    }
 
-  final def normalize(z: W)(using MultiplicativeGroup[W]): Weighted[W, A] = this match
+  final def normalize(z: W)(using MultiplicativeGroup[W]): Weighted[W, A] = this match {
     case Heavy(w, d, a) => Heavy(w / z, d / z, a)
     case weightless => weightless
+  }
 
   final override def toString: String =
     show(using Show.fromToString, Show.fromToString)
 
-  final def show[B >: A: Show](using Show[W]): String = this match
+  final def show[B >: A: Show](using Show[W]): String = this match {
     case Heavy(w, d, a) => s"Heavy(${w.show}, ${d.show}, ${(a: B).show})"
     case Weightless(w) => s"Weightless(${w.show})"
+  }
 
   final def ===[B >: A: Eq](that: Weighted[W, B])(using Eq[W]): Boolean =
-    (this, that) match
+    (this, that) match {
       case (Heavy(wa, da, a), Heavy(wb, db, b)) => wa === wb && da === db && b === a
       case (Weightless(wa), Weightless(wb)) => wa === wb
       case _ => false
+    }
+}
 
-object Weighted extends WeightedInstances:
+object Weighted extends WeightedInstances {
 
   def apply[W: Eq, A](weight: W, density: W, value: A)(using W: Semiring[W]): Weighted[W, A] =
     if W.isZero(weight) then weightless[W, A]
@@ -96,48 +103,56 @@ object Weighted extends WeightedInstances:
 
   def weightless[W, A](using W: Semiring[W]): Weighted[W, A] = Weightless[W, A]
 
-  final case class Heavy[W, A](weight: W, density: W, value: A) extends Weighted[W, A]:
+  final case class Heavy[W, A](weight: W, density: W, value: A) extends Weighted[W, A] {
     def isWeightless: false = false
     def valueOption: Some[A] = Some(value)
-
-  final case class Weightless[W, A](weight: W) extends Weighted[W, A]:
+  }
+  final case class Weightless[W, A](weight: W) extends Weighted[W, A] {
     def density: W = weight
     def isWeightless: true = true
     def valueOption: None.type = None
+  }
 
-  object Weightless:
+  object Weightless {
     def apply[W, A](using W: Semiring[W]): Weightless[W, A] =
       Weightless(W.zero)
+  }
+}
 
-sealed private[montecarlo] class WeightedInstances extends WeightedInstances0:
+sealed private[montecarlo] class WeightedInstances extends WeightedInstances0 {
   given [F[_], W](using Rig[W], Eq[W]): InvariantMonoidal[Weighted[W, _]] =
     WeightedInvariantMonoidal[W]
 
   given [W: Order, A: Order]: Order[Weighted[W, A]] =
     Order.by(w => (w.weight, w.density, w.valueOption))
 
-  given [W: Show, A: Show]: Show[Weighted[W, A]] with
+  given [W: Show, A: Show]: Show[Weighted[W, A]] with {
     def show(t: Weighted[W, A]): String = t.show
-
-sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1:
+  }
+}
+sealed private[montecarlo] class WeightedInstances0 extends WeightedInstances1 {
   given [W]: Invariant[Weighted[W, _]] = WeightedInvariant[W]
 
   given [W: Hash, A: Hash]: Hash[Weighted[W, A]] =
     Hash.by(w => (w.weight, w.density, w.valueOption))
-
-sealed private[montecarlo] class WeightedInstances1:
-  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with
+}
+sealed private[montecarlo] class WeightedInstances1 {
+  given [W: Eq, A: Eq]: Eq[Weighted[W, A]] with {
     def eqv(x: Weighted[W, A], y: Weighted[W, A]): Boolean = x === y
-
-sealed private[montecarlo] class WeightedInvariant[W] extends Invariant[Weighted[W, _]]:
+  }
+}
+sealed private[montecarlo] class WeightedInvariant[W] extends Invariant[Weighted[W, _]] {
   def imap[A, B](fa: Weighted[W, A])(f: A => B)(g: B => A) = fa.imap(f)(g)
+}
 
 sealed private[montecarlo] class WeightedInvariantSemigroupal[W](using Semiring[W], Eq[W])
     extends WeightedInvariant[W],
-      InvariantSemigroupal[Weighted[W, _]]:
+      InvariantSemigroupal[Weighted[W, _]] {
   def product[A, B](wa: Weighted[W, A], wb: Weighted[W, B]) = wa.product(wb)
+}
 
 sealed private[montecarlo] class WeightedInvariantMonoidal[W](using Rig[W], Eq[W])
     extends WeightedInvariantSemigroupal[W],
-      InvariantMonoidal[Weighted[W, _]]:
+      InvariantMonoidal[Weighted[W, _]] {
   def unit = Weighted.pure(())
+}

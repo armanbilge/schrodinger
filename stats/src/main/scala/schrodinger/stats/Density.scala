@@ -30,7 +30,7 @@ import schrodinger.math.syntax.*
 
 opaque type Density[F[_], P, A] <: (A => F[P]) = A => F[P]
 
-object Density extends DensityLowPriority0:
+object Density extends DensityLowPriority0 {
 
   inline def apply[F[_], P, A](f: A => F[P]): Density[F, P, A] = f
 
@@ -44,30 +44,37 @@ object Density extends DensityLowPriority0:
   export gaussian.given
   export logNormal.given
   export uniform.given
+}
 
-sealed private class DensityLowPriority0 extends DensityLowPriority1:
+sealed private class DensityLowPriority0 extends DensityLowPriority1 {
   given [F[_]: Applicative, P: MultiplicativeMonoid]: InvariantMonoidal[Density[F, P, _]] =
     DensityInvariantMonoidal()
+}
 
-sealed private class DensityLowPriority1 extends DensityLowPriority2:
+sealed private class DensityLowPriority1 extends DensityLowPriority2 {
   given [F[_]: Apply, P: MultiplicativeSemigroup]: InvariantSemigroupal[Density[F, P, _]] =
     DensityInvariantSemigroupal()
+}
 
-sealed private class DensityLowPriority2:
+sealed private class DensityLowPriority2 {
   given [F[_], P]: Invariant[Density[F, P, _]] = DensityInvariant()
+}
 
-sealed private class DensityInvariant[F[_], P] extends Invariant[Density[F, P, _]]:
+sealed private class DensityInvariant[F[_], P] extends Invariant[Density[F, P, _]] {
   def imap[A, B](da: Density[F, P, A])(f: A => B)(g: B => A) =
     Density(da.compose(g))
+}
 
 sealed private class DensityInvariantSemigroupal[F[_]: Apply, P: MultiplicativeSemigroup]
     extends DensityInvariant[F, P],
-      InvariantSemigroupal[Density[F, P, _]]:
+      InvariantSemigroupal[Density[F, P, _]] {
   def product[A, B](da: Density[F, P, A], db: Density[F, P, B]) =
     Density((a, b) => (da(a), db(b)).mapN(_ * _))
+}
 
 sealed private class DensityInvariantMonoidal[F[_]: Applicative, P](using
     P: MultiplicativeMonoid[P],
 ) extends DensityInvariantSemigroupal[F, P],
-      InvariantMonoidal[Density[F, P, _]]:
+      InvariantMonoidal[Density[F, P, _]] {
   def unit = Density(_ => P.one.pure)
+}

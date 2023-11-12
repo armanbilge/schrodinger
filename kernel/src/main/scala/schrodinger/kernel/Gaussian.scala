@@ -19,15 +19,17 @@ package schrodinger.kernel
 import cats.Monad
 import cats.syntax.all.*
 
-trait Gaussian[F[_], A]:
+trait Gaussian[F[_], A] {
   def gaussian: F[A]
   def gaussian(mean: A, standardDeviation: A): F[A]
+}
 
-trait GaussianCache[F[_], A]:
+trait GaussianCache[F[_], A] {
   def getAndClear: F[A]
   def set(a: A): F[Unit]
+}
 
-object Gaussian:
+object Gaussian {
   inline def apply[F[_], A](mean: A, standardDeviation: A)(using g: Gaussian[F, A]): F[A] =
     g.gaussian(mean, standardDeviation)
 
@@ -36,11 +38,11 @@ object Gaussian:
   given [F[_]: Monad](using
       U: Uniform[F, Double],
       cache: GaussianCache[F, Double],
-  ): Gaussian[F, Double] with
+  ): Gaussian[F, Double] with {
     def gaussian(mean: Double, standardDeviation: Double) =
       gaussian.map(_ * standardDeviation + mean)
 
-    def gaussian =
+    def gaussian = {
       val sampleAndCache = (U.uniform01, U.uniform10).flatMapN { (x, y) =>
         val alpha = 2 * Math.PI * x
         val r = Math.sqrt(-2 * Math.log(y))
@@ -52,3 +54,6 @@ object Gaussian:
       cache.getAndClear.flatMap { x =>
         if x.isNaN then sampleAndCache else x.pure
       }
+    }
+  }
+}

@@ -41,7 +41,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 // Testing for equivalence of distributions is just too ambitious
-class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestInstances:
+class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestInstances {
 
   given Ticker = Ticker()
   given seeds: ExhaustiveCheck[SplitMix] =
@@ -63,9 +63,9 @@ class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIn
         ),
     )
 
-  given [A: Arbitrary: Cogen]: Arbitrary[RVIO[SplitMix, A]] =
+  given [A: Arbitrary: Cogen]: Arbitrary[RVIO[SplitMix, A]] = {
     val generators =
-      new AsyncGenerators[RVIO[SplitMix, _]]:
+      new AsyncGenerators[RVIO[SplitMix, _]] {
         val F: Async[RVIO[SplitMix, _]] = Async[RVIO[SplitMix, _]]
         val arbitraryE: Arbitrary[Throwable] = arbitraryThrowable
         val cogenE: Cogen[Throwable] = Cogen[Throwable]
@@ -74,8 +74,10 @@ class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIn
         val cogenFU: Cogen[RVIO[SplitMix, Unit]] = Cogen[RVIO[SplitMix, Unit]]
         override def recursiveGen[B: Arbitrary: Cogen](deeper: GenK[RVIO[SplitMix, _]]) =
           super.recursiveGen[B](deeper).filterNot(_._1 == "racePair")
+      }
 
     Arbitrary(generators.generators)
+  }
 
   given [A](using cogen: Cogen[IO[A]]): Cogen[RVIO[SplitMix, A]] =
     Cogen[List[IO[A]]].contramap(rv => seeds.allValues.map(rv.simulate))
@@ -91,3 +93,4 @@ class RVIODeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIn
   checkAll("RVIO", MonoidTests[RVIO[SplitMix, Int]].monoid)
   checkAll("RVIO", SemigroupKTests[RVIO[SplitMix, _]].semigroupK[Int])
   checkAll("RVIO", AlignTests[RVIO[SplitMix, _]].align[Int, Int, Int, Int])
+}

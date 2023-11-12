@@ -19,18 +19,21 @@ package schrodinger.kernel
 import cats.Functor
 import cats.syntax.all.*
 
-trait Gumbel[F[_], A]:
+trait Gumbel[F[_], A] {
   def gumbel: F[A]
   def gumbel(location: A, scale: A): F[A]
+}
 
-object Gumbel:
+object Gumbel {
   inline def apply[F[_], A](location: A, scale: A)(using g: Gumbel[F, A]): F[A] =
     g.gumbel(location, scale)
 
   inline def standard[F[_], A](using g: Gumbel[F, A]): F[A] = g.gumbel
 
-  given [F[_]: Functor](using Exponential[F, Double]): Gumbel[F, Double] with
+  given [F[_]: Functor](using Exponential[F, Double]): Gumbel[F, Double] with {
     def gumbel(location: Double, scale: Double) =
       gumbel.map(_ * scale + location)
 
     def gumbel = Exponential.standard.map(-Math.log(_))
+  }
+}

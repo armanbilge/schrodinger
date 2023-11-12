@@ -28,22 +28,24 @@ import scala.collection.mutable
 
 final case class Confidence(replicates: Int, eqvThreshold: Double, neqvThreshold: Double)
 
-object PseudoRandomEq:
+object PseudoRandomEq {
   def apply[F[_]: Monad, G[_], S, A: Eq](using
       pseudo: PseudoRandom.Aux[F, G, S],
       seeds: ExhaustiveCheck[S],
       confidence: Confidence,
       eq: Eq[G[SimulationResult[A]]],
-  ): Eq[F[A]] =
+  ): Eq[F[A]] = {
     import cats.laws.discipline.eq.catsLawsEqForFn1Exhaustive
     Eq.by[F[A], S => G[SimulationResult[A]]](rv =>
       s => rv.replicateA(confidence.replicates).map(SimulationResult(_)).simulate(s),
     )
+  }
+}
 
 final case class SimulationResult[A](samples: List[A])
 
-object SimulationResult:
-  given [A: Eq](using confidence: Confidence): Eq[SimulationResult[A]] =
+object SimulationResult {
+  given [A: Eq](using confidence: Confidence): Eq[SimulationResult[A]] = {
     case (SimulationResult(xs), SimulationResult(ys)) =>
       import confidence.*
 
@@ -52,7 +54,7 @@ object SimulationResult:
       ys.foreach(a => if allValues.forall(_ =!= a) then allValues += a)
 
       if allValues.size == 1 then true
-      else
+      else {
         val xcounts = new Array[Int](allValues.size)
         val ycounts = new Array[Int](allValues.size)
         allValues.zipWithIndex.foreach { (a, i) =>
@@ -65,56 +67,68 @@ object SimulationResult:
         if p > eqvThreshold then true
         else if (1 - p) > neqvThreshold then false
         else throw new EqUndecidableException
+      }
+  }
 
   private def equidistributedBelief(
       trial1: Array[Int],
       trial2: Array[Int],
       dirichletPrior: Array[Double],
-  ): Double =
+  ): Double = {
     val marginal1 = dirichletMultinomialLogPmf(trial1, trial2, dirichletPrior)
     val marginal2 = dirichletMultinomialLogPmf(trial1, dirichletPrior) *
       dirichletMultinomialLogPmf(trial2, dirichletPrior)
     (marginal1 / (marginal1 + marginal2)).real
+  }
 
-  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): LogDouble =
+  private def dirichletMultinomialLogPmf(x: Array[Int], alpha: Array[Double]): LogDouble = {
     val A = sum(alpha)
     val n = sum(x)
     var pmf = gamma(A) * gamma(n + 1.0) / gamma(n + A)
     var k = 0
-    while k < x.length do
+    while k < x.length do {
       pmf *= gamma(x(k) + alpha(k)) / gamma(alpha(k)) / gamma(x(k) + 1.0)
       k += 1
+    }
     pmf
+  }
 
   private def dirichletMultinomialLogPmf(
       x1: Array[Int],
       x2: Array[Int],
       alpha: Array[Double],
-  ): LogDouble =
+  ): LogDouble = {
     val A = sum(alpha)
     val n1 = sum(x1)
     val n2 = sum(x2)
     val n = n1 + n2
     var pmf = gamma(A) * gamma(n1 + 1.0) * gamma(n2 + 1.0) / gamma(n + A)
     var k = 0
-    while k < x1.length do
+    while k < x1.length do {
       pmf *= gamma(x1(k) + x2(k) + alpha(k))
         / gamma(alpha(k)) / gamma(x1(k) + 1.0) / gamma(x2(k) + 1.0)
       k += 1
+    }
     pmf
+  }
 
-  private def sum(x: Array[Int]): Int =
+  private def sum(x: Array[Int]): Int = {
     var i = 0
     var sum = 0
-    while i < x.length do
+    while i < x.length do {
       sum += x(i)
       i += 1
+    }
     sum
+  }
 
-  private def sum(x: Array[Double]): Double =
+  private def sum(x: Array[Double]): Double = {
     var i = 0
     var sum = 0.0
-    while i < x.length do
+    while i < x.length do {
       sum += x(i)
       i += 1
+    }
     sum
+  }
+}

@@ -22,7 +22,7 @@ import algebra.ring.DivisionRing
 import algebra.ring.Field
 import algebra.ring.Semifield
 
-trait Logarithmic[A, L]:
+trait Logarithmic[A, L] {
 
   def semifield: Semifield[L]
 
@@ -35,8 +35,9 @@ trait Logarithmic[A, L]:
   extension (l: L) inline def toLinear: A = linear(l)
 
   extension (a: A) inline def toLogarithm: L = logarithm(a)
+}
 
-trait CommutativeLogarithmic[A, L] extends Logarithmic[A, L]:
+trait CommutativeLogarithmic[A, L] extends Logarithmic[A, L] {
   def commutativeSemifield: CommutativeSemifield[L]
 
   final def semifield = commutativeSemifield
@@ -44,12 +45,13 @@ trait CommutativeLogarithmic[A, L] extends Logarithmic[A, L]:
   def field: Field[A]
 
   final def divisionRing = field
+}
 
-object Logarithmic:
+object Logarithmic {
 
   inline def apply[A, L](using l: Logarithmic[A, L]): l.type = l
 
-  given CommutativeLogarithmic[Double, LogDouble] with
+  given CommutativeLogarithmic[Double, LogDouble] with {
     def commutativeSemifield = summon
 
     def field = summon
@@ -57,3 +59,5 @@ object Logarithmic:
     def linear(l: LogDouble) = l.log
 
     def logarithm(a: Double) = LogDouble.exp(a)
+  }
+}

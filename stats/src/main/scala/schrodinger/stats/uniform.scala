@@ -22,13 +22,16 @@ import cats.syntax.all.*
 import schrodinger.kernel.Uniform
 import schrodinger.math.LogDouble
 
-object uniform:
-  given [F[_]: Applicative]: Uniform[Density[F, LogDouble, _], Double] with
+object uniform {
+  given [F[_]: Applicative]: Uniform[Density[F, LogDouble, _], Double] with {
     def uniform01 = uniform(0, 1)
     def uniform10 = uniform(1, 0)
-    def uniform(include: Double, exclude: Double) =
+    def uniform(include: Double, exclude: Double) = {
       val zero = LogDouble.Zero.pure
       val density = LogDouble(Math.abs(exclude - include)).reciprocal.pure
       if exclude >= include then
         Density(x => if include <= x & x < exclude then density else zero)
       else Density(x => if exclude < x & x <= include then density else zero)
+    }
+  }
+}

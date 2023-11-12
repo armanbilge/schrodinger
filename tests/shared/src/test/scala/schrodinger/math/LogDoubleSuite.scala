@@ -30,16 +30,17 @@ import org.scalacheck.Prop.*
 import schrodinger.laws.LogarithmicTests
 import schrodinger.laws.MonusTests
 
-class LogDoubleSuite extends DisciplineSuite:
+class LogDoubleSuite extends DisciplineSuite {
 
   given Arbitrary[LogDouble] = Arbitrary(Gen.double.map(LogDouble.exp(_)))
   given Cogen[LogDouble] = Cogen.cogenDouble.contramap(_.log)
 
-  def approxEq(eps: Double): Eq[LogDouble] =
+  def approxEq(eps: Double): Eq[LogDouble] = {
     case (LogDouble.Zero, LogDouble.Zero) => true
     case (LogDouble.One, LogDouble.One) => true
     case (x, y) if x.isNaN & y.isNaN => true
     case (x, y) => ((x.log - y.log) / (x.log.max(y.log))).abs < eps
+  }
 
   {
     given eq: Eq[LogDouble] = approxEq(1e-8)
@@ -77,3 +78,4 @@ class LogDoubleSuite extends DisciplineSuite:
   checkAll("LogDoubleAlgebra", SerializableTests.serializable(CommutativeSemifield[LogDouble]))
 
   checkAll("LogDouble", LogarithmicTests[Double, LogDouble].logarithmic)
+}

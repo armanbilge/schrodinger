@@ -25,27 +25,29 @@ import cats.collections.HashMap
 import cats.kernel.Hash
 import cats.syntax.all.*
 
-trait DiscreteUniform[F[_], I]:
+trait DiscreteUniform[F[_], I] {
   def discreteUniform(n: I): F[I]
+}
 
-object DiscreteUniform:
+object DiscreteUniform {
   inline def apply[F[_], I](n: I)(using u: DiscreteUniform[F, I]): F[I] =
     u.discreteUniform(n)
 
   def apply[F[_], G[_]: Reducible, A](
       support: G[A],
   )(using F: Priority[Functor[F], InvariantAndHash[F, A]], u: DiscreteUniform[F, Long]): F[A] =
-    F match
+    F match {
       case Priority.Preferred(given Functor[f]) =>
         apply(support.size).map(support.get(_).get)
       case Priority.Fallback(InvariantAndHash(given Invariant[f], given Hash[a])) =>
         val inv = HashMap.fromIterableOnce(support.toIterable.view.zipWithIndex)
         apply(support.size).imap(support.get(_).get)(inv.getOrElse(_, -1))
+    }
 
   def apply[F[_]: Invariant](support: Range)(using u: DiscreteUniform[F, Long]): F[Int] =
     apply(support.length.toLong).imap(i => support(i.toInt))(support.indexOf(_).toLong)
 
-  given [F[_]: FlatMap: Random]: DiscreteUniform[F, Long] with
+  given [F[_]: FlatMap: Random]: DiscreteUniform[F, Long] with {
     def discreteUniform(n: Long) =
       if (n & -n) == n then Random.long.map(_ & (n - 1))
       else
@@ -54,3 +56,5 @@ object DiscreteUniform:
           val v = b % n
           Option.when(b - v + (n - 1) >= 0)(v)
         }.untilDefinedM
+  }
+}

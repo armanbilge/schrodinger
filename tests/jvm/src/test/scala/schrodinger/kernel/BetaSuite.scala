@@ -26,7 +26,7 @@ import org.scalacheck.Prop.*
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class BetaSuite extends ScalaCheckSuite:
+class BetaSuite extends ScalaCheckSuite {
   val N = 100
 
   case class BetaParams(alpha: Double, beta: Double)
@@ -50,3 +50,4 @@ class BetaSuite extends ScalaCheckSuite:
         List.fill(N)(apache.sample())
     }
   }
+}

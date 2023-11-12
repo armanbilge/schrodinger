@@ -24,7 +24,7 @@ import scala.annotation.nowarn
 
 opaque type LogDouble = Double
 
-object LogDouble:
+object LogDouble {
   final val Zero: LogDouble = Double.NegativeInfinity
   final val One: LogDouble = 0.0
   final val Two: LogDouble = 0.6931471805599453
@@ -37,25 +37,29 @@ object LogDouble:
   inline def `1+`(x: Double): LogDouble = Math.log1p(x)
   inline def exp(x: Double): LogDouble = x
 
-  def sum(xs: IArray[LogDouble]): LogDouble =
+  def sum(xs: IArray[LogDouble]): LogDouble = {
     var max = LogDouble.Zero
     var i = 0
-    while i < xs.length do
+    while i < xs.length do {
       max = LogDouble.max(max)(xs(i))
       i += 1
+    }
     var sum = 0.0
     i = 0
-    while i < xs.length do
+    while i < xs.length do {
       sum += LogDouble./(xs(i))(max).real
       i += 1
+    }
     LogDouble.*(LogDouble(sum))(max)
+  }
 
-  def sum(xs: Iterable[LogDouble]): LogDouble =
+  def sum(xs: Iterable[LogDouble]): LogDouble = {
     val max = xs.fold(LogDouble.Zero)(LogDouble.max(_)(_))
     val sum = xs.fold(0.0)(_ + LogDouble./(_)(max).real)
     LogDouble.*(LogDouble(sum))(max)
+  }
 
-  extension (x: LogDouble)
+  extension (x: LogDouble) {
     inline def real: Double = Math.exp(x)
     inline def log: Double = x
     inline def +(y: LogDouble): LogDouble =
@@ -75,12 +79,13 @@ object LogDouble:
     inline def <=(y: LogDouble): Boolean = (x: Double) <= (y: Double)
     inline def >(y: LogDouble): Boolean = (x: Double) > (y: Double)
     inline def >=(y: LogDouble): Boolean = (x: Double) >= (y: Double)
+  }
 
   given CommutativeSemifield[LogDouble]
     with Monus[LogDouble]
     with Order[LogDouble]
     with Hash[LogDouble]
-    with
+    with {
     override def zero: LogDouble = LogDouble.Zero
     override def one: LogDouble = LogDouble.One
     override def plus(x: LogDouble, y: LogDouble) = LogDouble.+(x)(y)
@@ -88,9 +93,10 @@ object LogDouble:
       if gt(x, y) then LogDouble.-(x)(y) else zero
     override def positiveSumN(x: LogDouble, n: Int): LogDouble = LogDouble.*(x)(LogDouble(n))
     override def sum(as: TraversableOnce[LogDouble] @nowarn("cat=deprecation")): LogDouble =
-      as.asInstanceOf[Matchable] match
+      as.asInstanceOf[Matchable] match {
         case iterable: Iterable[LogDouble] @unchecked => LogDouble.sum(iterable)
         case _ => super.sum(as)
+      }
     override def times(x: LogDouble, y: LogDouble) = LogDouble.*(x)(y)
     override def div(x: LogDouble, y: LogDouble) = LogDouble./(x)(y)
     override def reciprocal(x: LogDouble) = x.reciprocal
@@ -98,3 +104,5 @@ object LogDouble:
     override def hash(x: LogDouble): Int = x.hashCode
     override def additiveCommutativeMonoid = this
     override def naturalOrder = this
+  }
+}

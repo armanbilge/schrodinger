@@ -29,10 +29,11 @@ import cats.kernel.Order
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
-trait Categorical[F[_], V, I]:
+trait Categorical[F[_], V, I] {
   def categorical(probabilites: V): F[I]
+}
 
-object Categorical:
+object Categorical {
   inline def apply[F[_], V, I](probabilites: V)(using
       c: Categorical[F, V, I],
   ): F[I] = c.categorical(probabilites)
@@ -41,23 +42,28 @@ object Categorical:
       F: Priority[Functor[F], InvariantAndHash[F, A]],
       P: AdditiveMonoid[P],
       c: Categorical[F, G[P], Long],
-  ): F[A] =
+  ): F[A] = {
     val probabilities = support.map(_._2)
-    F match
+    F match {
       case Priority.Preferred(given Functor[f]) =>
         apply(probabilities).map(support.get(_).get._1)
       case Priority.Fallback(InvariantAndHash(given Invariant[f], given Hash[a])) =>
         val inv = HashMap.fromIterableOnce(support.toIterable.view.map(_._1).zipWithIndex)
         apply(probabilities).imap(support.get(_).get._1)(inv.getOrElse(_, -1))
+    }
+  }
 
   given [F[_]: Functor, G[_]: Reducible, P: Order](using
       P: AdditiveMonoid[P],
       u: Uniform[F, P],
-  ): Categorical[F, G[P], Long] with
-    def categorical(probabilities: G[P]) =
+  ): Categorical[F, G[P], Long] with {
+    def categorical(probabilities: G[P]) = {
       val cumSum =
         probabilities.reduceLeftTo(Chain.one(_))((c, p) => c :+ (c.lastOption.get + p)).toVector
       val sum = cumSum.last
       Uniform(P.zero, sum).map(
         cumSum.search(_)(using Order[P].toOrdering).insertionPoint,
       )
+    }
+  }
+}

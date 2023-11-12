@@ -20,6 +20,7 @@ import cats.Invariant
 import cats.kernel.Hash
 
 final case class InvariantAndHash[F[_], A](invariant: Invariant[F], hash: Hash[A])
-object InvariantAndHash:
+object InvariantAndHash {
   given [F[_], A](using F: Invariant[F], A: Hash[A]): InvariantAndHash[F, A] =
     InvariantAndHash(F, A)
+}

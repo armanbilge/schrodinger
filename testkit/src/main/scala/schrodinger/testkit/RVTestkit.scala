@@ -38,7 +38,7 @@ import schrodinger.unsafe.SplittableRng
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
 
-trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
+trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances {
 
   export schrodinger.kernel.testkit.random
 
@@ -53,8 +53,8 @@ trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
   given [F[_]: Async, S: SplittableRng: ExhaustiveCheck, A: Arbitrary: Cogen](using
       Cogen[F[Unit]],
       Ticker,
-  ): Arbitrary[RVT[F, S, A]] =
-    val generators = new RandomGenerators[RVT[F, S, _]] with AsyncGenerators[RVT[F, S, _]]:
+  ): Arbitrary[RVT[F, S, A]] = {
+    val generators = new RandomGenerators[RVT[F, S, _]] with AsyncGenerators[RVT[F, S, _]] {
       val F: Async[RVT[F, S, _]] = Async[RVT[F, S, _]]
       val arbitraryE: Arbitrary[Throwable] = arbitraryThrowable
       val cogenE: Cogen[Throwable] = Cogen[Throwable]
@@ -68,8 +68,10 @@ trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
           .filterNot(
             _._1 == "racePair",
           )
+    }
 
     Arbitrary(generators.generators)
+  }
 
   given [F[_]: Monad, S, A](using
       pseudo: PseudoRandom.Aux[RVT[F, S, _], F, S],
@@ -81,16 +83,19 @@ trait RVTestkit extends RVTestkitLowPriority, cats.effect.testkit.TestInstances:
   given Arbitrary[SplitMix] = Arbitrary(
     Arbitrary.arbitrary[Long].map(SplitMix(_, SplitMix.GoldenGamma)),
   )
+}
 
-sealed private[testkit] trait RVTestkitLowPriority:
+sealed private[testkit] trait RVTestkitLowPriority {
   given [F[_]: Monad, S, A: Arbitrary: Cogen](using
       PseudoRandom.Aux[RVT[F, S, _], F, S],
-  ): Arbitrary[RVT[F, S, A]] =
-    val generators = new RandomGenerators[RVT[F, S, _]] with MonadGenerators[RVT[F, S, _]]:
+  ): Arbitrary[RVT[F, S, A]] = {
+    val generators = new RandomGenerators[RVT[F, S, _]] with MonadGenerators[RVT[F, S, _]] {
       override val maxDepth = 3
       val F = Monad[RVT[F, S, _]]
+    }
 
     Arbitrary(generators.generators)
+  }
 
   given [F[_]: Monad, S, A](using
       pseudo: PseudoRandom.Aux[RVT[F, S, _], F, S],
@@ -98,3 +103,4 @@ sealed private[testkit] trait RVTestkitLowPriority:
       orderF: Order[F[A]],
   ): Order[RVT[F, S, A]] =
     Order.by[RVT[F, S, A], List[F[A]]](rv => seeds.allValues.map(pseudo.simulate(rv)))
+}

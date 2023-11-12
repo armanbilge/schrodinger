@@ -25,7 +25,7 @@ import org.scalacheck.Prop.*
 
 import java.util.SplittableRandom
 
-class SplitMixSuite extends ScalaCheckSuite:
+class SplitMixSuite extends ScalaCheckSuite {
 
   val N = 100
 
@@ -59,3 +59,4 @@ class SplitMixSuite extends ScalaCheckSuite:
       ints === expectedInts
     }
   }
+}

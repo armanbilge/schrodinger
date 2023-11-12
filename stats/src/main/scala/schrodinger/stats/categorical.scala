@@ -23,9 +23,11 @@ import cats.Reducible
 import cats.syntax.all.*
 import schrodinger.kernel.Categorical
 
-object categorical:
+object categorical {
   given [F[_]: Applicative, G[_]: Reducible, A](using
       A: Rig[A],
-  ): Categorical[Density[F, A, _], G[A], Long] with
+  ): Categorical[Density[F, A, _], G[A], Long] with {
     def categorical(support: G[A]) =
       Density(support.get(_).getOrElse(A.zero).pure)
+  }
+}

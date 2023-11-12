@@ -22,19 +22,22 @@ import cats.NonEmptyTraverse
 import cats.syntax.all.*
 import schrodinger.math.syntax.*
 
-trait Dirichlet[F[_], V]:
+trait Dirichlet[F[_], V] {
   def dirichlet(concentration: V): F[V]
+}
 
-object Dirichlet:
+object Dirichlet {
   inline def apply[F[_], V](concentration: V)(using d: Dirichlet[F, V]): F[V] =
     d.dirichlet(concentration)
 
   given [F[_]: Apply, G[_]: NonEmptyTraverse, A](using
       A: Semifield[A],
       g: Gamma[F, A],
-  ): Dirichlet[F, G[A]] with
+  ): Dirichlet[F, G[A]] with {
     def dirichlet(concentration: G[A]) =
       concentration.nonEmptyTraverse(Gamma(_, A.one)).map { xs =>
         val sum = A.sum(xs.toIterable)
         xs.map(_ / sum)
       }
+  }
+}

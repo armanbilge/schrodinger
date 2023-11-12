@@ -23,14 +23,17 @@ import schrodinger.kernel.Gaussian
 import schrodinger.kernel.LogNormal
 import schrodinger.math.LogDouble
 
-object logNormal:
+object logNormal {
   given [F[_]: Applicative](using
       gaussian: Gaussian[Density[F, LogDouble, _], Double],
-  ): LogNormal[Density[F, LogDouble, _], Double] with
+  ): LogNormal[Density[F, LogDouble, _], Double] with {
     def logNormal = logNormal(0, 1)
-    def logNormal(mu: Double, sigma: Double) =
+    def logNormal(mu: Double, sigma: Double) = {
       val delegate = gaussian.gaussian(mu, sigma)
       Density { x =>
         val logx = Math.log(x)
         delegate(logx).map(_ / LogDouble.exp(logx))
       }
+    }
+  }
+}

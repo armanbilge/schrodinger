@@ -26,7 +26,7 @@ import org.scalacheck.Gen
 import org.scalacheck.effect.PropF.*
 import scodec.bits.*
 
-class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
+class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite {
 
   override protected def scalaCheckTestParameters =
     super.scalaCheckTestParameters
@@ -42,22 +42,26 @@ class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
     yield Threefish(s0, s1, s2, s3),
   )
 
-  enum RngOp:
+  enum RngOp {
     case NextInt, NextLong, SplitRight, SplitLeft
-  object RngOp:
+  }
+  object RngOp {
     given Arbitrary[RngOp] = Arbitrary(Gen.oneOf(NextInt, NextLong, SplitRight, SplitLeft))
+  }
 
-  def run(rng: Threefish, ops: List[RngOp]): IO[Threefish] =
+  def run(rng: Threefish, ops: List[RngOp]): IO[Threefish] = {
     import RngOp.*
 
-    def go(rng: Threefish, ops: List[RngOp]): IO[Threefish] = ops match
+    def go(rng: Threefish, ops: List[RngOp]): IO[Threefish] = ops match {
       case Nil => IO.pure(rng)
       case NextInt :: tail => IO(rng.nextInt()) >> go(rng, tail)
       case NextLong :: tail => IO(rng.nextLong()) >> go(rng, tail)
       case SplitRight :: tail => IO(rng.split()) >> go(rng, tail)
       case SplitLeft :: tail => IO(rng.split()).flatMap(go(_, tail))
+    }
 
     go(rng, ops)
+  }
 
   test("generate") {
     forAllF { (rng: Threefish, ops: List[RngOp]) =>
@@ -87,3 +91,4 @@ class ThreefishSuite extends CatsEffectSuite, ScalaCheckEffectSuite:
       hex"94EEEA8B1F2ADA84ADF103313EAE6670952419A1F4B16D53D83F13E63C9F6B11",
     )
   }
+}
