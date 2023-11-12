@@ -23,10 +23,13 @@ import schrodinger.kernel.Gamma
 import schrodinger.math.LogDouble
 import schrodinger.math.special
 
-object gamma:
-  given [F[_]](using F: Applicative[F]): Gamma[Density[F, LogDouble, _], Double] with
-    def gamma(shape: Double, rate: Double) =
+object gamma {
+  given [F[_]](using F: Applicative[F]): Gamma[Density[F, LogDouble, _], Double] with {
+    def gamma(shape: Double, rate: Double) = {
       val `β^α/Γ(α)` = LogDouble(rate) ** shape / special.gamma(shape)
       Density { x =>
         F.pure(`β^α/Γ(α)` * LogDouble(x) ** (shape - 1) * LogDouble.exp(-rate * x))
       }
+    }
+  }
+}

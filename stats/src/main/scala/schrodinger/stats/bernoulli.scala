@@ -26,18 +26,23 @@ import schrodinger.kernel.FairBernoulli
 import schrodinger.math.Monus
 import schrodinger.math.syntax.*
 
-object bernoulli:
+object bernoulli {
 
   given [F[_]: Applicative, A](using
       A: Semifield[A],
-  ): FairBernoulli[Density[F, A, _], Boolean] with
-    def fairBernoulli =
+  ): FairBernoulli[Density[F, A, _], Boolean] with {
+    def fairBernoulli = {
       val half = A.fromInt(2).reciprocal.pure
       Density(_ => half)
+    }
+  }
 
   given [F[_]: Applicative, A: Monus](using A: Rig[A]): Bernoulli[Density[F, A, _], A, Boolean]
-  with
-    def bernoulli(successProbability: A) =
+  with {
+    def bernoulli(successProbability: A) = {
       val success = successProbability.pure
       val failure = (A.one ∸ successProbability).pure
       Density(if _ then success else failure)
+    }
+  }
+}

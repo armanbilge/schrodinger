@@ -48,18 +48,20 @@ import scala.util.NotGiven
 
 opaque type RVIO[S, +A] = IO[A]
 
-object RVIO:
-  extension [S, A](rvioa: RVIO[S, A])
+object RVIO {
+  extension [S, A](rvioa: RVIO[S, A]) {
     inline def evalMap[B](f: A => IO[B]): RVIO[S, B] =
       rvioa.flatMap(a => eval(f(a)))
+  }
 
   type Par[S, A] = ParallelF[RVIO[S, _], A]
 
   inline def eval[S, A](ioa: IO[A]): RVIO[S, A] = ioa
 
   def evalK[S]: IO ~> RVIO[S, _] =
-    new:
+    new {
       def apply[A](ioa: IO[A]): RVIO[S, A] = ioa
+    }
 
   def algebra[S: SplittableRng]: IO[Algebra[S]] = IOLocal[State[S]](null).map(Algebra(_))
 
@@ -72,7 +74,7 @@ object RVIO:
       extends Async[RVIO[S0, _]],
         PseudoRandom[RVIO[S0, _]],
         RngDispatcher[RVIO[S0, _]],
-        GaussianCache[RVIO[S0, _], Double]:
+        GaussianCache[RVIO[S0, _], Double] {
 
     type G[A] = IO[A]
     type S = S0
@@ -150,8 +152,9 @@ object RVIO:
     ): RVIO[S, A] =
       fa.guaranteeCase(finalizer)
 
-    extension [A](fa: RVIO[S, A])
+    extension [A](fa: RVIO[S, A]) {
       def simulate(seed: S): IO[A] = IO(State(seed.copy())).flatMap(state.set) *> fa
+    }
 
     def int: RVIO[S, Int] = state.get.flatMap(s => IO(s.rng.nextInt()))
 
@@ -171,9 +174,11 @@ object RVIO:
     def set(x: Double): RVIO[S, Unit] = state.get.flatMap(s => IO(s.cachedGaussian = x))
 
     def suspend[A](hint: Sync.Type)(thunk: => A): RVIO[S, A] = IO.suspend(hint)(thunk)
+  }
 
-  given [S, A](using show: Show[IO[A]]): Show[RVIO[S, A]] with
+  given [S, A](using show: Show[IO[A]]): Show[RVIO[S, A]] with {
     def show(rv: RVIO[S, A]): String = s"RV${show.show(rv)}"
+  }
 
   given [S, A](using m: Monoid[IO[A]]): Monoid[RVIO[S, A]] = m
   given [S, A](using
@@ -184,3 +189,4 @@ object RVIO:
   given [S]: Align[RVIO[S, _]] = IO.alignForIO
   given [S](using Spawn[RVIO[S, _]]): Parallel[RVIO[S, _]] = spawn.parallelForGenSpawn
   given [S]: Console[RVIO[S, _]] = IO.consoleForIO
+}

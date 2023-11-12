@@ -26,7 +26,7 @@ import schrodinger.kernel.testkit.SplitMix64
 
 import scala.language.implicitConversions
 
-class CategoricalSuite extends ScalaCheckSuite:
+class CategoricalSuite extends ScalaCheckSuite {
 
   val N = 1000
 
@@ -42,3 +42,4 @@ class CategoricalSuite extends ScalaCheckSuite:
       )
     }
   }
+}

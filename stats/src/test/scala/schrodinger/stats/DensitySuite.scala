@@ -28,7 +28,7 @@ import cats.syntax.all.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 
-class DensitySuite extends DisciplineSuite:
+class DensitySuite extends DisciplineSuite {
 
   given [F[_]: Functor, A](using arb: Arbitrary[A => F[Int]]): Arbitrary[Density[F, Long, A]] =
     Arbitrary(arb.arbitrary.map(_.andThen(_.map(_.toLong.abs))).map(Density(_)))
@@ -40,3 +40,4 @@ class DensitySuite extends DisciplineSuite:
     "Density",
     InvariantMonoidalTests[Density[Eval, Long, _]].invariantMonoidal[MiniInt, MiniInt, MiniInt],
   )
+}

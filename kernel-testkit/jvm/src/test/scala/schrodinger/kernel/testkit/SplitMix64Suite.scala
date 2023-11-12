@@ -22,7 +22,7 @@ import org.apache.commons.rng.core.source64
 import org.scalacheck.Prop.forAll
 import schrodinger.kernel.Random
 
-class SplitMix64Suite extends ScalaCheckSuite:
+class SplitMix64Suite extends ScalaCheckSuite {
   val N = 100
 
   property("match Apache implementation") {
@@ -32,3 +32,4 @@ class SplitMix64Suite extends ScalaCheckSuite:
         List.fill(N)(apache.nextLong())
     }
   }
+}

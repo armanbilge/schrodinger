@@ -24,9 +24,9 @@ import org.scalacheck.Prop.forAll
 import org.typelevel.discipline.Laws
 import schrodinger.math.Logarithmic
 
-trait LogarithmicTests[A, L](laws: LogarithmicLaws[A, L]) extends Laws:
+trait LogarithmicTests[A, L](laws: LogarithmicLaws[A, L]) extends Laws {
 
-  def logarithmic(using Arbitrary[A], Arbitrary[L], Eq[A], Eq[L]): RuleSet =
+  def logarithmic(using Arbitrary[A], Arbitrary[L], Eq[A], Eq[L]): RuleSet = {
     val props = Seq[(String, Prop)](
       "logarithm round trip" -> forAll(laws.logarithmRoundTrip(_)),
       "linear round trip" -> forAll(laws.linearRoundTrip(_)),
@@ -36,8 +36,11 @@ trait LogarithmicTests[A, L](laws: LogarithmicLaws[A, L]) extends Laws:
     )
 
     DefaultRuleSet("logarithmic", None, props*)
+  }
+}
 
-object LogarithmicTests:
+object LogarithmicTests {
 
   def apply[A, L](using Logarithmic[A, L]): LogarithmicTests[A, L] =
     new LogarithmicTests(LogarithmicLaws[A, L]) {}
+}

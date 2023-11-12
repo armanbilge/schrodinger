@@ -19,7 +19,7 @@ package schrodinger.laws
 import cats.kernel.laws.*
 import schrodinger.math.Logarithmic
 
-trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]):
+trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]) {
 
   def logarithmRoundTrip(a: A): IsEq[A] =
     L.linear(L.logarithm(a)) <-> a
@@ -37,6 +37,8 @@ trait LogarithmicLaws[A, L](using val L: Logarithmic[A, L]):
   def divIsMinus(x: L, y: L): IsEq[A] =
     L.linear(L.semifield.div(x, y)) <->
       L.divisionRing.minus(L.linear(x), L.linear(y))
+}
 
-object LogarithmicLaws:
+object LogarithmicLaws {
   def apply[A, L](using Logarithmic[A, L]): LogarithmicLaws[A, L] = new {}
+}

@@ -25,10 +25,11 @@ import schrodinger.kernel.Categorical
 import schrodinger.math.syntax.*
 import schrodinger.stats.Density
 
-trait ImportanceSample[F[_], G[_], A]:
+trait ImportanceSample[F[_], G[_], A] {
   def importanceSample(target: F[A], proposal: G[A], sampleCount: Int): G[A]
+}
 
-object ImportanceSample:
+object ImportanceSample {
 
   inline def apply[F[_], G[_], A](using
       is: ImportanceSample[F, G, A],
@@ -38,7 +39,7 @@ object ImportanceSample:
   given [F[_]: Monad, P: Eq, A](using
       P: Semifield[P],
       c: Categorical[F, NonEmptyList[P], Long],
-  ): ImportanceSample[Density[F, P, _], WeightedT[F, P, _], A] with
+  ): ImportanceSample[Density[F, P, _], WeightedT[F, P, _], A] with {
 
     def importanceSample(
         target: Density[F, P, A],
@@ -53,3 +54,5 @@ object ImportanceSample:
         }
       }
     }
+  }
+}

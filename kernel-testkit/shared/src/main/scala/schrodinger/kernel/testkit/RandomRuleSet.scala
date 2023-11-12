@@ -24,9 +24,9 @@ class EqUndecidableException extends Exception
 
 extension (ruleSet: Laws#RuleSet) def random: Laws#RuleSet = RandomRuleSet(ruleSet)
 
-object RandomRuleSet extends Laws:
+object RandomRuleSet extends Laws {
   def apply(ruleSet: Laws#RuleSet): RuleSet =
-    new RuleSet:
+    new RuleSet {
       val bases = ruleSet.bases
       val name = ruleSet.name
       val parents = ruleSet.parents.map(apply)
@@ -38,3 +38,5 @@ object RandomRuleSet extends Laws:
           case result => result
         }
       }
+    }
+}

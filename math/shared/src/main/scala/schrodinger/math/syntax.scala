@@ -28,19 +28,22 @@ inline def zero[A](using A: AdditiveMonoid[A]): A = A.zero
 
 inline def one[A](using A: MultiplicativeMonoid[A]): A = A.one
 
-extension [A](x: A)
+extension [A](x: A) {
   inline def +(y: A)(using A: AdditiveSemigroup[A]): A = A.plus(x, y)
   inline def *(y: A)(using A: MultiplicativeSemigroup[A]): A = A.times(x, y)
   inline def /(y: A)(using A: MultiplicativeGroup[A]): A = A.div(x, y)
   inline def reciprocal(using A: MultiplicativeGroup[A]): A = A.reciprocal(x)
+}
 
-extension [A](A: Rig[A])
+extension [A](A: Rig[A]) {
   inline def fromInt(n: Int): A = fakeRing.fromInt(n)
   inline def fromBigInt(n: BigInt): A = fakeRing.fromBigInt(n)
 
-  private def fakeRing: Ring[A] = new:
+  private def fakeRing: Ring[A] = new {
     def zero = A.zero
     def one = A.one
     def plus(x: A, y: A) = A.plus(x, y)
     def times(x: A, y: A) = A.times(x, y)
     def negate(x: A) = throw new UnsupportedOperationException
+  }
+}

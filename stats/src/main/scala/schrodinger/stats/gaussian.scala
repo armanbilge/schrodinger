@@ -22,12 +22,12 @@ import cats.syntax.all.*
 import schrodinger.kernel.Gaussian
 import schrodinger.math.LogDouble
 
-object gaussian:
+object gaussian {
   private final val `log(2π)/2` = 0.9189385332046727417803297
 
-  given [F[_]](using F: Applicative[F]): Gaussian[Density[F, LogDouble, _], Double] with
+  given [F[_]](using F: Applicative[F]): Gaussian[Density[F, LogDouble, _], Double] with {
     def gaussian = gaussian(0, 1)
-    def gaussian(mean: Double, standardDeviation: Double) =
+    def gaussian(mean: Double, standardDeviation: Double) = {
       val `σ√2π` = LogDouble(standardDeviation) * LogDouble.exp(`log(2π)/2`)
       Density { x =>
         F.pure {
@@ -35,3 +35,6 @@ object gaussian:
           LogDouble.exp(-0.5 * z * z) / `σ√2π`
         }
       }
+    }
+  }
+}

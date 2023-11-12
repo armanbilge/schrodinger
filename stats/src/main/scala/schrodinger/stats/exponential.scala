@@ -22,9 +22,12 @@ import cats.syntax.all.*
 import schrodinger.kernel.Exponential
 import schrodinger.math.LogDouble
 
-object exponential:
-  given [F[_]: Applicative]: Exponential[Density[F, LogDouble, _], Double] with
+object exponential {
+  given [F[_]: Applicative]: Exponential[Density[F, LogDouble, _], Double] with {
     def exponential = exponential(1)
-    def exponential(rate: Double) =
+    def exponential(rate: Double) = {
       val logRate = LogDouble(rate)
       Density(x => (logRate * LogDouble.exp(-rate * x)).pure)
+    }
+  }
+}

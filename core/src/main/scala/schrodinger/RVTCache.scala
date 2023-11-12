@@ -18,10 +18,12 @@ package schrodinger
 
 import cats.effect.kernel.Sync
 
-final class RVTCache[F[_], S, A](private[schrodinger] val default: A):
+final class RVTCache[F[_], S, A](private[schrodinger] val default: A) {
   val get: RVT[F, S, A] = RVT.Retrieve(this)
   def set(value: A): RVT[F, S, Unit] = RVT.Store(this, value)
+}
 
-object RVTCache:
+object RVTCache {
   def in[F[_], G[_], S, A](default: A)(using F: Sync[F]): F[RVTCache[G, S, A]] =
     F.delay(RVTCache[G, S, A](default))
+}

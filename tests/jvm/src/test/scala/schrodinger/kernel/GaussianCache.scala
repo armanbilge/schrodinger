@@ -22,8 +22,9 @@ import org.typelevel.vault.Key
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-given GaussianCache[PureRV[SplitMix64, _], Double] with
+given GaussianCache[PureRV[SplitMix64, _], Double] with {
   val key = Key.newKey[SyncIO, Double].unsafeRunSync()
   def getAndClear: PureRV[SplitMix64, Double] =
     PureRV.getExtra(key).map(_.getOrElse(Double.NaN)) <* PureRV.setExtra(key, None)
   def set(a: Double): PureRV[SplitMix64, Unit] = PureRV.setExtra(key, Some(a))
+}

@@ -29,7 +29,7 @@ val MunitVersion = "1.0.0-M10"
 val DisciplineMunitVersion = "2.0.0-M3"
 val MunitCatsEffectVersion = "2.0.0-M3"
 
-ThisBuild / scalacOptions ++= Seq("-new-syntax", "-indent", "-source:future")
+ThisBuild / scalacOptions ++= Seq("-new-syntax", "-no-indent", "-source:future")
 ThisBuild / Test / testOptions += Tests.Argument("+l")
 
 val commonJvmSettings = Seq(

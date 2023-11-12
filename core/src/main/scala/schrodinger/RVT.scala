@@ -56,12 +56,13 @@ import scala.concurrent.duration.*
 import RVT.*
 
 type RV[S, A] = RVT[Id, S, A]
-object RV:
+object RV {
   def pure[S, A](a: A): RV[S, A] = RVT.pure(a)
   def int[S]: RV[S, Int] = RVT.int
   def long[S]: RV[S, Long] = RVT.long
+}
 
-sealed abstract class RVT[F[_], S, A]:
+sealed abstract class RVT[F[_], S, A] {
 
   final def map[B](f: A => B): RVT[F, S, B] = FlatMap(this, a => Pure(f(a)))
 
@@ -73,7 +74,7 @@ sealed abstract class RVT[F[_], S, A]:
 
   final def split(using S: SplittableRng[S]): RVT[F, S, F[A]] = Split(this, S)
 
-  final def simulate(s: S)(using sim: Simulator[F], S: Rng[S]): F[A] =
+  final def simulate(s: S)(using sim: Simulator[F], S: Rng[S]): F[A] = {
     type G[A] = sim.G[A]
     given G: Sync[G] = sim.runtime
 
@@ -81,7 +82,7 @@ sealed abstract class RVT[F[_], S, A]:
       G.delay(s.copy()).product(G.delay(mutable.Map[RVTCache[F, S, Any], Any]())).flatMap {
         (rng, cache) =>
 
-          def go[B](rv: RVT[F[_], S, B]): G[B] = (rv: @unchecked) match
+          def go[B](rv: RVT[F[_], S, B]): G[B] = (rv: @unchecked) match {
 
             case Pure(b) => G.pure(b)
 
@@ -92,8 +93,9 @@ sealed abstract class RVT[F[_], S, A]:
             case Cont(body) =>
               sim.upgrade(
                 body(
-                  new (RVT[F, S, _] ~> F):
-                    def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva)),
+                  new (RVT[F, S, _] ~> F) {
+                    def apply[A](rva: RVT[F, S, A]): F[A] = sim.downgrade(go(rva))
+                  },
                 ),
               )
 
@@ -116,20 +118,24 @@ sealed abstract class RVT[F[_], S, A]:
                 val k = key.asInstanceOf[RVTCache[F, S, Any]]
                 cache(k) = value
               }
+          }
 
           go(this)
       }
 
     sim.downgrade(ga)
+  }
+}
 
-object RVT extends RVTInstances:
+object RVT extends RVTInstances {
   def pure[F[_], S, A](a: A): RVT[F, S, A] = Pure(a)
 
   def eval[F[_], S, A](fa: F[A]): RVT[F, S, A] = Eval(fa)
 
   def evalK[F[_], S]: F ~> RVT[F, S, _] =
-    new (F ~> RVT[F, S, _]):
+    new (F ~> RVT[F, S, _]) {
       def apply[A](fa: F[A]): RVT[F, S, A] = RVT.eval(fa)
+    }
 
   def int[F[_], S]: RVT[F, S, Int] = NextInt()
 
@@ -163,20 +169,24 @@ object RVT extends RVTInstances:
       extends RVT[F, S, A]
   final private[schrodinger] case class Store[F[_], S, A](key: RVTCache[F, S, A], value: A)
       extends RVT[F, S, Unit]
+}
 
-sealed private[schrodinger] trait RVTInstances extends RVTInstances8:
+sealed private[schrodinger] trait RVTInstances extends RVTInstances8 {
   given [F[_]: Async, S: SplittableRng]: Async[RVT[F, S, _]] =
     new RVTAsync[F, S] {}
+}
 
-sealed private[schrodinger] trait RVTInstances8 extends RVTInstances7:
+sealed private[schrodinger] trait RVTInstances8 extends RVTInstances7 {
   given [F[_], S: SplittableRng, E](using F: GenTemporal[F, E]): GenTemporal[RVT[F, S, _], E] =
     new RVTTemporal[F, S, E] {}
 
-  given [F[_], S: Rng](using F: Sync[F]): Sync[RVT[F, S, _]] with RVTSync[F, S] with
+  given [F[_], S: Rng](using F: Sync[F]): Sync[RVT[F, S, _]] with RVTSync[F, S] with {
     override def applicative = this
     def rootCancelScope: CancelScope = F.rootCancelScope
+  }
+}
 
-sealed private[schrodinger] trait RVTInstances7 extends RVTInstances6:
+sealed private[schrodinger] trait RVTInstances7 extends RVTInstances6 {
   given [F[_], S: SplittableRng, E](using
       F: GenConcurrent[F, E],
   ): GenConcurrent[RVT[F, S, _], E] =
@@ -184,32 +194,40 @@ sealed private[schrodinger] trait RVTInstances7 extends RVTInstances6:
 
   given [F[_]: Clock, S, E]: Clock[RVT[F, S, _]] =
     new RVTClock[F, S] {}
+}
 
-sealed private[schrodinger] trait RVTInstances6 extends RVTInstances5:
+sealed private[schrodinger] trait RVTInstances6 extends RVTInstances5 {
   given [F[_], S: SplittableRng, E](using F: GenSpawn[F, E]): GenSpawn[RVT[F, S, _], E] =
     new RVTSpawn[F, S, E] {}
+}
 
-sealed private[schrodinger] trait RVTInstances5 extends RVTInstances4:
+sealed private[schrodinger] trait RVTInstances5 extends RVTInstances4 {
   given [F[_], S, E](using
       F: MonadCancel[F, E],
-  ): MonadCancel[RVT[F, S, _], E] with RVTMonadCancel[F, S, E] with
+  ): MonadCancel[RVT[F, S, _], E] with RVTMonadCancel[F, S, E] with {
     def rootCancelScope: CancelScope = F.rootCancelScope
+  }
+}
 
-sealed private[schrodinger] trait RVTInstances4 extends RVTInstances3:
+sealed private[schrodinger] trait RVTInstances4 extends RVTInstances3 {
   given [F[_], S, E](using MonadError[F, E]): MonadError[RVT[F, S, _], E] =
     new RVTMonadError[F, S, E] {}
+}
 
-sealed private[schrodinger] trait RVTInstances3 extends RVTInstances2:
+sealed private[schrodinger] trait RVTInstances3 extends RVTInstances2 {
   given [F[_]: CommutativeMonad, S]: CommutativeMonad[RVT[F, S, _]] = new RVTMonad[F, S]
     with CommutativeMonad[RVT[F, S, _]] {}
+}
 
-sealed private[schrodinger] trait RVTInstances2 extends RVTInstances1:
+sealed private[schrodinger] trait RVTInstances2 extends RVTInstances1 {
   given [F[_], S]: Monad[RVT[F, S, _]] = new RVTMonad[F, S] {}
+}
 
-sealed private[schrodinger] trait RVTInstances1 extends RVTInstances0:
+sealed private[schrodinger] trait RVTInstances1 extends RVTInstances0 {
   given [F[_]: MonoidK, S]: Alternative[RVT[F, S, _]] = new RVTAlternative[F, S] {}
+}
 
-sealed private[schrodinger] trait RVTInstances0:
+sealed private[schrodinger] trait RVTInstances0 {
   given [F[_]: SemigroupK, S]: SemigroupK[RVT[F, S, _]] = new RVTSemigroupK[F, S] {}
 
   given [F[_]: FunctorFilter, S]: FunctorFilter[RVT[F, S, _]] = new RVTFunctorFilter[F, S] {}
@@ -222,9 +240,10 @@ sealed private[schrodinger] trait RVTInstances0:
 
   given [F[_], S: SplittableRng]: RngDispatcher.Aux[RVT[F, S, _], S] =
     new RVTRngDispatcher[F, S] {}
+}
 
 sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Simulator, S0: Rng]
-    extends PseudoRandom[RVT[F0, S0, _]]:
+    extends PseudoRandom[RVT[F0, S0, _]] {
   type G[X] = F0[X]
   type S = S0
 
@@ -232,21 +251,24 @@ sealed private[schrodinger] trait RVTPseudoRandom[F0[_]: Simulator, S0: Rng]
   def long: RVT[G, S, Long] = RVT.long
 
   extension [A](rva: RVT[G, S, A]) def simulate(seed: S): G[A] = rva.simulate(seed)
+}
 
 sealed private[schrodinger] trait RVTGaussianDoubleCache[F[_], S]
-    extends GaussianCache[RVT[F, S, _], Double]:
+    extends GaussianCache[RVT[F, S, _], Double] {
   val key = RVTCache[F, S, Double](Double.NaN)
   def getAndClear: RVT[F, S, Double] =
     key.get <* key.set(Double.NaN)
   def set(a: Double): RVT[F, S, Unit] = key.set(a)
+}
 
 sealed private[schrodinger] trait RVTRngDispatcher[F[_], S0](using S: SplittableRng[S0])
-    extends RngDispatcher[RVT[F, S0, _]]:
+    extends RngDispatcher[RVT[F, S0, _]] {
   type S = S0
   val rng = S
   val dispatch: RVT[F, S, S] = RVT.dispatch
+}
 
-sealed private[schrodinger] trait RVTMonad[F[_], S] extends StackSafeMonad[RVT[F, S, _]]:
+sealed private[schrodinger] trait RVTMonad[F[_], S] extends StackSafeMonad[RVT[F, S, _]] {
 
   def pure[A](a: A): RVT[F, S, A] = RVT.pure(a)
 
@@ -254,44 +276,50 @@ sealed private[schrodinger] trait RVTMonad[F[_], S] extends StackSafeMonad[RVT[F
 
   def flatMap[A, B](rva: RVT[F, S, A])(f: A => RVT[F, S, B]): RVT[F, S, B] =
     rva.flatMap(f)
+}
 
 private[schrodinger] trait RVTMonadError[F[_], S, E](using F: MonadError[F, E])
     extends RVTMonad[F, S]
-    with MonadError[RVT[F, S, _], E]:
+    with MonadError[RVT[F, S, _], E] {
 
   def raiseError[A](e: E): RVT[F, S, A] = RVT.eval(F.raiseError(e))
 
   def handleErrorWith[A](rva: RVT[F, S, A])(f: E => RVT[F, S, A]): RVT[F, S, A] =
     RVT.cont(sim => sim(rva).handleErrorWith(e => sim(f(e))))
+}
 
 sealed private[schrodinger] trait RVTFunctorFilter[F[_], S](using FunctorFilter[F])
-    extends FunctorFilter[RVT[F, S, _]]:
+    extends FunctorFilter[RVT[F, S, _]] {
 
   def functor = RVT.given_Monad_RVT
 
   def mapFilter[A, B](rva: RVT[F, S, A])(f: A => Option[B]): RVT[F, S, B] =
     RVT.cont(sim => sim(rva).mapFilter(f))
+}
 
-sealed private[schrodinger] trait RVTDefer[F[_], S] extends Defer[RVT[F, S, _]]:
+sealed private[schrodinger] trait RVTDefer[F[_], S] extends Defer[RVT[F, S, _]] {
 
   def defer[A](rva: => RVT[F, S, A]): RVT[F, S, A] = RVT.defer(rva)
+}
 
 sealed private[schrodinger] trait RVTSemigroupK[F[_], S](using SemigroupK[F])
-    extends SemigroupK[RVT[F, S, _]]:
+    extends SemigroupK[RVT[F, S, _]] {
 
   def combineK[A](rvx: RVT[F, S, A], rvy: RVT[F, S, A]): RVT[F, S, A] =
     RVT.cont(sim => sim(rvx) <+> sim(rvy))
+}
 
 sealed private[schrodinger] trait RVTAlternative[F[_], S](using F: MonoidK[F])
     extends RVTMonad[F, S],
       RVTSemigroupK[F, S],
-      Alternative[RVT[F, S, _]]:
+      Alternative[RVT[F, S, _]] {
 
   def empty[A]: RVT[F, S, A] = RVT.eval(F.empty)
+}
 
 sealed private[schrodinger] trait RVTMonadCancel[F[_], S, E](using F: MonadCancel[F, E])
     extends RVTMonadError[F, S, E],
-      MonadCancel[RVT[F, S, _], E]:
+      MonadCancel[RVT[F, S, _], E] {
 
   val canceled: RVT[F, S, Unit] = RVT.eval(F.canceled)
 
@@ -311,12 +339,13 @@ sealed private[schrodinger] trait RVTMonadCancel[F[_], S, E](using F: MonadCance
         sim(body(rvpoll))
       }
     }
+}
 
 sealed private[schrodinger] trait RVTSpawn[F[_], S, E](using
     F: GenSpawn[F, E],
     S: SplittableRng[S],
 ) extends GenSpawn[RVT[F, S, _], E],
-      RVTMonadCancel[F, S, E]:
+      RVTMonadCancel[F, S, E] {
 
   val unique: RVT[F, S, Unique.Token] = RVT.eval(F.unique)
 
@@ -339,63 +368,71 @@ sealed private[schrodinger] trait RVTSpawn[F[_], S, E](using
     }
 
   private def liftFiber[A](fib: Fiber[F, E, A]): Fiber[RVT[F, S, _], E, A] =
-    new Fiber[RVT[F, S, _], E, A]:
+    new Fiber[RVT[F, S, _], E, A] {
       def cancel: RVT[F, S, Unit] = RVT.eval(fib.cancel)
       def join: RVT[F, S, Outcome[RVT[F, S, _], E, A]] =
         RVT.eval(F.map(fib.join)(liftOutcome))
+    }
 
   private def liftOutcome[A](oc: Outcome[F, E, A]): Outcome[RVT[F, S, _], E, A] =
-    oc match
+    oc match {
       case Outcome.Canceled() => Outcome.Canceled()
       case Outcome.Errored(e) => Outcome.Errored(e)
       case Outcome.Succeeded(foa) => Outcome.Succeeded(RVT.eval(foa))
+    }
+}
 
 sealed private[schrodinger] trait RVTConcurrent[F[_], S, E](using F: GenConcurrent[F, E])
     extends RVTSpawn[F, S, E],
-      GenConcurrent[RVT[F, S, _], E]:
+      GenConcurrent[RVT[F, S, _], E] {
 
   def ref[A](a: A): RVT[F, S, Ref[RVT[F, S, _], A]] =
     RVT.eval(F.ref[A](a).map(_.mapK(RVT.evalK)))
 
   def deferred[A]: RVT[F, S, Deferred[RVT[F, S, _], A]] =
     RVT.eval(F.deferred[A].map(_.mapK(RVT.evalK)))
+}
 
 sealed private[schrodinger] trait RVTClock[F[_], S](using F: Clock[F])
-    extends Clock[RVT[F, S, _]]:
+    extends Clock[RVT[F, S, _]] {
 
   def applicative = RVT.given_Monad_RVT
 
   val monotonic: RVT[F, S, FiniteDuration] = RVT.eval(F.monotonic)
 
   val realTime: RVT[F, S, FiniteDuration] = RVT.eval(F.realTime)
+}
 
 sealed private[schrodinger] trait RVTTemporal[F[_], S, E](using F: GenTemporal[F, E])
     extends RVTConcurrent[F, S, E],
       RVTClock[F, S],
-      GenTemporal[RVT[F, S, _], E]:
+      GenTemporal[RVT[F, S, _], E] {
   def sleep(time: FiniteDuration): RVT[F, S, Unit] = RVT.eval(F.sleep(time))
+}
 
 sealed private[schrodinger] trait RVTSync[F[_], S](using F: Sync[F])
     extends RVTMonadCancel[F, S, Throwable],
       RVTClock[F, S],
-      Sync[RVT[F, S, _]]:
+      Sync[RVT[F, S, _]] {
 
   def suspend[A](hint: Sync.Type)(thunk: => A): RVT[F, S, A] =
     RVT.eval(F.suspend(hint)(thunk))
+}
 
 sealed private[schrodinger] trait RVTAsync[F[_], S: SplittableRng](using F: Async[F])
     extends RVTSync[F, S],
       RVTTemporal[F, S, Throwable],
-      Async[RVT[F, S, _]]:
+      Async[RVT[F, S, _]] {
 
   def cont[K, R](body: CECont[RVT[F, S, _], K, R]): RVT[F, S, R] =
     RVT.cont { sim =>
       F.cont {
-        new CECont[F, K, R]:
+        new CECont[F, K, R] {
           def apply[G[_]](using
               G: MonadCancel[G, Throwable],
           ): (Either[Throwable, K] => Unit, G[K], F ~> G) => G[R] =
             (cb, gk, nat) => body[G].apply(cb, gk, sim.andThen(nat))
+        }
       }
     }
 
@@ -407,3 +444,4 @@ sealed private[schrodinger] trait RVTAsync[F[_], S: SplittableRng](using F: Asyn
 
   override val unique: RVT[F, S, Unique.Token] = RVT.eval(F.unique)
   override def never[A]: RVT[F, S, A] = RVT.eval(F.never)
+}

@@ -20,38 +20,44 @@ import cats.Functor
 import cats.syntax.all.*
 import schrodinger.math.LogDouble
 
-trait Uniform[F[_], A]:
+trait Uniform[F[_], A] {
   def uniform01: F[A]
   def uniform10: F[A]
   def uniform(include: A, exclude: A): F[A]
+}
 
-object Uniform:
+object Uniform {
   inline def apply[F[_], A](include: A, exclude: A)(using u: Uniform[F, A]): F[A] =
     u.uniform(include, exclude)
 
   inline def standard[F[_], A](using u: Uniform[F, A]): F[A] = u.uniform01
 
-  given [F[_]: Functor: Random]: Uniform[F, Double] with
+  given [F[_]: Functor: Random]: Uniform[F, Double] with {
 
     def uniform01 = Random.long.map(x => (x >>> 11) * 1.1102230246251565e-16)
 
     def uniform10 = Random.long.map(x => ((x >>> 11) + 1) * 1.1102230246251565e-16)
 
     def uniform(include: Double, exclude: Double) =
-      if exclude >= include then
+      if exclude >= include then {
         val delta = exclude - include
         uniform01.map(_ * delta + include)
-      else
+      } else {
         val delta = include - exclude
         uniform10.map(_ * delta + exclude)
+      }
+  }
 
-  given [F[_]: Functor](using double: Uniform[F, Double]): Uniform[F, LogDouble] with
+  given [F[_]: Functor](using double: Uniform[F, Double]): Uniform[F, LogDouble] with {
     def uniform01 = double.uniform01.map(LogDouble(_))
     def uniform10 = double.uniform10.map(LogDouble(_))
     def uniform(include: LogDouble, exclude: LogDouble) =
-      if exclude >= include then
+      if exclude >= include then {
         val delta = exclude - include
         uniform01.map(_ * delta + include)
-      else
+      } else {
         val delta = include - exclude
         uniform10.map(_ * delta + exclude)
+      }
+  }
+}

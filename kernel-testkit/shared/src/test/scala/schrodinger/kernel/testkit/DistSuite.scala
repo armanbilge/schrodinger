@@ -24,7 +24,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 
-class DistSuite extends DisciplineSuite:
+class DistSuite extends DisciplineSuite {
 
   given [A: Arbitrary]: Arbitrary[Dist[Int, A]] =
     Arbitrary(
@@ -46,3 +46,4 @@ class DistSuite extends DisciplineSuite:
   )
 
   checkAll("Dist", EqTests[Dist[Int, Byte]].eqv)
+}

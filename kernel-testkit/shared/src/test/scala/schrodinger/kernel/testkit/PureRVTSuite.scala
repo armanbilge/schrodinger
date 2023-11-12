@@ -23,7 +23,7 @@ import cats.syntax.all.*
 import munit.DisciplineSuite
 import org.scalacheck.Arbitrary
 
-class PureRVTSuite extends DisciplineSuite:
+class PureRVTSuite extends DisciplineSuite {
   given Confidence = Confidence(1000, 0.9, 0.9)
   given ExhaustiveCheck[SplitMix64] = ExhaustiveCheck.instance(List(SplitMix64(1234567890L)))
   // TODO PureRV needs a cogen
@@ -41,3 +41,4 @@ class PureRVTSuite extends DisciplineSuite:
 
   checkAll("PureRV", EqTests[PureRV[SplitMix64, Boolean]].eqv.random)
   checkAll("PureRV", MonadTests[PureRV[SplitMix64, _]].monad[Boolean, Boolean, Boolean].random)
+}

@@ -29,7 +29,7 @@ import schrodinger.unsafe.SplitMix
 
 import scala.concurrent.duration.*
 
-class RVIOSuite extends CatsEffectSuite, ScalaCheckEffectSuite, RVTestkit:
+class RVIOSuite extends CatsEffectSuite, ScalaCheckEffectSuite, RVTestkit {
 
   test("run deterministically") {
     for
@@ -64,3 +64,4 @@ class RVIOSuite extends CatsEffectSuite, ScalaCheckEffectSuite, RVTestkit:
       }
     }
   }
+}

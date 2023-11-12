@@ -22,10 +22,13 @@ import cats.syntax.all.*
 import schrodinger.kernel.DiscreteUniform
 import schrodinger.math.syntax.*
 
-object discreteUniform:
+object discreteUniform {
   given [F[_]: Applicative, A](using A: Semifield[A]): DiscreteUniform[Density[F, A, _], Long]
-  with
-    def discreteUniform(n: Long) =
+  with {
+    def discreteUniform(n: Long) = {
       val zero = A.zero.pure
       val p = A.fromBigInt(n).reciprocal.pure
       Density(i => if 0 <= i & i < n then p else zero)
+    }
+  }
+}

@@ -27,7 +27,7 @@ import org.scalacheck.Prop.*
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class GammaSuite extends ScalaCheckSuite:
+class GammaSuite extends ScalaCheckSuite {
   val N = 100
 
   case class GammaParams(shape: Double, rate: Double)
@@ -50,10 +50,11 @@ class GammaSuite extends ScalaCheckSuite:
             shape,
             1.0 / rate,
           )
-        else
+        else {
           val splitMix = new source64.SplitMix64(seed)
           val gaussian = new BoxMullerNormalizedGaussianSampler(splitMix)
           new MarsagliaTsangGammaSampler(splitMix, gaussian, shape, 1.0 / rate)
+        }
 
       Gamma[PureRV[SplitMix64, _], Double](shape, rate)
         .replicateA(N)
@@ -62,3 +63,4 @@ class GammaSuite extends ScalaCheckSuite:
         List.fill(N)(apache.sample())
     }
   }
+}

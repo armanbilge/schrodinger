@@ -21,22 +21,27 @@ import cats.Monad
 import cats.effect.SyncIO
 import cats.effect.kernel.Sync
 
-trait Simulator[F[_]: Monad]:
+trait Simulator[F[_]: Monad] {
   type G[_]
   given runtime: Sync[G]
   def upgrade[A](fa: F[A]): G[A]
   def downgrade[A](ga: G[A]): F[A]
+}
 
-object Simulator extends SimulatorLowPriority:
-  given [F[_]](using F: Sync[F]): Simulator[F] with
+object Simulator extends SimulatorLowPriority {
+  given [F[_]](using F: Sync[F]): Simulator[F] with {
     type G[A] = F[A]
     given runtime: Sync[G] = F
     def upgrade[A](fa: F[A]): G[A] = fa
     def downgrade[A](ga: G[A]): F[A] = ga
+  }
+}
 
-sealed abstract private[schrodinger] class SimulatorLowPriority:
-  given Simulator[Id] with
+sealed abstract private[schrodinger] class SimulatorLowPriority {
+  given Simulator[Id] with {
     type G[A] = SyncIO[A]
     given runtime: Sync[G] = SyncIO.syncForSyncIO
     def upgrade[A](a: A): SyncIO[A] = SyncIO.pure(a)
     def downgrade[A](ga: SyncIO[A]): A = ga.unsafeRunSync()
+  }
+}

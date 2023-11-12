@@ -18,14 +18,17 @@ package schrodinger.montecarlo
 
 import fs2.Stream
 
-trait MarkovChain[F[_], G[_], A]:
+trait MarkovChain[F[_], G[_], A] {
   def markovChain(initial: A)(transition: A => G[A]): F[A]
+}
 
-object MarkovChain:
+object MarkovChain {
   inline def apply[F[_], G[_], A](initial: A)(transition: A => G[A])(using
       mc: MarkovChain[F, G, A],
   ): F[A] = mc.markovChain(initial)(transition)
 
-  given [F[_], A]: MarkovChain[Stream[F, _], F, A] with
+  given [F[_], A]: MarkovChain[Stream[F, _], F, A] with {
     def markovChain(initial: A)(transition: A => F[A]) =
       Stream.iterateEval(initial)(transition)
+  }
+}

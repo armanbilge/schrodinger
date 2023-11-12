@@ -37,7 +37,7 @@ import scala.concurrent.duration.DurationInt
 import scala.concurrent.duration.FiniteDuration
 
 // Testing for equivalence of distributions is just too ambitious
-class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestInstances:
+class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestInstances {
 
   given Ticker = Ticker()
   given seeds: ExhaustiveCheck[SplitMix] =
@@ -54,9 +54,9 @@ class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIns
   ): Eq[RVT[IO, SplitMix, A]] =
     Eq.by[RVT[IO, SplitMix, A], List[IO[A]]](rv => seeds.allValues.map(rv.simulate))
 
-  given [A: Arbitrary: Cogen]: Arbitrary[RVT[IO, SplitMix, A]] =
+  given [A: Arbitrary: Cogen]: Arbitrary[RVT[IO, SplitMix, A]] = {
     val generators =
-      new AsyncGenerators[RVT[IO, SplitMix, _]]:
+      new AsyncGenerators[RVT[IO, SplitMix, _]] {
         val F: Async[RVT[IO, SplitMix, _]] = Async[RVT[IO, SplitMix, _]]
         val arbitraryE: Arbitrary[Throwable] = arbitraryThrowable
         val cogenE: Cogen[Throwable] = Cogen[Throwable]
@@ -65,8 +65,10 @@ class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIns
         val cogenFU: Cogen[RVT[IO, SplitMix, Unit]] = Cogen[RVT[IO, SplitMix, Unit]]
         override def recursiveGen[B: Arbitrary: Cogen](deeper: GenK[RVT[IO, SplitMix, _]]) =
           super.recursiveGen[B](deeper).filterNot(_._1 == "racePair")
+      }
 
     Arbitrary(generators.generators)
+  }
 
   given [A](using cogen: Cogen[IO[A]]): Cogen[RVT[IO, SplitMix, A]] =
     Cogen[List[IO[A]]].contramap(rv => seeds.allValues.map(rv.simulate))
@@ -75,3 +77,4 @@ class RVTDeterministicSuite extends DisciplineSuite, cats.effect.testkit.TestIns
     rv => ioBooleanToProp(seeds.allValues.forallM(rv.simulate(_)))
 
   checkAll("RVT", AsyncTests[RVT[IO, SplitMix, _]].async[Int, Int, Int](100.millis))
+}

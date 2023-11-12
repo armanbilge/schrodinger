@@ -36,7 +36,7 @@ import schrodinger.kernel.testkit.Confidence
 import schrodinger.testkit.RVTestkit
 import schrodinger.unsafe.SplitMix
 
-class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, RVTestkit:
+class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, RVTestkit {
 
   override protected def scalaCheckInitialSeed: String =
     "Q1J0q5oq1vByvYnjzXvwOZDzPP3aEJPeh_Dz1wXDDOJ="
@@ -51,11 +51,12 @@ class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, 
   given seeds: ExhaustiveCheck[SplitMix] =
     ExhaustiveCheck.instance(List(SplitMix(1234567890L, SplitMix.GoldenGamma)))
 
-  given Simulator[Option] with
+  given Simulator[Option] with {
     type G[A] = OptionT[SyncIO, A]
     given runtime: Sync[G] = Sync.syncForOptionT[SyncIO]
     def upgrade[A](fa: Option[A]): G[A] = OptionT.fromOption(fa)
     def downgrade[A](ga: G[A]): Option[A] = ga.value.unsafeRunSync()
+  }
 
   checkAll(
     "RVT",
@@ -95,3 +96,4 @@ class RVTSuite extends CatsEffectSuite, DisciplineSuite, ScalaCheckEffectSuite, 
       prog.simulate(seed)
     }
   }
+}

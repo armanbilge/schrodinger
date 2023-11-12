@@ -37,18 +37,20 @@ import scala.util.NotGiven
 
 type PureRV[S, A] = PureRVT[Eval, S, A]
 
-object PureRV:
+object PureRV {
   def getExtra[S, A](key: LookupKey[A]): PureRV[S, Option[A]] =
     PureRVT.getExtra(key)
 
   def setExtra[S, A](key: InsertKey[A], a: Option[A]): PureRV[S, Unit] =
     PureRVT.setExtra(key, a)
+}
 
 opaque type PureRVT[F[_], S, A] = StateT[F, (S, Vault), A]
 
-object PureRVT:
-  extension [F[_], S, A](rv: PureRVT[F, S, A])
+object PureRVT {
+  extension [F[_], S, A](rv: PureRVT[F, S, A]) {
     def simulate(seed: S)(using FlatMap[F]): F[A] = rv.runA((seed, Vault.empty))
+  }
 
   def getExtra[F[_]: Applicative, S, A](key: LookupKey[A]): PureRVT[F, S, Option[A]] =
     StateT.inspect(_._2.lookup(key))
@@ -61,7 +63,7 @@ object PureRVT:
   given [F[_]: Monad, S](using NotGiven[Sync[F]]): Monad[PureRVT[F, S, _]] =
     IndexedStateT.catsDataMonadForIndexedStateT
 
-  given [F[_]: Monad, S0](using rng: PureRng[S0]): PseudoRandom[PureRVT[F, S0, _]] with
+  given [F[_]: Monad, S0](using rng: PureRng[S0]): PseudoRandom[PureRVT[F, S0, _]] with {
     type G[A] = F[A]
     type S = S0
 
@@ -79,20 +81,25 @@ object PureRVT:
         _ <- StateT.set((state1, extras))
       yield x
 
-    extension [A](fa: PureRVT[F, S, A])
+    extension [A](fa: PureRVT[F, S, A]) {
       def simulate(seed: S): G[A] =
         PureRVT.simulate(fa)(seed)
+    }
+  }
 
-  given [F[_]: Monad, S: PureRng, A: Arbitrary: Cogen]: Arbitrary[PureRVT[F, S, A]] =
+  given [F[_]: Monad, S: PureRng, A: Arbitrary: Cogen]: Arbitrary[PureRVT[F, S, A]] = {
     val generators = new RandomGenerators[PureRVT[F, S, _]]
-      with MonadGenerators[PureRVT[F, S, _]]:
+      with MonadGenerators[PureRVT[F, S, _]] {
       override val maxDepth = 3
       implicit val F = given_Monad_PureRVT
+    }
 
     Arbitrary(generators.generators[A])
+  }
 
   given [F[_]: Monad, S: PureRng: ExhaustiveCheck, A: Eq](using
       Confidence,
       Eq[F[SimulationResult[A]]],
   ): Eq[PureRVT[F, S, A]] =
     PseudoRandomEq[PureRVT[F, S, _], F, S, A]
+}

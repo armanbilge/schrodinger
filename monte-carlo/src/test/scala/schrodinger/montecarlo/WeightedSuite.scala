@@ -21,10 +21,11 @@ import cats.kernel.laws.discipline.OrderTests
 import cats.laws.discipline.InvariantMonoidalTests
 import munit.DisciplineSuite
 
-class WeightedSuite extends DisciplineSuite:
+class WeightedSuite extends DisciplineSuite {
 
   checkAll(
     "Weighted",
     InvariantMonoidalTests[Weighted[Int, _]].invariantMonoidal[Int, Int, Int],
   )
   checkAll("Weighted", OrderTests[Weighted[Int, Int]].order)
+}

@@ -23,12 +23,15 @@ import schrodinger.kernel.Beta
 import schrodinger.math.LogDouble
 import schrodinger.math.special
 
-object beta:
-  given [F[_]](using F: Applicative[F]): Beta[Density[F, LogDouble, _], Double] with
-    def beta(alpha: Double, beta: Double) =
+object beta {
+  given [F[_]](using F: Applicative[F]): Beta[Density[F, LogDouble, _], Double] with {
+    def beta(alpha: Double, beta: Double) = {
       val `B(α,β)` = special.beta(alpha, beta)
       Density { x =>
         F.pure {
           LogDouble(x) ** (alpha - 1) * LogDouble.`1+`(-x) ** (beta - 1) / `B(α,β)`
         }
       }
+    }
+  }
+}

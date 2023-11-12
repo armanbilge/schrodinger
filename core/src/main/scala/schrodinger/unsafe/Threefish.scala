@@ -40,14 +40,15 @@ final class Threefish private (
     // indices
     private var bIndex: Byte,
     private var bseqLength: Byte,
-) extends Serializable:
+) extends Serializable {
 
   private[unsafe] def state(): (Long, Long, Long, Long) = (s0, s1, s2, s3)
 
-  private[unsafe] def debug(): String =
-    def toBinString(l: Long) =
+  private[unsafe] def debug(): String = {
+    def toBinString(l: Long) = {
       val s = l.toBinaryString
       ("0" * (64 - s.length) + s).reverse
+    }
 
     s"""|Threefish(
         |  s = ${(s0, s1, s2, s3)},
@@ -56,11 +57,12 @@ final class Threefish private (
         |  bseq = ${toBinString(bseq0)}${toBinString(bseq1)},
         |  bseqLength = $bseqLength,
         |)""".stripMargin
+  }
 
   private[unsafe] def copy() =
     new Threefish(s0, s1, s2, s3, b0, b1, b2, b3, bseq0, bseq1, ctr, bIndex, bseqLength)
 
-  private[unsafe] def nextInt() =
+  private[unsafe] def nextInt() = {
     if bIndex >= 8 then incrementCtr()
 
     val bi = Array(b0, b1, b2, b3)(bIndex / 2)
@@ -70,8 +72,9 @@ final class Threefish private (
     bIndex = (bIndex + 1).toByte
 
     rtn.toInt
+  }
 
-  private[unsafe] def nextLong() =
+  private[unsafe] def nextLong() = {
     if bIndex >= 7 then incrementCtr()
 
     bIndex = (bIndex + (bIndex % 2)).toByte
@@ -80,8 +83,9 @@ final class Threefish private (
     bIndex = (bIndex + 2).toByte
 
     rtn
+  }
 
-  private[unsafe] def split() =
+  private[unsafe] def split() = {
     if bseqLength == -128 then // overflow
       reseed()
 
@@ -96,20 +100,22 @@ final class Threefish private (
     rehash()
 
     left
+  }
 
   private inline def setBseq(i: Int): Unit =
     if i < 64 then bseq0 |= 1L << i
     else bseq1 |= 1L << (i - 64)
 
   private def incrementCtr(): Unit =
-    if ctr == -1 then // max uint
+    if ctr == -1 then { // max uint
       reseed()
       rehash()
-    else
+    } else {
       ctr += 1
       rehash()
+    }
 
-  private def rehash(): Unit =
+  private def rehash(): Unit = {
 
     val key = Array(s0, s1, s2, s3)
     val block = Array(bseq0, bseq1, ctr, bseqLength)
@@ -120,8 +126,9 @@ final class Threefish private (
     b2 = out(2)
     b3 = out(3)
     bIndex = 0
+  }
 
-  private def reseed(): Unit =
+  private def reseed(): Unit = {
     bseqLength = -1 // never happens naturally, so guarantees prefix-free
 
     rehash()
@@ -135,18 +142,21 @@ final class Threefish private (
     bseq1 = 0
     ctr = 0
     bseqLength = 0
+  }
+}
 
 /** A splittable generator, as described in:
   *
   * K Claessen and MH Palka. Splittable Pseudorandom Number Generators using Cryptographic
   * Hashing. Haskell '13. [[http://dx.doi.org/10.1145/2503778.2503784]]
   */
-object Threefish:
+object Threefish {
 
-  def apply(s0: Long, s1: Long, s2: Long, s3: Long): Threefish =
+  def apply(s0: Long, s1: Long, s2: Long, s3: Long): Threefish = {
     val tf = new Threefish(s0, s1, s2, s3, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     tf.rehash()
     tf
+  }
 
   def fromSecureRandom[F[_]](random: SecureRandom[F])(using F: Sync[F]): F[Threefish] =
     (random.nextLong, random.nextLong, random.nextLong, random.nextLong)
@@ -154,12 +164,14 @@ object Threefish:
         F.delay(Threefish(s0, s1, s2, s3))
       }
 
-  given SplittableRng[Threefish] with
-    extension (tf: Threefish)
+  given SplittableRng[Threefish] with {
+    extension (tf: Threefish) {
       def copy() = tf.copy()
       def nextInt() = tf.nextInt()
       def nextLong() = tf.nextLong()
       def split() = tf.split()
+    }
+  }
 
   /*
    * Copyright (c) 2000-2021 The Legion of the Bouncy Castle Inc. (https://www.bouncycastle.org)
@@ -187,7 +199,7 @@ object Threefish:
       key: Array[Long],
       block: Array[Long],
       out: Array[Long],
-  ): Unit =
+  ): Unit = {
 
     val kw = new Array[Long](9)
     kw(0) = key(0); kw(5 + 0) = kw(0)
@@ -208,7 +220,7 @@ object Threefish:
 
     var d = 1
     var dm5 = 1
-    while d < Rounds / 4 do
+    while d < Rounds / 4 do {
 
       b0 += b1
       b1 = rotlXor(b1, R00, b0)
@@ -262,8 +274,11 @@ object Threefish:
 
       d += 2
       dm5 = (dm5 + 2) % 5
+    }
 
     out(0) = b0
     out(1) = b1
     out(2) = b2
     out(3) = b3
+  }
+}

@@ -21,7 +21,7 @@ import cats.kernel.laws.*
 import schrodinger.math.Monus
 import schrodinger.math.syntax.*
 
-trait MonusLaws[A](using val A: Monus[A]):
+trait MonusLaws[A](using val A: Monus[A]) {
 
   private given AdditiveCommutativeMonoid[A] = A.additiveCommutativeMonoid
   import given_AdditiveCommutativeMonoid_A.*
@@ -37,6 +37,8 @@ trait MonusLaws[A](using val A: Monus[A]):
 
   def monusNaturalOrderConsistency(x: A, y: A) =
     A.naturalOrder.lteqv(x, x + y)
+}
 
-object MonusLaws:
+object MonusLaws {
   def apply[A: Monus]: MonusLaws[A] = new MonusLaws {}
+}

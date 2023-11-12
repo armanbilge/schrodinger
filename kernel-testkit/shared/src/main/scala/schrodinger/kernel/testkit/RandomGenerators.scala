@@ -24,7 +24,7 @@ import org.scalacheck.Arbitrary
 import org.scalacheck.Cogen
 import org.scalacheck.Gen
 
-trait RandomGenerators[F[_]: Random] extends Generators1[F]:
+trait RandomGenerators[F[_]: Random] extends Generators1[F] {
   implicit val F: Functor[F]
 
   override protected def baseGen[A: Arbitrary: Cogen]: List[(String, Gen[F[A]])] =
@@ -37,3 +37,4 @@ trait RandomGenerators[F[_]: Random] extends Generators1[F]:
   private def genRandomLong[A: Arbitrary]: Gen[F[A]] =
     for f <- Arbitrary.arbitrary[Long => A]
     yield Random.long.map(f)
+}

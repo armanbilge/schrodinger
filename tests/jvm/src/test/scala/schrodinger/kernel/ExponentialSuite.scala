@@ -24,7 +24,7 @@ import org.scalacheck.Prop.*
 import schrodinger.kernel.testkit.PureRV
 import schrodinger.kernel.testkit.SplitMix64
 
-class ExponentialSuite extends ScalaCheckSuite:
+class ExponentialSuite extends ScalaCheckSuite {
   val N = 100
 
   property("match Apache implementation") {
@@ -38,3 +38,4 @@ class ExponentialSuite extends ScalaCheckSuite:
         List.fill(N)(apache.sample())
     }
   }
+}

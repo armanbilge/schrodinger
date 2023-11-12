@@ -24,7 +24,7 @@ import java.lang
 
 final class SplitMix(private[unsafe] var seed: Long, val gamma: Long) extends Serializable
 
-object SplitMix:
+object SplitMix {
 
   def fromTime[F[_]: Applicative: Clock]: F[SplitMix] =
     (Clock[F].realTime.map(_.length), Clock[F].monotonic.map(_.length)).mapN {
@@ -33,42 +33,50 @@ object SplitMix:
         SplitMix(mix64(s), mixGamma(s + GoldenGamma))
     }
 
-  given SplittableRng[SplitMix] with
-    extension (s: SplitMix)
+  given SplittableRng[SplitMix] with {
+    extension (s: SplitMix) {
 
       def copy(): SplitMix = SplitMix(s.seed, s.gamma)
 
-      def nextInt(): Int =
+      def nextInt(): Int = {
         s.seed += s.gamma
         mix32(s.seed)
+      }
 
-      def nextLong(): Long =
+      def nextLong(): Long = {
         s.seed += s.gamma
         mix64(s.seed)
+      }
 
-      def nextGamma(): Long =
+      def nextGamma(): Long = {
         s.seed += s.gamma
         mixGamma(s.seed)
+      }
 
-      def split(): SplitMix =
+      def split(): SplitMix = {
         val seed = s.nextLong()
         val gamma = s.nextGamma()
         SplitMix(seed, gamma)
+      }
+    }
+  }
 
   final val GoldenGamma = 0x9e3779b97f4a7c15L
 
-  private inline def mix64(_z: Long) =
+  private inline def mix64(_z: Long) = {
     var z = _z
     z = (z ^ (z >>> 30)) * 0xbf58476d1ce4e5b9L
     z = (z ^ (z >>> 27)) * 0x94d049bb133111ebL
     z ^ (z >>> 31)
+  }
 
-  private inline def mix32(_z: Long) =
+  private inline def mix32(_z: Long) = {
     var z = _z
     z = (z ^ (z >>> 33)) * 0x62a9d9ed799705f5L
     (((z ^ (z >>> 28)) * 0xcb24d0a5c88c35b3L) >>> 32).toInt
+  }
 
-  private inline def mixGamma(_z: Long) =
+  private inline def mixGamma(_z: Long) = {
     var z = _z
     z = (z ^ (z >>> 33)) * 0xff51afd7ed558ccdL
 
@@ -78,3 +86,5 @@ object SplitMix:
     val n = lang.Long.bitCount(z ^ (z >>> 1))
     if n < 24 then z ^ 0xaaaaaaaaaaaaaaaaL
     else z
+  }
+}
