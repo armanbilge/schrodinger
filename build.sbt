@@ -14,7 +14,7 @@ ThisBuild / crossScalaVersions := Seq(Scala3)
 ThisBuild / githubWorkflowJavaVersions := Seq(JavaSpec.temurin("17"))
 ThisBuild / tlJdkRelease := Some(17)
 
-val CatsVersion = "2.10.0"
+val CatsVersion = "2.11.0"
 val CatsEffectVersion = "3.5.2"
 val CatsCollectionsVersion = "0.9.8"
 val CommonsNumbersGamma = "1.1"
